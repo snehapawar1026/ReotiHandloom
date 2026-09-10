@@ -155,6 +155,21 @@ export const Footer = () => {
               <Mail className="w-4 h-4 text-amber-400 shrink-0" />
               <span>reotihandloom@hotmail.com</span>
             </p>
+            <p className="flex items-center gap-2 pt-1">
+              <svg className="w-4 h-4 text-rose-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+              </svg>
+              <a
+                href="https://www.instagram.com/reoti_handloom"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-amber-400 font-extrabold text-rose-300 transition-colors"
+              >
+                @reoti_handloom
+              </a>
+            </p>
           </div>
         </div>
       </div>

@@ -38,6 +38,19 @@ export const Navbar = () => {
       {/* Top Royal Black & Zari Announcement Strip */}
       <div className="bg-gradient-to-r from-amber-950 via-neutral-950 to-rose-950 text-amber-200 text-xs py-1.5 px-4 sm:px-8 flex items-center justify-between font-medium border-b border-amber-900/40">
         <div className="flex items-center gap-6">
+          <a
+            href="https://www.instagram.com/reoti_handloom"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 hover:text-amber-100 text-rose-300 font-bold transition-colors"
+          >
+            <svg className="w-3.5 h-3.5 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </svg>
+            <span>@reoti_handloom</span>
+          </a>
           <span className="flex items-center gap-1.5 hover:text-amber-100 cursor-pointer transition-colors">
             <Smartphone className="w-3.5 h-3.5 text-amber-400" />
             <span>App Download</span>
