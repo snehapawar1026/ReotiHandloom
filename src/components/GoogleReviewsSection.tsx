@@ -22,6 +22,7 @@ export const GoogleReviewsSection = () => {
   const [reviews, setReviews] = useState<GoogleReviewItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,35 +39,34 @@ export const GoogleReviewsSection = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Automatic Smooth Slider (Every 3.5 seconds)
+  // Bulletproof Continuous Auto-Slide (Every 3 seconds)
   useEffect(() => {
-    if (loading || isHovered || !sliderRef.current || reviews.length === 0) return;
+    if (loading || isHovered || reviews.length === 0) return;
 
-    const interval = setInterval(() => {
-      if (sliderRef.current) {
-        const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-        // Reset to start if reached the end
-        if (scrollLeft + clientWidth >= scrollWidth - 10) {
-          sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
-        } else {
-          sliderRef.current.scrollBy({ left: 340, behavior: 'smooth' });
-        }
-      }
-    }, 3500);
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % reviews.length);
+    }, 3000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, [loading, isHovered, reviews.length]);
 
-  const scrollLeft = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: -340, behavior: 'smooth' });
+  // Scroll to current index when index changes
+  useEffect(() => {
+    if (sliderRef.current && reviews.length > 0) {
+      const cardWidth = 360; // 340px card + gap
+      sliderRef.current.scrollTo({
+        left: currentIndex * cardWidth,
+        behavior: 'smooth',
+      });
     }
+  }, [currentIndex, reviews.length]);
+
+  const scrollLeft = () => {
+    setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
   };
 
   const scrollRight = () => {
-    if (sliderRef.current) {
-      sliderRef.current.scrollBy({ left: 340, behavior: 'smooth' });
-    }
+    setCurrentIndex((prev) => (prev + 1) % reviews.length);
   };
 
   return (
@@ -153,7 +153,7 @@ export const GoogleReviewsSection = () => {
           </div>
         </div>
 
-        {/* Dynamic Reviews Carousel with Auto Slide */}
+        {/* Dynamic Reviews Carousel with Bulletproof Auto Slide */}
         {loading ? (
           <div className="py-12 flex items-center justify-center gap-2 text-xs font-bold text-gray-400">
             <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
@@ -172,7 +172,11 @@ export const GoogleReviewsSection = () => {
                 href={GOOGLE_MAPS_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-80 sm:w-96 shrink-0 bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between hover:shadow-md hover:border-amber-300 transition-all group cursor-pointer"
+                className={`w-80 sm:w-96 shrink-0 bg-white rounded-2xl p-6 border transition-all duration-300 group cursor-pointer ${
+                  index === currentIndex
+                    ? 'border-amber-400 shadow-md scale-[1.01]'
+                    : 'border-gray-200/80 shadow-xs hover:border-amber-300'
+                }`}
               >
                 <div>
                   {/* User Profile Header */}
