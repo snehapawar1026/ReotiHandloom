@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { HeroBanner } from '@/components/HeroBanner';
 import { FestiveArchSection } from '@/components/FestiveArchSection';
+import { GoogleReviewsSection } from '@/components/GoogleReviewsSection';
 import { InstagramFamousSection } from '@/components/InstagramFamousSection';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductItem } from '@/context/ShopContext';
@@ -107,6 +108,9 @@ export default function Home() {
 
       {/* Instagram Famous Weavers Section (Nykaa Screenshot 3) */}
       <InstagramFamousSection />
+
+      {/* 331+ Google Customer Reviews Section */}
+      <GoogleReviewsSection />
 
       {/* Best Sellers Section */}
       {bestSellers.length > 0 && (

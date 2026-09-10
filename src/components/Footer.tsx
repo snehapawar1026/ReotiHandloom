@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Truck, RefreshCw, Phone, MapPin, Mail, Sparkles } from 'lucide-react';
+import { ShieldCheck, Truck, RefreshCw, Phone, MapPin, Mail, Sparkles, Star } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -65,6 +65,28 @@ export const Footer = () => {
           <p className="text-amber-200/75 leading-relaxed pt-1">
             Reoti Handloom is a premier brand dedicated to crafting authentic Maheshwari Sarees. We bring royal craftsmanship, rich zari borders, and lightweight silk-cotton textures straight from Maheshwar looms to your doorstep.
           </p>
+
+          {/* Google Rating Badge */}
+          <div className="pt-2">
+            <a
+              href="https://www.google.com/search?q=reoti+handloom"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-amber-900/80 hover:bg-amber-900 border border-amber-700/60 px-3 py-1.5 rounded-lg transition-colors group"
+            >
+              <div className="flex items-center gap-1 text-amber-400">
+                <span className="font-extrabold text-xs text-white">4.8</span>
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+              </div>
+              <span className="text-[10px] text-amber-200 font-bold border-l border-amber-800 pl-2">
+                331 Google Reviews
+              </span>
+            </a>
+          </div>
         </div>
 
         {/* Categories */}
