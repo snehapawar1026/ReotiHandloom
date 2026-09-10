@@ -21,8 +21,6 @@ export const GoogleReviewsSection = () => {
   const [totalReviews, setTotalReviews] = useState<number>(331);
   const [reviews, setReviews] = useState<GoogleReviewItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,34 +37,35 @@ export const GoogleReviewsSection = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Bulletproof Continuous Auto-Slide (Every 3 seconds)
+  // Guaranteed Continuous Non-stop Auto-Slide (Every 2.8 Seconds)
   useEffect(() => {
-    if (loading || isHovered || reviews.length === 0) return;
+    if (loading || !sliderRef.current || reviews.length === 0) return;
 
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % reviews.length);
-    }, 3000);
+    const interval = setInterval(() => {
+      if (sliderRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
+        // If near end of scroll width, smoothly wrap to start
+        if (scrollLeft + clientWidth >= scrollWidth - 20) {
+          sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          sliderRef.current.scrollBy({ left: 360, behavior: 'smooth' });
+        }
+      }
+    }, 2800);
 
-    return () => clearInterval(timer);
-  }, [loading, isHovered, reviews.length]);
-
-  // Scroll to current index when index changes
-  useEffect(() => {
-    if (sliderRef.current && reviews.length > 0) {
-      const cardWidth = 360; // 340px card + gap
-      sliderRef.current.scrollTo({
-        left: currentIndex * cardWidth,
-        behavior: 'smooth',
-      });
-    }
-  }, [currentIndex, reviews.length]);
+    return () => clearInterval(interval);
+  }, [loading, reviews.length]);
 
   const scrollLeft = () => {
-    setCurrentIndex((prev) => (prev === 0 ? reviews.length - 1 : prev - 1));
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: -360, behavior: 'smooth' });
+    }
   };
 
   const scrollRight = () => {
-    setCurrentIndex((prev) => (prev + 1) % reviews.length);
+    if (sliderRef.current) {
+      sliderRef.current.scrollBy({ left: 360, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -128,14 +127,14 @@ export const GoogleReviewsSection = () => {
               <button
                 onClick={scrollLeft}
                 aria-label="Previous Review"
-                className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-xs"
+                className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-xs active:scale-95"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={scrollRight}
                 aria-label="Next Review"
-                className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-xs"
+                className="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-xs active:scale-95"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -153,7 +152,7 @@ export const GoogleReviewsSection = () => {
           </div>
         </div>
 
-        {/* Dynamic Reviews Carousel with Bulletproof Auto Slide */}
+        {/* Dynamic Reviews Carousel with Non-Stop Auto Slide */}
         {loading ? (
           <div className="py-12 flex items-center justify-center gap-2 text-xs font-bold text-gray-400">
             <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
@@ -162,8 +161,6 @@ export const GoogleReviewsSection = () => {
         ) : (
           <div
             ref={sliderRef}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
             className="flex gap-5 overflow-x-auto scrollbar-none scroll-smooth pb-4 pt-1 px-1"
           >
             {reviews.map((rev, index) => (
@@ -172,11 +169,7 @@ export const GoogleReviewsSection = () => {
                 href={GOOGLE_MAPS_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`w-80 sm:w-96 shrink-0 bg-white rounded-2xl p-6 border transition-all duration-300 group cursor-pointer ${
-                  index === currentIndex
-                    ? 'border-amber-400 shadow-md scale-[1.01]'
-                    : 'border-gray-200/80 shadow-xs hover:border-amber-300'
-                }`}
+                className="w-80 sm:w-96 shrink-0 bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs flex flex-col justify-between hover:shadow-md hover:border-amber-300 transition-all group cursor-pointer"
               >
                 <div>
                   {/* User Profile Header */}
