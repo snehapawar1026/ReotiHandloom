@@ -21,6 +21,7 @@ export const GoogleReviewsSection = () => {
   const [totalReviews, setTotalReviews] = useState<number>(331);
   const [reviews, setReviews] = useState<GoogleReviewItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,6 +37,25 @@ export const GoogleReviewsSection = () => {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  // Automatic Smooth Slider (Every 3.5 seconds)
+  useEffect(() => {
+    if (loading || isHovered || !sliderRef.current || reviews.length === 0) return;
+
+    const interval = setInterval(() => {
+      if (sliderRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
+        // Reset to start if reached the end
+        if (scrollLeft + clientWidth >= scrollWidth - 10) {
+          sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          sliderRef.current.scrollBy({ left: 340, behavior: 'smooth' });
+        }
+      }
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [loading, isHovered, reviews.length]);
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -133,7 +153,7 @@ export const GoogleReviewsSection = () => {
           </div>
         </div>
 
-        {/* Dynamic Reviews Carousel */}
+        {/* Dynamic Reviews Carousel with Auto Slide */}
         {loading ? (
           <div className="py-12 flex items-center justify-center gap-2 text-xs font-bold text-gray-400">
             <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
@@ -142,6 +162,8 @@ export const GoogleReviewsSection = () => {
         ) : (
           <div
             ref={sliderRef}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
             className="flex gap-5 overflow-x-auto scrollbar-none scroll-smooth pb-4 pt-1 px-1"
           >
             {reviews.map((rev, index) => (
