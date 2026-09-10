@@ -1,0 +1,106 @@
+// This is your Prisma schema file for Reoti Handloom
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  title             String
+  slug              String   @unique
+  description       String
+  price             Float
+  originalPrice     Float
+  discountPercent   Int
+  fabric            String   // e.g. "Silk Cotton", "Pure Silk", "Tissue Silk", "Cotton"
+  weaveType         String   // e.g. "Chatai Weave", "Narmada Border", "Bugdi Border", "Zari Border"
+  borderType        String   // e.g. "Gold Zari", "Silver Zari", "Tissue Zari", "Traditional"
+  color             String
+  lengthWithBlouse  String   @default("6.3 Meters (With Blouse Piece)")
+  occasion          String   @default("Festive & Wedding")
+  isFeatured        Boolean  @default(false)
+  isBestSeller      Boolean  @default(false)
+  isAuthenticCraft  Boolean  @default(true)
+  rating            Float    @default(4.8)
+  reviewCount       Int      @default(42)
+  stock             Int      @default(15)
+  images            String   // Stored as JSON string of image URLs
+  categoryId        String
+  category          Category @relation(fields: [categoryId], references: [id])
+  reviews           Review[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userName  String
+  userEmail String?
+  rating    Int      @default(5)
+  comment   String
+  image     String?  // Customer uploaded photo of received product
+  verified  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String
+  subtitle  String?
+  image     String
+  link      String   @default("/products")
+  tag       String?  // e.g. "FESTIVE SALE - 30% OFF", "ROYAL COLLECTION"
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String   @default("password123")
+  phone     String?
+  role      String   @default("user") // "user" | "admin"
+  address   String?
+  city      String?
+  pincode   String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  orderNumber     String   @unique
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  shippingAddress String
+  totalAmount     Float
+  status          String   @default("PROCESSING") // PENDING, PROCESSING, SHIPPED, DELIVERED
+  paymentMethod   String   @default("UPI") // UPI, CARD, COD
+  paymentStatus   String   @default("PAID")
+  items           String   // JSON string of cart items
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
