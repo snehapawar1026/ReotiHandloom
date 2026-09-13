@@ -94,16 +94,16 @@ export default function AboutPage() {
       {/* 2. Main Reoti Story Layout (Full Responsive Max Width) */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12 sm:space-y-16">
         
-        {/* Section Heading */}
-        <div className="border-b border-amber-200/80 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <h2 className="font-serif font-extrabold text-3xl sm:text-5xl text-[#2D1214] tracking-wide flex items-center gap-2">
+        {/* Section Heading (Centered) */}
+        <div className="border-b border-amber-200/80 pb-6 text-center">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#8B263E] bg-rose-50 px-4 py-1 rounded-full border border-rose-200">
+              Reoti Heritage Story
+            </span>
+            <h2 className="font-serif font-extrabold text-3xl sm:text-5xl text-[#2D1214] tracking-wide inline-flex items-center justify-center gap-2">
               <span>The Reoti Heritage Saga: Royal Maheshwar Weaves</span>
               <span className="text-[#E52E4E]">✨</span>
             </h2>
-            <span className="text-xs font-bold uppercase tracking-widest text-[#8B263E] bg-rose-50 px-3.5 py-1 rounded-full border border-rose-200 self-start sm:self-center shrink-0">
-              Reoti Heritage Story
-            </span>
           </div>
         </div>
 
@@ -119,8 +119,8 @@ export default function AboutPage() {
           />
         </div>
 
-        {/* Story Text Paragraphs */}
-        <div className="space-y-6 text-gray-800 text-xs sm:text-sm sm:leading-relaxed font-medium max-w-4xl">
+        {/* Story Text Paragraphs (Centered Layout) */}
+        <div className="space-y-6 text-gray-800 text-sm sm:text-base sm:leading-relaxed font-medium max-w-4xl mx-auto text-center">
           <p>
             We are a team of Renowned Master Weavers and skilled artisans committed to reviving the age-old art of Maheshwari handloom weaving. Our vision is to bring the rich heritage of Maheshwari Weaving directly from Narmada ghat looms to every corner of India and across the globe.
           </p>
