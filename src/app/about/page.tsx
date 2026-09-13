@@ -167,19 +167,19 @@ export default function AboutPage() {
                   key={item.id}
                   className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center"
                 >
-                  {/* Frameless Image Column */}
+                  {/* Frameless Image Column (Full Un-cropped View) */}
                   <div
                     className={`lg:col-span-6 ${
                       isEven ? 'lg:order-1' : 'lg:order-2'
                     }`}
                   >
-                    <div className="relative w-full h-[320px] sm:h-[420px] lg:h-[460px] rounded-2xl overflow-hidden shadow-xl group bg-amber-950/20">
+                    <div className="relative w-full h-[360px] sm:h-[460px] lg:h-[500px] rounded-2xl overflow-hidden shadow-md group bg-amber-950/5 border border-amber-200/60 flex items-center justify-center p-2 sm:p-4">
                       <img
                         src={item.image}
                         alt={item.headingMain}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                        className="w-full h-full object-contain drop-shadow-md group-hover:scale-[1.02] transition-transform duration-500"
                       />
-                      <div className="absolute top-4 left-4 bg-amber-950/90 text-amber-200 text-xs font-bold px-3.5 py-1.5 rounded-full border border-amber-500/40 backdrop-blur-md shadow-lg">
+                      <div className="absolute top-4 right-4 bg-amber-950/90 text-amber-200 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/40 backdrop-blur-md shadow">
                         {item.badge}
                       </div>
                     </div>
