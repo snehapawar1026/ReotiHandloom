@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
-import { ShieldCheck, Lock, Mail, Phone, User, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Phone, User, CheckCircle, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser, user } = useShop();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams ? searchParams.get('redirect') : null;
+
+  const { setUser, user, setIsCartOpen } = useShop();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
 
@@ -54,6 +57,9 @@ export default function LoginPage() {
           setUser(data.user);
           if (data.user.role === 'admin') {
             router.push('/reoti-studio-manage');
+          } else if (redirectTarget === 'cart') {
+            setIsCartOpen(true);
+            router.push('/');
           } else {
             router.push('/');
           }
@@ -69,6 +75,9 @@ export default function LoginPage() {
         const data = await res.json();
         if (data.success) {
           setUser(data.user);
+          if (redirectTarget === 'cart') {
+            setIsCartOpen(true);
+          }
           router.push('/');
         } else {
           setError(data.error || 'Registration failed.');
@@ -97,6 +106,14 @@ export default function LoginPage() {
             Something &quot;more&quot; in Maheshwari Handloom
           </p>
         </div>
+
+        {/* Redirect Notice Banner */}
+        {redirectTarget === 'cart' && (
+          <div className="bg-amber-100 border-b border-amber-300 p-3 text-amber-950 text-xs font-semibold flex items-center justify-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-rose-700 shrink-0" />
+            <span>Order place karne ke liye pehle Login / Account create karein</span>
+          </div>
+        )}
 
         {/* Tab Switcher: Customer Login / Register */}
         <div className="flex border-b border-gray-200 bg-amber-50/50">

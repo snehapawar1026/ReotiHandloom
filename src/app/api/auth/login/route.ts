@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendAdminEmail } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,6 +43,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid email or password' }, { status: 401 });
     }
 
+    // Log Activity for Seller / Admin Dashboard & Notifications
+    const title = `🔐 Customer Logged In: ${user.name}`;
+    const details = `Email: ${user.email} | Phone: ${user.phone || 'N/A'}`;
+
+    await prisma.activityLog.create({
+      data: {
+        type: 'LOGIN',
+        title,
+        details,
+        userEmail: user.email,
+      },
+    }).catch(() => {});
+
+    sendAdminEmail({
+      title,
+      type: 'LOGIN',
+      details,
+      userEmail: user.email,
+      userPhone: user.phone || undefined,
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       user: {
@@ -57,3 +79,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

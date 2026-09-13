@@ -85,6 +85,26 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  // Track visitor session once per browser session
+  useEffect(() => {
+    try {
+      const hasTracked = sessionStorage.getItem('reoti_tracked_session');
+      if (!hasTracked) {
+        sessionStorage.setItem('reoti_tracked_session', 'true');
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'VISIT',
+            title: '🌐 New Website Visitor',
+            details: `Visited Reoti Handloom Store (${window.location.pathname})`,
+            pageUrl: window.location.pathname,
+          }),
+        }).catch(() => {});
+      }
+    } catch (e) {}
+  }, []);
+
   // Save state to localStorage
   useEffect(() => {
     try {

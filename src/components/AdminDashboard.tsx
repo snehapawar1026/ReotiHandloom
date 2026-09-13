@@ -28,12 +28,19 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Users,
+  Globe,
+  UserCheck,
+  LogIn,
+  UserPlus,
+  Phone,
+  MessageSquare,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { user, setUser, logout } = useShop();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'add' | 'products' | 'categories' | 'push' | 'insta'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'customers' | 'add' | 'products' | 'categories' | 'push' | 'insta'>('orders');
 
   // Dashboard Stats
   const [orders, setOrders] = useState<any[]>([]);
@@ -41,6 +48,18 @@ export default function AdminDashboard() {
   const [categories, setCategories] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Customer & Visitor Logs State
+  const [customerData, setCustomerData] = useState<{
+    stats: { totalVisits: number; totalUsers: number; loginsToday: number; totalOrders: number };
+    users: any[];
+    activities: any[];
+  }>({
+    stats: { totalVisits: 0, totalUsers: 0, loginsToday: 0, totalOrders: 0 },
+    users: [],
+    activities: [],
+  });
+  const [activityFilter, setActivityFilter] = useState<'ALL' | 'VISIT' | 'LOGIN' | 'REGISTER' | 'ORDER'>('ALL');
 
   // Instagram Feed Manager state
   const [instaPosts, setInstaPosts] = useState<any[]>([]);
@@ -210,16 +229,24 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [resOrders, resProducts, resCategories, resActivity] = await Promise.all([
+      const [resOrders, resProducts, resCategories, resActivity, resCustomers] = await Promise.all([
         fetch('/api/orders').then((r) => r.json()),
         fetch('/api/products').then((r) => r.json()),
         fetch('/api/categories?includeHidden=true').then((r) => r.json()),
         fetch('/api/admin/activity').then((r) => r.json()),
+        fetch('/api/admin/customers').then((r) => r.json()),
       ]);
 
       if (resOrders.success) setOrders(resOrders.orders);
       if (resProducts.success) setProducts(resProducts.products);
       if (resActivity.success) setActivities(resActivity.activities || []);
+      if (resCustomers.success) {
+        setCustomerData({
+          stats: resCustomers.stats || { totalVisits: 0, totalUsers: 0, loginsToday: 0, totalOrders: 0 },
+          users: resCustomers.users || [],
+          activities: resCustomers.activities || [],
+        });
+      }
       if (resCategories.success) {
         setCategories(resCategories.categories);
         if (resCategories.categories.length > 0) {
@@ -968,6 +995,18 @@ export default function AdminDashboard() {
         </button>
 
         <button
+          onClick={() => setActiveTab('customers')}
+          className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
+            activeTab === 'customers'
+              ? 'border-amber-900 text-amber-950'
+              : 'border-transparent text-gray-400 hover:text-gray-700'
+          }`}
+        >
+          <Users className="w-4 h-4 text-amber-800" />
+          <span>Customer Logs & Visitors ({customerData.users.length})</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('products')}
           className={`pb-3 flex items-center gap-2 border-b-2 transition-colors ${
             activeTab === 'products'
@@ -1027,6 +1066,243 @@ export default function AdminDashboard() {
           <span>Instagram Feed ({instaPosts.length})</span>
         </button>
       </div>
+
+      {/* Tab: Customer Logs & Visitors */}
+      {activeTab === 'customers' && (
+        <div className="mt-6 space-y-6">
+          
+          {/* Top Metric Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-amber-900">
+                <span className="text-xs font-bold uppercase tracking-wider">Total Visitors</span>
+                <Globe className="w-5 h-5 text-amber-700" />
+              </div>
+              <p className="text-2xl font-serif font-extrabold text-amber-950">
+                {customerData.stats.totalVisits.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-gray-500">Tracked Store Visits</p>
+            </div>
+
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-emerald-900">
+                <span className="text-xs font-bold uppercase tracking-wider">Registered Users</span>
+                <UserCheck className="w-5 h-5 text-emerald-700" />
+              </div>
+              <p className="text-2xl font-serif font-extrabold text-emerald-950">
+                {customerData.stats.totalUsers.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-gray-500">Customer Accounts</p>
+            </div>
+
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-blue-900">
+                <span className="text-xs font-bold uppercase tracking-wider">Logins Today</span>
+                <LogIn className="w-5 h-5 text-blue-700" />
+              </div>
+              <p className="text-2xl font-serif font-extrabold text-blue-950">
+                {customerData.stats.loginsToday.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-gray-500">Last 24 Hours</p>
+            </div>
+
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-rose-900">
+                <span className="text-xs font-bold uppercase tracking-wider">Total Orders</span>
+                <ShoppingBag className="w-5 h-5 text-rose-700" />
+              </div>
+              <p className="text-2xl font-serif font-extrabold text-rose-950">
+                {customerData.stats.totalOrders.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-gray-500">Placed Orders</p>
+            </div>
+          </div>
+
+          {/* Section 1: Registered Customers Directory */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-2xs overflow-hidden">
+            <div className="p-4 bg-amber-950 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-400" />
+                <h3 className="font-serif font-bold text-sm text-amber-100">
+                  Registered Customer Directory ({customerData.users.length})
+                </h3>
+              </div>
+              <span className="text-[10px] bg-amber-900 text-amber-200 font-mono px-2 py-0.5 rounded">
+                Admin Alert Phone: 9617444445
+              </span>
+            </div>
+
+            {customerData.users.length === 0 ? (
+              <div className="text-center py-10 text-gray-500 text-xs">
+                No customer accounts registered yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-amber-50 text-amber-950 font-bold border-b border-amber-200">
+                    <tr>
+                      <th className="p-3">Customer Name</th>
+                      <th className="p-3">Email Address</th>
+                      <th className="p-3">Mobile Number</th>
+                      <th className="p-3">Joined Date</th>
+                      <th className="p-3 text-center">Orders Placed</th>
+                      <th className="p-3 text-right">Quick Contact</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {customerData.users.map((c) => (
+                      <tr key={c.id} className="hover:bg-amber-50/40">
+                        <td className="p-3 font-bold text-gray-900">{c.name}</td>
+                        <td className="p-3 text-gray-600 font-mono text-[11px]">{c.email}</td>
+                        <td className="p-3 text-gray-800 font-semibold">{c.phone || 'N/A'}</td>
+                        <td className="p-3 text-gray-500 font-mono text-[11px]">
+                          {new Date(c.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className="bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                            {c.orders?.length || 0} Orders
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <a
+                            href={`https://wa.me/91${c.phone || '9617444445'}?text=${encodeURIComponent(
+                              `Hello ${c.name}, thank you for shopping with Reoti Handloom Maheshwar!`
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-2.5 py-1 rounded text-[11px]"
+                          >
+                            <Phone className="w-3 h-3" />
+                            <span>WhatsApp</span>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Section 2: Real-time Visitor & Customer Activity Feed */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-2xs overflow-hidden space-y-4 p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+              <div>
+                <h3 className="font-serif font-bold text-base text-amber-950 flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-amber-700" />
+                  <span>Real-Time Visitor & User Activity Log</span>
+                </h3>
+                <p className="text-[11px] text-gray-500">
+                  Track website visits, logins, user registrations, and order activities.
+                </p>
+              </div>
+
+              {/* Activity Filter Buttons */}
+              <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
+                {(['ALL', 'VISIT', 'LOGIN', 'REGISTER', 'ORDER'] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setActivityFilter(filter)}
+                    className={`px-3 py-1 rounded-full border text-[11px] transition-colors ${
+                      activityFilter === filter
+                        ? 'bg-amber-950 text-white border-amber-950 font-bold'
+                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    }`}
+                  >
+                    {filter === 'ALL'
+                      ? 'All Activity'
+                      : filter === 'VISIT'
+                      ? 'Visits 🌐'
+                      : filter === 'LOGIN'
+                      ? 'Logins 🔐'
+                      : filter === 'REGISTER'
+                      ? 'Signups 👤'
+                      : 'Orders 🛍️'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filtered Activity Cards */}
+            {(() => {
+              const filteredList = customerData.activities.filter((act) =>
+                activityFilter === 'ALL' ? true : act.type === activityFilter
+              );
+
+              if (filteredList.length === 0) {
+                return (
+                  <div className="text-center py-10 text-gray-500 text-xs">
+                    No activity logs recorded for this category yet.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-3">
+                  {filteredList.map((act) => {
+                    const waText = encodeURIComponent(
+                      `🚨 *Reoti Store Activity Alert*\n\n` +
+                      `📌 *Event:* ${act.title}\n` +
+                      `👤 *User:* ${act.userEmail || 'Visitor'}\n` +
+                      `📝 *Details:* ${act.details || 'N/A'}\n` +
+                      `🕒 *Time:* ${new Date(act.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+                    );
+                    const adminWaUrl = `https://wa.me/919617444445?text=${waText}`;
+
+                    return (
+                      <div
+                        key={act.id}
+                        className="p-3.5 bg-amber-50/50 border border-amber-200/80 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-amber-100/50 transition-colors"
+                      >
+                        <div className="space-y-1 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                                act.type === 'ORDER'
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : act.type === 'LOGIN'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : act.type === 'REGISTER'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-amber-100 text-amber-900'
+                              }`}
+                            >
+                              {act.type}
+                            </span>
+                            <h4 className="font-bold text-gray-900">{act.title}</h4>
+                          </div>
+
+                          {act.details && (
+                            <p className="text-[11px] text-gray-600 font-mono">{act.details}</p>
+                          )}
+
+                          <div className="flex items-center gap-3 text-[10px] text-gray-400 font-mono pt-0.5">
+                            <span>Email: {act.userEmail || 'Guest / Visitor'}</span>
+                            <span>•</span>
+                            <span>IP: {act.userIp || '127.0.0.1'}</span>
+                            <span>•</span>
+                            <span>{new Date(act.createdAt).toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <a
+                          href={adminWaUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg shadow-2xs"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Send WA Alert (9617444445)</span>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* Tab 1: Orders Dashboard */}
       {activeTab === 'orders' && (

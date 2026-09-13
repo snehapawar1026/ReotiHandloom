@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendAdminEmail } from '@/lib/notifications';
 
 export async function GET() {
   try {
@@ -70,13 +71,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Log Activity for Store Owner / Admin Dashboard
+    const title = `🛍️ New Order Received: #${orderNumber}`;
+    const details = `Customer: ${customerName} (${customerPhone}) | Amount: ₹${totalAmount} | Address: ${shippingAddress}`;
+
     await prisma.activityLog.create({
       data: {
         type: 'ORDER',
-        title: `🛍️ New Order Received: #${orderNumber}`,
-        details: `Customer: ${customerName} (${customerPhone}) | Amount: ₹${totalAmount}`,
+        title,
+        details,
         userEmail: customerEmail || null,
       },
+    }).catch(() => {});
+
+    sendAdminEmail({
+      title,
+      type: 'ORDER',
+      details,
+      userEmail: customerEmail || undefined,
+      userPhone: customerPhone,
+      amount: parseFloat(totalAmount),
     }).catch(() => {});
 
     return NextResponse.json({ success: true, order });
@@ -85,3 +98,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

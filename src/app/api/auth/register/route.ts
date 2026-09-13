@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendAdminEmail } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,13 +29,24 @@ export async function POST(req: NextRequest) {
     });
 
     // Log Activity for Seller / Admin Dashboard
+    const title = `👤 New Customer Registered: ${name}`;
+    const details = `Email: ${email} | Phone: ${phone || 'N/A'}`;
+
     await prisma.activityLog.create({
       data: {
         type: 'REGISTER',
-        title: `👤 New Customer Registered: ${name}`,
-        details: `Email: ${email} | Phone: ${phone || 'N/A'}`,
+        title,
+        details,
         userEmail: email,
       },
+    }).catch(() => {});
+
+    sendAdminEmail({
+      title,
+      type: 'REGISTER',
+      details,
+      userEmail: email,
+      userPhone: phone || undefined,
     }).catch(() => {});
 
     return NextResponse.json({
@@ -45,3 +57,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
