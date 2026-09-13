@@ -165,36 +165,36 @@ export default function Home() {
       <HeroBanner />
 
       {/* 2. Authentic Scalloped Parent Categories Carousel (Placed Right Below Main Hero Banner) */}
-      <section className="w-full bg-[#FAF7F2]/80 border-y border-[#E8DFC8] py-4">
-        <div className="max-w-7xl mx-auto px-4 relative group/carousel">
+      <section className="w-full bg-[#FAF7F2]/90 border-y border-[#E8DFC8] py-4 relative">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 relative group/carousel">
           
-          {/* Left Arrow */}
+          {/* Left Scroll Arrow */}
           <button
             onClick={() => scrollHomeCategories('left')}
-            className="hidden sm:flex absolute left-0 top-[40%] -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-white/95 text-[#581C1C] border border-[#E8DFC8] shadow-md hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95"
+            className="flex absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white text-[#581C1C] border border-[#E8DFC8] shadow-xl hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95 hover:scale-105"
             aria-label="Scroll Left"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-6 h-6" />
           </button>
 
-          {/* Right Arrow */}
+          {/* Right Scroll Arrow */}
           <button
             onClick={() => scrollHomeCategories('right')}
-            className="hidden sm:flex absolute right-0 top-[40%] -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-white/95 text-[#581C1C] border border-[#E8DFC8] shadow-lg hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95"
+            className="flex absolute -right-2 sm:-right-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white text-[#581C1C] border border-[#E8DFC8] shadow-xl hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95 hover:scale-105"
             aria-label="Scroll Right"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-6 h-6" />
           </button>
 
           <div
             ref={homeCategoryScrollRef}
-            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-2 scrollbar-none justify-start md:justify-center px-4 sm:px-6"
+            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-3 pt-1 scrollbar-none justify-start px-8 sm:px-12 touch-pan-x snap-x snap-mandatory scroll-smooth w-full select-none"
           >
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/products?category=${cat.slug}`}
-                className="flex flex-col items-center group cursor-pointer shrink-0"
+                className="flex flex-col items-center group cursor-pointer shrink-0 snap-start"
               >
                 <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center shrink-0">
                   {/* Authentic Scalloped Bead Ring SVG */}
@@ -244,15 +244,28 @@ export default function Home() {
 
             {/* Horizontal Scrollable Festive Cards (Arch Dome Jharokha Frame as in media_1789238433446.png) */}
             <div className="relative group/festive">
+              {/* White Scroll Left Button */}
+              <button
+                onClick={() => {
+                  if (festiveScrollRef.current) {
+                    festiveScrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+                  }
+                }}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white text-gray-900 shadow-2xl flex items-center justify-center hover:bg-amber-100 transition-all cursor-pointer border border-gray-200 active:scale-95"
+                aria-label="Scroll Left"
+              >
+                <ChevronLeft className="w-6 h-6 text-gray-800" />
+              </button>
+
               <div
                 ref={festiveScrollRef}
-                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none justify-start px-2"
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none justify-start px-6 touch-pan-x snap-x snap-mandatory scroll-smooth"
               >
                 {GANESH_FESTIVE_CARDS.map((card, idx) => (
                   <Link
                     key={idx}
                     href={card.link}
-                    className="group relative w-48 sm:w-60 h-80 sm:h-[380px] shrink-0 rounded-t-full rounded-b-2xl overflow-hidden border-2 border-[#D4AF37] shadow-2xl hover:scale-105 transition-all duration-500 block bg-[#F4E3B5]"
+                    className="group relative w-48 sm:w-60 h-80 sm:h-[380px] shrink-0 snap-start rounded-t-full rounded-b-2xl overflow-hidden border-2 border-[#D4AF37] shadow-2xl hover:scale-105 transition-all duration-500 block bg-[#F4E3B5]"
                   >
                     {/* Damask Floral Wallpaper Backdrop */}
                     <div className="absolute inset-0 bg-[#F4E3B5] bg-[radial-gradient(#D4AF37_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-60" />
@@ -284,7 +297,7 @@ export default function Home() {
                     festiveScrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
                   }
                 }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white text-gray-900 shadow-2xl flex items-center justify-center hover:bg-amber-100 transition-all cursor-pointer border border-gray-200 active:scale-95"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white text-gray-900 shadow-2xl flex items-center justify-center hover:bg-amber-100 transition-all cursor-pointer border border-gray-200 active:scale-95"
                 aria-label="Scroll Right"
               >
                 <ChevronRight className="w-6 h-6 text-gray-800" />
