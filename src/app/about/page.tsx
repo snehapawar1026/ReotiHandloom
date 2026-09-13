@@ -91,8 +91,8 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 2. Main Reoti Story Layout (Matching Reference Screenshot) */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12">
+      {/* 2. Main Reoti Story Layout (Full Responsive Max Width) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12 sm:space-y-16">
         
         {/* Section Heading */}
         <div className="border-b border-amber-200/80 pb-4">

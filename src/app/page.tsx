@@ -188,7 +188,7 @@ export default function Home() {
 
           <div
             ref={homeCategoryScrollRef}
-            className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-none justify-start px-6"
+            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-2 scrollbar-none justify-start md:justify-center px-4 sm:px-6"
           >
             {categories.map((cat) => (
               <Link

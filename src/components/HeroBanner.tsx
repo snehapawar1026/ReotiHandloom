@@ -13,15 +13,34 @@ interface BannerItem {
   link: string;
 }
 
+const DEFAULT_BANNERS: BannerItem[] = [
+  {
+    id: 'b1',
+    title: 'Maharani Ahilyabai Holkar Royal Maheshwar Weaves',
+    subtitle: 'Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 5th generation weaver craftsmanship.',
+    image: '/uploads/maheshwari_legacy_banner.png',
+    tag: 'ROYAL MAHESHWAR HERITAGE',
+    link: '/products',
+  },
+  {
+    id: 'b2',
+    title: 'Authentic Maheshwari Handloom Sarees & Suits',
+    subtitle: '100% Certified Craftmark & Handloom Mark Quality Guarantee directly from Maheshwar weavers.',
+    image: '/studio/studio_1.jpg',
+    tag: 'DIRECT LOOM PRICE',
+    link: '/products',
+  },
+];
+
 export const HeroBanner = () => {
-  const [banners, setBanners] = useState<BannerItem[]>([]);
+  const [banners, setBanners] = useState<BannerItem[]>(DEFAULT_BANNERS);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     fetch('/api/banners')
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.banners.length > 0) {
+        if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
           setBanners(data.banners);
         }
       })
@@ -36,9 +55,7 @@ export const HeroBanner = () => {
     return () => clearInterval(interval);
   }, [banners]);
 
-  if (banners.length === 0) return null;
-
-  const activeBanner = banners[currentIndex];
+  const activeBanner = banners[currentIndex] || DEFAULT_BANNERS[0];
 
   return (
     <div className="relative w-full h-[340px] sm:h-[480px] lg:h-[560px] bg-neutral-950 overflow-hidden font-sans group">
