@@ -147,46 +147,61 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* Grid of Heritage Photos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {heritageGallery.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white border border-amber-200/80 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group"
-              >
-                {/* Photo container */}
-                <div className="relative h-64 sm:h-72 w-full bg-neutral-900 overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 right-3 bg-amber-950/80 text-amber-200 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-500/40 backdrop-blur-md shadow">
-                    {item.badge}
-                  </div>
-                </div>
+          {/* Alternating Zig-Zag Split Layout (Image Left / Text Right -> Image Right / Text Left) */}
+          <div className="space-y-8 sm:space-y-12">
+            {heritageGallery.map((item, index) => {
+              const isEven = index % 2 === 0; // 0, 2, 4 -> Image Left; 1, 3 -> Image Right
 
-                {/* Info Container */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3 bg-gradient-to-b from-white to-amber-50/30">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-extrabold tracking-wider uppercase text-rose-900 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full inline-block">
-                      {item.category}
-                    </span>
-                    <h3 className="font-serif font-bold text-base text-amber-950 group-hover:text-rose-900 transition-colors leading-snug">
+              return (
+                <div
+                  key={item.id}
+                  className="bg-white border border-amber-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-md hover:shadow-xl transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center"
+                >
+                  {/* Image Column */}
+                  <div
+                    className={`lg:col-span-6 ${
+                      isEven ? 'lg:order-1' : 'lg:order-2'
+                    }`}
+                  >
+                    <div className="relative w-full h-[280px] sm:h-[360px] lg:h-[400px] rounded-xl sm:rounded-2xl overflow-hidden bg-neutral-900 shadow-md group">
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute top-4 left-4 bg-amber-950/85 backdrop-blur-md text-amber-200 text-xs font-bold px-3.5 py-1.5 rounded-full border border-amber-500/40 shadow">
+                        {item.badge}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content / Details Column */}
+                  <div
+                    className={`lg:col-span-6 space-y-4 ${
+                      isEven ? 'lg:order-2' : 'lg:order-1'
+                    }`}
+                  >
+                    <div className="inline-flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full text-xs font-bold text-rose-900 uppercase tracking-wider">
+                      <Crown className="w-3.5 h-3.5 text-rose-700" />
+                      <span>{item.category}</span>
+                    </div>
+
+                    <h3 className="font-serif font-extrabold text-xl sm:text-3xl text-amber-950 leading-tight">
                       {item.title}
                     </h3>
-                    <p className="text-xs text-gray-600 font-medium leading-relaxed">
+
+                    <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed">
                       {item.description}
                     </p>
-                  </div>
 
-                  <div className="pt-3 border-t border-amber-100 flex items-center gap-1.5 text-[11px] font-semibold text-amber-900">
-                    <FileCheck className="w-4 h-4 text-amber-700" />
-                    <span>Verified Authentic Heritage Record</span>
+                    <div className="pt-4 border-t border-amber-100 flex items-center gap-2 text-xs font-bold text-amber-900">
+                      <FileCheck className="w-4 h-4 text-amber-700" />
+                      <span>Verified Official Reoti Handloom Heritage Record</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
