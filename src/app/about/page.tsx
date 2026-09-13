@@ -18,41 +18,51 @@ export default function AboutPage() {
   const heritageGallery = [
     {
       id: 'govt_cert_1996',
-      title: 'M.P. State Textile Corp Govt Certificate (1996)',
-      category: 'Government Recognition',
-      description: 'Official certificate from M.P. State Textile Corporation Ltd. dated 06-11-1996 awarded to Shri Ashok Ambekar (Reoti Handloom) for Best Selected Saree.',
+      tag: 'GOVERNMENT RECOGNITION',
+      headingMain: 'M.P. STATE TEXTILE CORP',
+      headingHighlight: 'GOVT CERTIFICATE (1996)',
+      description: 'Official certificate from M.P. State Textile Corporation Ltd. dated 06-11-1996 awarded to Shri Ashok Ambekar (Pro-Reoti Maheshwar) for Best Selected Saree in state competition.',
+      quote: 'Recognized for authentic Maheshwari weave excellence.',
       image: '/heritage/govt_cert_1996.jpg',
-      badge: 'Govt Awarded 1996',
+      badge: 'Govt Certificate 1996',
     },
     {
       id: 'vip_visit_1',
-      title: 'VIP Dignitary & Celebrity Visit',
-      category: 'VIP Showcase',
-      description: 'Veteran actress & VIP Dignitary inspecting authentic Reoti Maheshwari Sarees with master weavers.',
+      tag: 'VIP & CELEBRITY VISIT',
+      headingMain: 'HONORING CELEBRITY DIGNITARIES',
+      headingHighlight: 'HEMA MALINI AT REOTI LOOMS',
+      description: 'Veteran actress & VIP Dignitary inspecting authentic Reoti Maheshwari Sarees directly with master weavers on traditional handlooms.',
+      quote: 'Crafting royal sarees worn & cherished by dignitaries.',
       image: '/heritage/vip_visit_1.jpg',
-      badge: 'VIP Dignitary Visit',
+      badge: 'VIP Visit',
     },
     {
       id: 'vip_visit_2',
-      title: 'Royal & VIP Saree Exhibition',
-      category: 'Heritage Exhibition',
-      description: 'Presenting exclusive handloom Maheshwari silk sarees to distinguished guests and patrons.',
+      tag: 'HERITAGE EXHIBITION',
+      headingMain: 'PRESENTING EXCLUSIVE',
+      headingHighlight: 'ROYAL MAHESHWAR SILK ZARI SAREES',
+      description: 'Presenting exclusive handwoven Maheshwari silk sarees with pure gold/silver zari borders to distinguished patrons & art connoisseurs.',
+      quote: 'Preserving Holkar dynasty weaving traditions.',
       image: '/heritage/vip_visit_2.jpg',
-      badge: 'Exclusive Exhibition',
+      badge: 'Exclusive Showing',
     },
     {
       id: 'vip_visit_3',
-      title: 'Distinguished Patron Felicitations',
-      category: 'Client Heritage',
-      description: 'Gifting handmade Maheshwari zari sarees crafted on 5th generation heritage looms.',
+      tag: 'PATRON FELICITATIONS',
+      headingMain: 'CRAFTING LIVING TRADITION',
+      headingHighlight: 'FOR DISTINGUISHED PATRONS',
+      description: 'Felicitating distinguished guests with handmade Maheshwari sarees woven on 5th generation heritage looms straight from Narmada ghats.',
+      quote: 'Direct from weaver hands to royal wardrobes.',
       image: '/heritage/vip_visit_3.jpg',
       badge: 'VIP Showcase',
     },
     {
       id: 'govt_cert_photo_1996',
-      title: '1996 Award Winning Saree Photo',
-      category: 'Masterwork Record',
+      tag: 'MASTERWORK RECORD',
+      headingMain: 'AWARD WINNING SAREE',
+      headingHighlight: '1996 STATE COMPETITION MASTERPIECE',
       description: 'Official photograph snippet of the award-winning Maheshwari saree selected by M.P. State Govt Textile Corporation.',
+      quote: '100% authentic handloom craftsmanship.',
       image: '/heritage/govt_cert_photo_1996.jpg',
       badge: 'Historic Masterpiece',
     },
@@ -147,56 +157,75 @@ export default function AboutPage() {
             </p>
           </div>
 
-          {/* Alternating Zig-Zag Split Layout (Image Left / Text Right -> Image Right / Text Left) */}
-          <div className="space-y-8 sm:space-y-12">
+          {/* Frameless Luxury Editorial Split Rows (Image Left/Text Right <-> Image Right/Text Left) */}
+          <div className="space-y-16 sm:space-y-24 py-6">
             {heritageGallery.map((item, index) => {
-              const isEven = index % 2 === 0; // 0, 2, 4 -> Image Left; 1, 3 -> Image Right
+              const isEven = index % 2 === 0;
 
               return (
                 <div
                   key={item.id}
-                  className="bg-white border border-amber-200/90 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-md hover:shadow-xl transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center"
+                  className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center"
                 >
-                  {/* Image Column */}
+                  {/* Frameless Image Column */}
                   <div
                     className={`lg:col-span-6 ${
                       isEven ? 'lg:order-1' : 'lg:order-2'
                     }`}
                   >
-                    <div className="relative w-full h-[280px] sm:h-[360px] lg:h-[400px] rounded-xl sm:rounded-2xl overflow-hidden bg-neutral-900 shadow-md group">
+                    <div className="relative w-full h-[320px] sm:h-[420px] lg:h-[460px] rounded-2xl overflow-hidden shadow-xl group bg-amber-950/20">
                       <img
                         src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                        alt={item.headingMain}
+                        className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
                       />
-                      <div className="absolute top-4 left-4 bg-amber-950/85 backdrop-blur-md text-amber-200 text-xs font-bold px-3.5 py-1.5 rounded-full border border-amber-500/40 shadow">
+                      <div className="absolute top-4 left-4 bg-amber-950/90 text-amber-200 text-xs font-bold px-3.5 py-1.5 rounded-full border border-amber-500/40 backdrop-blur-md shadow-lg">
                         {item.badge}
                       </div>
                     </div>
                   </div>
 
-                  {/* Content / Details Column */}
+                  {/* Editorial Text Column */}
                   <div
-                    className={`lg:col-span-6 space-y-4 ${
+                    className={`lg:col-span-6 space-y-5 ${
                       isEven ? 'lg:order-2' : 'lg:order-1'
                     }`}
                   >
-                    <div className="inline-flex items-center gap-2 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full text-xs font-bold text-rose-900 uppercase tracking-wider">
-                      <Crown className="w-3.5 h-3.5 text-rose-700" />
-                      <span>{item.category}</span>
+                    {/* Dash Tag Accent */}
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 h-[2px] bg-amber-800/80"></span>
+                      <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-amber-900/90">
+                        {item.tag}
+                      </span>
                     </div>
 
-                    <h3 className="font-serif font-extrabold text-xl sm:text-3xl text-amber-950 leading-tight">
-                      {item.title}
+                    {/* Editorial Two-Tone Heading */}
+                    <h3 className="font-serif text-2xl sm:text-4xl lg:text-[40px] font-extrabold text-[#2D1214] leading-[1.15] tracking-tight">
+                      <span className="block">{item.headingMain}</span>
+                      <span className="block font-serif font-normal italic text-amber-800 mt-1">
+                        {item.headingHighlight}
+                      </span>
                     </h3>
 
-                    <p className="text-xs sm:text-sm text-gray-700 font-medium leading-relaxed">
+                    {/* Subtle Divider Line */}
+                    <div className="w-16 h-[2px] bg-amber-200/80"></div>
+
+                    {/* Paragraph */}
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-700 font-medium leading-relaxed">
                       {item.description}
                     </p>
 
-                    <div className="pt-4 border-t border-amber-100 flex items-center gap-2 text-xs font-bold text-amber-900">
-                      <FileCheck className="w-4 h-4 text-amber-700" />
-                      <span>Verified Official Reoti Handloom Heritage Record</span>
+                    {/* Quote / Heritage Stamp */}
+                    <div className="pt-4 border-t border-amber-200/60 flex items-start gap-3">
+                      <span className="text-2xl text-amber-800 leading-none select-none font-serif">“</span>
+                      <div>
+                        <p className="text-xs sm:text-sm font-serif italic text-amber-950 font-semibold">
+                          {item.quote}
+                        </p>
+                        <p className="text-[11px] text-gray-500 font-medium mt-0.5">
+                          Verified Official Reoti Handloom Heritage Record
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
