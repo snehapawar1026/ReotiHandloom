@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
       shippingAddress,
       totalAmount,
       paymentMethod,
+      paymentStatus,
+      transactionId,
       items,
     } = body;
 
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest) {
         shippingAddress,
         totalAmount: parseFloat(totalAmount),
         paymentMethod: paymentMethod || 'UPI',
-        paymentStatus: paymentMethod === 'COD' ? 'PENDING' : 'PAID',
+        paymentStatus: paymentStatus || (paymentMethod === 'COD' ? 'PENDING' : 'PAID'),
         status: 'PROCESSING',
         items: typeof items === 'string' ? items : JSON.stringify(items),
       },

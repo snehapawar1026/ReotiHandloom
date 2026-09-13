@@ -16,6 +16,7 @@ import {
   CreditCard,
   Building,
 } from 'lucide-react';
+import { PaymentGatewayModal } from '@/components/PaymentGatewayModal';
 
 export const CartDrawer = () => {
   const {
@@ -45,6 +46,9 @@ export const CartDrawer = () => {
   const [pincode, setPincode] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
+  // Payment Gateway Modal State
+  const [isGatewayOpen, setIsGatewayOpen] = useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<any>(null);
 
@@ -63,13 +67,21 @@ export const CartDrawer = () => {
 
   const finalPayable = Math.max(0, totalCartPrice - appliedDiscount);
 
-  const handlePlaceOrder = async (e: React.FormEvent) => {
+  const handleOpenGateway = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !shippingAddress || !pincode) {
       alert('Please fill in all address details');
       return;
     }
+    setIsGatewayOpen(true);
+  };
 
+  const handleFinalizeOrderWithPayment = async (paymentData: {
+    paymentMethod: string;
+    transactionId: string;
+    paymentStatus: string;
+  }) => {
+    setIsGatewayOpen(false);
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/orders', {
@@ -81,7 +93,9 @@ export const CartDrawer = () => {
           customerEmail,
           shippingAddress: `${shippingAddress}, ${city} - ${pincode}`,
           totalAmount: finalPayable,
-          paymentMethod,
+          paymentMethod: paymentData.paymentMethod,
+          paymentStatus: paymentData.paymentStatus,
+          transactionId: paymentData.transactionId,
           items: cart,
         }),
       });
@@ -161,7 +175,7 @@ export const CartDrawer = () => {
               </div>
             ) : isCheckoutOpen ? (
               /* Checkout Form View */
-              <form onSubmit={handlePlaceOrder} className="space-y-4 text-xs">
+              <form onSubmit={handleOpenGateway} className="space-y-4 text-xs">
                 <div className="flex items-center justify-between pb-2 border-b border-gray-200">
                   <h3 className="font-bold text-sm text-gray-900">Shipping & Delivery Address</h3>
                   <button
@@ -471,6 +485,19 @@ export const CartDrawer = () => {
               </button>
             </div>
           )}
+          {/* Payment Gateway Modal */}
+          <PaymentGatewayModal
+            isOpen={isGatewayOpen}
+            onClose={() => setIsGatewayOpen(false)}
+            amount={finalPayable}
+            customerDetails={{
+              name: customerName,
+              phone: customerPhone,
+              email: customerEmail,
+              address: `${shippingAddress}, ${city} - ${pincode}`,
+            }}
+            onPaymentSuccess={handleFinalizeOrderWithPayment}
+          />
         </div>
       </div>
     </div>
