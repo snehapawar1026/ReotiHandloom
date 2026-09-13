@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
-import { ShieldCheck, Lock, Mail, Phone, User, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, Phone, User, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,8 +14,13 @@ export default function LoginPage() {
   // Form Fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Password Visibility Toggles
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,6 +28,18 @@ export default function LoginPage() {
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (mode === 'register') {
+      if (password !== confirmPassword) {
+        setError('Passwords do not match! Please verify your confirm password.');
+        return;
+      }
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters long.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -36,12 +53,12 @@ export default function LoginPage() {
         if (data.success) {
           setUser(data.user);
           if (data.user.role === 'admin') {
-            router.push('/admin');
+            router.push('/reoti-studio-manage');
           } else {
             router.push('/');
           }
         } else {
-          setError(data.error || 'Login failed');
+          setError(data.error || 'Login failed. Please check your credentials.');
         }
       } else {
         const res = await fetch('/api/auth/register', {
@@ -54,11 +71,11 @@ export default function LoginPage() {
           setUser(data.user);
           router.push('/');
         } else {
-          setError(data.error || 'Registration failed');
+          setError(data.error || 'Registration failed.');
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication error');
+      setError(err.message || 'Authentication error occurred.');
     } finally {
       setLoading(false);
     }
@@ -84,7 +101,10 @@ export default function LoginPage() {
         {/* Tab Switcher: Customer Login / Register */}
         <div className="flex border-b border-gray-200 bg-amber-50/50">
           <button
-            onClick={() => setMode('login')}
+            onClick={() => {
+              setMode('login');
+              setError('');
+            }}
             className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider transition-colors ${
               mode === 'login'
                 ? 'bg-white text-rose-700 border-b-2 border-rose-700'
@@ -94,7 +114,10 @@ export default function LoginPage() {
             Customer Login
           </button>
           <button
-            onClick={() => setMode('register')}
+            onClick={() => {
+              setMode('register');
+              setError('');
+            }}
             className={`flex-1 py-3.5 text-xs font-bold uppercase tracking-wider transition-colors ${
               mode === 'register'
                 ? 'bg-white text-rose-700 border-b-2 border-rose-700'
@@ -120,7 +143,7 @@ export default function LoginPage() {
               <div className="flex gap-2 justify-center pt-2">
                 {user.role === 'admin' && (
                   <button
-                    onClick={() => router.push('/admin')}
+                    onClick={() => router.push('/reoti-studio-manage')}
                     className="px-4 py-2 bg-amber-950 text-white font-bold text-xs rounded hover:bg-black"
                   >
                     Open Seller Admin Panel
@@ -188,24 +211,66 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {/* Password */}
+              {/* Password with Eye Toggle */}
               <div>
                 <label className="block text-gray-700 font-bold mb-1">Password *</label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 pl-9 text-xs focus:ring-1 focus:ring-rose-600"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 pl-9 pr-10 text-xs focus:ring-1 focus:ring-rose-600"
                   />
                   <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-800 p-0.5 focus:outline-none"
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4 text-rose-700" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-gray-500" />
+                    )}
+                  </button>
                 </div>
               </div>
 
+              {/* Confirm Password (Registration Only) */}
+              {mode === 'register' && (
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">Confirm Password *</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Re-enter password to confirm"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 pl-9 pr-10 text-xs focus:ring-1 focus:ring-rose-600"
+                    />
+                    <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-800 p-0.5 focus:outline-none"
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4 text-rose-700" />
+                      ) : (
+                        <Eye className="w-4 h-4 text-gray-500" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {error && (
-                <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2 rounded border border-rose-200">
+                <p className="text-xs font-bold text-rose-600 bg-rose-50 p-2.5 rounded-lg border border-rose-200">
                   {error}
                 </p>
               )}

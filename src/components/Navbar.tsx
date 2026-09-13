@@ -171,11 +171,11 @@ export const Navbar = () => {
               {user ? (
                 <div className="relative group flex flex-col items-center">
                   <Link
-                    href={user.role === 'admin' ? '/admin' : '/login'}
+                    href={user.role === 'admin' ? '/reoti-studio-manage' : '/login'}
                     className="flex flex-col items-center text-amber-950 hover:text-rose-700 transition-colors"
                   >
                     <User className="w-5 h-5 text-rose-700" />
-                    <span className="text-[10px] font-bold mt-1 tracking-wider uppercase hidden sm:block max-w-[80px] truncate">
+                    <span className="text-[10px] font-bold mt-1 tracking-wider uppercase hidden sm:block max-w-[85px] truncate">
                       {user.name.split(' ')[0]}
                     </span>
                   </Link>
@@ -187,7 +187,7 @@ export const Navbar = () => {
                         {user.name}
                       </p>
                       {user.role === 'admin' && (
-                        <Link href="/admin" className="flex items-center gap-1.5 text-amber-900 font-bold hover:text-rose-700">
+                        <Link href="/reoti-studio-manage" className="flex items-center gap-1.5 text-amber-900 font-bold hover:text-rose-700">
                           <ShieldCheck className="w-3.5 h-3.5" />
                           <span>Seller Admin Panel</span>
                         </Link>
@@ -206,7 +206,7 @@ export const Navbar = () => {
                 <Link href="/login" className="flex flex-col items-center text-amber-950 hover:text-rose-700 transition-colors">
                   <User className="w-5 h-5" />
                   <span className="text-[10px] font-bold mt-1 tracking-wider uppercase hidden sm:block">
-                    REOTI
+                    LOGIN
                   </span>
                 </Link>
               )}
