@@ -1,7 +1,7 @@
 'use client';
 
-import AdminPage from '@/app/admin/page';
+import AdminDashboard from '@/components/AdminDashboard';
 
 export default function ReotiStudioManagePortal() {
-  return <AdminPage />;
+  return <AdminDashboard />;
 }
