@@ -48,6 +48,30 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
     }
 
+    // Fetch color variants (products sharing the same designCode OR same category+fabric+weaveType)
+    let colorVariants: any[] = [];
+    if (product.designCode) {
+      colorVariants = await prisma.product.findMany({
+        where: { designCode: product.designCode },
+      });
+    } else {
+      colorVariants = await prisma.product.findMany({
+        where: {
+          categoryId: product.categoryId,
+          fabric: product.fabric,
+          weaveType: product.weaveType,
+        },
+      });
+    }
+
+    // Fallback: If only 1 product found, include related products from same category as color options
+    if (colorVariants.length <= 1) {
+      colorVariants = await prisma.product.findMany({
+        where: { categoryId: product.categoryId },
+        take: 6,
+      });
+    }
+
     // Fetch related products from the same category
     const relatedProducts = await prisma.product.findMany({
       where: {
@@ -57,7 +81,7 @@ export async function GET(
       take: 4,
     });
 
-    return NextResponse.json({ success: true, product, relatedProducts });
+    return NextResponse.json({ success: true, product, colorVariants, relatedProducts });
   } catch (error: any) {
     console.error('Error fetching product by slug:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -8,44 +8,44 @@ export const Footer = () => {
   return (
     <footer className="bg-amber-950 text-amber-100 font-sans border-t-4 border-amber-600">
       {/* Handloom Quality Guarantee Strip */}
-      <div className="bg-amber-900 border-b border-amber-800/80 py-8">
-        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-center">
-          <div className="flex flex-col items-center space-y-2 p-2">
-            <div className="w-12 h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6" />
+      <div className="bg-amber-900 border-b border-amber-800/80 py-6 sm:py-8">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
+          <div className="flex flex-col items-center space-y-1.5 p-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-white">100% Authentic Handloom</h4>
-            <p className="text-xs text-amber-200/80">Certified Craftmark & Handloom Mark directly from Maheshwar weavers.</p>
+            <h4 className="font-serif font-bold text-xs sm:text-sm text-white">100% Authentic Handloom</h4>
+            <p className="text-[11px] sm:text-xs text-amber-200/80">Certified Craftmark & Handloom Mark from Maheshwar weavers.</p>
           </div>
 
-          <div className="flex flex-col items-center space-y-2 p-2">
-            <div className="w-12 h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
-              <Truck className="w-6 h-6" />
+          <div className="flex flex-col items-center space-y-1.5 p-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
+              <Truck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-white">Express All India Delivery</h4>
-            <p className="text-xs text-amber-200/80">Free doorstep shipping with real-time tracking updates.</p>
+            <h4 className="font-serif font-bold text-xs sm:text-sm text-white">Express All India Delivery</h4>
+            <p className="text-[11px] sm:text-xs text-amber-200/80">Free doorstep shipping with real-time tracking updates.</p>
           </div>
 
-          <div className="flex flex-col items-center space-y-2 p-2">
-            <div className="w-12 h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
-              <RefreshCw className="w-6 h-6" />
+          <div className="flex flex-col items-center space-y-1.5 p-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
+              <RefreshCw className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-white">7 Days Easy Returns</h4>
-            <p className="text-xs text-amber-200/80">Hassle-free exchange & return policy for supreme peace of mind.</p>
+            <h4 className="font-serif font-bold text-xs sm:text-sm text-white">7 Days Easy Returns</h4>
+            <p className="text-[11px] sm:text-xs text-amber-200/80">Hassle-free exchange & return policy for supreme peace of mind.</p>
           </div>
 
-          <div className="flex flex-col items-center space-y-2 p-2">
-            <div className="w-12 h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
-              <Sparkles className="w-6 h-6" />
+          <div className="flex flex-col items-center space-y-1.5 p-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-800 text-amber-200 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <h4 className="font-serif font-bold text-sm text-white">Ahilya Fort Heritage</h4>
-            <p className="text-xs text-amber-200/80">Preserving centuries-old royal weaving techniques of Maharani Ahilyabai Holkar.</p>
+            <h4 className="font-serif font-bold text-xs sm:text-sm text-white">Ahilya Fort Heritage</h4>
+            <p className="text-[11px] sm:text-xs text-amber-200/80">Preserving royal weaving techniques of Maharani Ahilyabai Holkar.</p>
           </div>
         </div>
       </div>
 
       {/* Main Footer Links */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-4 gap-8 text-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-xs">
         
         {/* Brand info with Official Circle Logo */}
         <div className="space-y-3">
@@ -111,8 +111,8 @@ export const Footer = () => {
               </Link>
             </li>
             <li>
-              <Link href="/products?category=chatai-border-special" className="hover:text-amber-400 transition-colors">
-                Chatai Border Reversible Sarees
+              <Link href="/products?category=garbha-reshami-special" className="hover:text-amber-400 transition-colors">
+                Garbha Reshami Reversible Sarees
               </Link>
             </li>
             <li>
@@ -132,8 +132,8 @@ export const Footer = () => {
             <li><Link href="/products" className="hover:text-amber-400">Track Order Status</Link></li>
             <li><Link href="/wishlist" className="hover:text-amber-400">My Wishlist</Link></li>
             <li><span className="hover:text-amber-400">Handloom Care Instructions</span></li>
-            <li><span className="hover:text-amber-400">Shipping & Delivery Policy</span></li>
-            <li><span className="hover:text-amber-400">Returns & Refund Policy</span></li>
+            <li><Link href="/policies/shipping-policy" className="hover:text-amber-400">Shipping & Delivery Policy</Link></li>
+            <li><Link href="/policies/return-policy" className="hover:text-amber-400">Returns & Refund Policy</Link></li>
           </ul>
         </div>
 

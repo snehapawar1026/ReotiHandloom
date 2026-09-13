@@ -5,31 +5,41 @@ import path from 'path';
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get('file') as File | null;
+    const rawFiles = formData.getAll('files').length > 0
+      ? formData.getAll('files')
+      : formData.getAll('file');
 
-    if (!file) {
-      return NextResponse.json({ success: false, error: 'No image file provided' }, { status: 400 });
+    const files = rawFiles.filter((f): f is File => f instanceof File);
+
+    if (files.length === 0) {
+      return NextResponse.json({ success: false, error: 'No image files provided' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    // Ensure public/uploads directory exists
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     await mkdir(uploadsDir, { recursive: true });
 
-    // Generate unique filename preserving original extension
-    const ext = path.extname(file.name) || '.jpg';
-    const filename = `saree_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`;
-    const filePath = path.join(uploadsDir, filename);
+    const uploadedUrls: string[] = [];
 
-    // Write original image buffer cleanly
-    await writeFile(filePath, buffer);
+    for (const file of files) {
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-    const imageUrl = `/uploads/${filename}`;
-    return NextResponse.json({ success: true, url: imageUrl, filename });
+      const ext = path.extname(file.name) || '.jpg';
+      const filename = `saree_${Date.now()}_${Math.random().toString(36).substring(2, 7)}${ext}`;
+      const filePath = path.join(uploadsDir, filename);
+
+      await writeFile(filePath, buffer);
+      uploadedUrls.push(`/uploads/${filename}`);
+    }
+
+    return NextResponse.json({
+      success: true,
+      url: uploadedUrls[0],
+      urls: uploadedUrls,
+      count: uploadedUrls.length,
+    });
   } catch (error: any) {
-    console.error('Error uploading image:', error);
+    console.error('Error uploading image(s):', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

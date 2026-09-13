@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Heart, MessageCircle, Send, Bookmark, MoreVertical, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Heart, MessageCircle, Send, Bookmark, MoreVertical, ExternalLink, Play } from 'lucide-react';
 
 const INSTA_URL = "https://www.instagram.com/reoti_handloom";
 
@@ -14,78 +14,107 @@ const InstagramIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
 );
 
 interface InstaPost {
-  handle: string;
-  image: string;
-  caption: string;
-  likes: string;
+  id?: string;
+  handle?: string;
+  image?: string;
+  postUrl?: string;
+  caption?: string;
+  likes?: string;
+  isVideo?: boolean;
 }
 
-const INSTA_POSTS: InstaPost[] = [
+const DEFAULT_POSTS: InstaPost[] = [
   {
+    id: 'insta-1',
     handle: 'reoti_handloom',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
-    caption: 'Royal Crimson Gold Zari Saree • Woven direct from Maheshwar fort looms. Authentic Handloom Mark.',
+    image: '/uploads/saree_1789062703690_a4mpx.jpeg',
+    postUrl: 'https://www.instagram.com/reoti_handloom',
+    caption: 'Bright Yellow & Black Maheshwari Silk Cotton Saree with Silver Zari Border • Woven direct from Maheshwar fort looms. Authentic Handloom Mark.',
     likes: '1,842',
+    isVideo: false,
   },
   {
+    id: 'insta-2',
     handle: 'reoti_handloom',
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
-    caption: 'Pure Mulberry Silk Peacock Blue Saree • Royal Heritage Maheshwari Collection 2026.',
+    image: '/uploads/saree_1789059507283_4f5xe.jpeg',
+    postUrl: 'https://www.instagram.com/reoti_handloom',
+    caption: 'Dusty Rose & Black Maheshwari Silk Cotton Saree with Silver Zari Border • Royal Heritage Maheshwari Collection 2026.',
     likes: '2,490',
+    isVideo: true,
   },
   {
+    id: 'insta-3',
     handle: 'reoti_handloom',
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
-    caption: 'Tissue Gold Bugdi Border Ivory Saree • Glimmering Festive & Wedding Wear.',
+    image: '/uploads/saree_1789150613406_pewc9.jpeg',
+    postUrl: 'https://www.instagram.com/reoti_handloom',
+    caption: 'Peach Beige & Black Maheshwari Handloom Saree with Silver Zari Border • Glimmering Festive Wear.',
     likes: '1,924',
+    isVideo: false,
   },
   {
+    id: 'insta-4',
     handle: 'reoti_handloom',
-    image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-    caption: 'Authentic Reversible Chatai Border Saree • Handmade Perfection by Master Artisans.',
+    image: '/uploads/saree_1789062433334_nf5up.jpg',
+    postUrl: 'https://www.instagram.com/reoti_handloom',
+    caption: 'Authentic Royal Maheshwari Silk Cotton Saree • Handmade Perfection by Master Artisans.',
     likes: '3,105',
+    isVideo: true,
   },
 ];
 
 export const InstagramFamousSection = () => {
+  const [posts, setPosts] = useState<InstaPost[]>(DEFAULT_POSTS);
+
+  useEffect(() => {
+    fetch('/api/instagram')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.posts && data.posts.length > 0) {
+          setPosts(data.posts);
+        }
+      })
+      .catch((err) => console.error('Error fetching instagram posts:', err));
+  }, []);
+
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-12 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-2">
-            <InstagramIcon className="w-6 h-6 text-rose-600" />
-            <h2 className="text-xl sm:text-2xl font-serif font-extrabold text-gray-900">
-              Follow Us On Instagram @reoti_handloom
-            </h2>
-          </div>
-          <p className="text-xs text-gray-500 font-medium mt-1">
-            Official Instagram handle • Trending handloom saree collections & loom weaving stories from Maheshwar
-          </p>
+      <div className="text-center mb-8">
+        <span className="text-xs font-extrabold tracking-[0.25em] uppercase text-rose-600 block mb-1">
+          LOOM WEAVING & HERITAGE
+        </span>
+        <h2 className="text-2xl sm:text-4xl font-serif font-extrabold text-gray-900 tracking-wide flex items-center justify-center gap-2">
+          <InstagramIcon className="w-7 h-7 text-rose-600" />
+          <span>Follow Us On Instagram @reoti_handloom</span>
+        </h2>
+        <div className="w-20 h-0.5 bg-rose-600/40 mx-auto mt-2.5 rounded-full mb-3" />
+        <p className="text-xs sm:text-sm text-gray-600 font-medium text-center mb-4 max-w-2xl mx-auto">
+          Official Instagram handle • Trending handloom saree collections & loom weaving stories from Maheshwar
+        </p>
+        <div className="flex justify-center">
+          <a
+            href={INSTA_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 via-rose-600 to-purple-600 text-white font-extrabold text-xs px-6 py-3 rounded-full hover:opacity-95 transition-opacity shadow-sm shrink-0"
+          >
+            <InstagramIcon className="w-4 h-4" />
+            <span>Follow @reoti_handloom</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
         </div>
-
-        <a
-          href={INSTA_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 via-rose-600 to-purple-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-full hover:opacity-95 transition-opacity shadow-xs shrink-0"
-        >
-          <InstagramIcon className="w-4 h-4" />
-          <span>Follow @reoti_handloom</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
       </div>
 
-      {/* Instagram Post Cards Grid */}
+      {/* Grid of Clean Instagram Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {INSTA_POSTS.map((post, idx) => (
+        {posts.slice(0, 4).map((post, idx) => (
           <a
-            key={idx}
-            href={INSTA_URL}
+            key={post.id || idx}
+            href={post.postUrl || INSTA_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all group block"
           >
-            {/* Instagram Profile Header */}
+            {/* Profile Header */}
             <div className="p-3 border-b border-gray-100 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 p-0.5 shrink-0">
@@ -97,7 +126,7 @@ export const InstagramFamousSection = () => {
                 </div>
                 <div>
                   <h4 className="font-extrabold text-xs text-gray-900 group-hover:text-rose-600 transition-colors flex items-center gap-1">
-                    <span>@{post.handle}</span>
+                    <span>@{post.handle || 'reoti_handloom'}</span>
                     <span className="w-3.5 h-3.5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[8px] font-bold">✓</span>
                   </h4>
                   <p className="text-[10px] text-gray-400 font-medium">Maheshwar, Madhya Pradesh</p>
@@ -106,20 +135,28 @@ export const InstagramFamousSection = () => {
               <MoreVertical className="w-4 h-4 text-gray-400" />
             </div>
 
-            {/* Post Image */}
+            {/* Photo / Video Container */}
             <div className="aspect-square overflow-hidden bg-slate-100 relative">
               <img
-                src={post.image}
-                alt={post.handle}
+                src={post.image || '/uploads/saree_1789062703690_a4mpx.jpeg'}
+                alt={post.caption || 'Reoti Handloom Instagram Post'}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <InstagramIcon className="w-3 h-3" />
-                <span>Instagram</span>
-              </div>
+              {post.isVideo ? (
+                <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-full bg-white/90 text-rose-600 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                    <Play className="w-5 h-5 fill-rose-600 ml-0.5" />
+                  </div>
+                </div>
+              ) : (
+                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <InstagramIcon className="w-3 h-3" />
+                  <span>Instagram</span>
+                </div>
+              )}
             </div>
 
-            {/* Instagram Action Icons & Likes */}
+            {/* Actions & Caption */}
             <div className="p-3 space-y-2">
               <div className="flex items-center justify-between text-gray-700">
                 <div className="flex items-center gap-3">
@@ -130,10 +167,10 @@ export const InstagramFamousSection = () => {
                 <Bookmark className="w-5 h-5 hover:text-gray-900 cursor-pointer" />
               </div>
 
-              <p className="text-[11px] font-bold text-gray-900">{post.likes} likes</p>
+              <p className="text-[11px] font-bold text-gray-900">{post.likes || '1,840'} likes</p>
 
               <p className="text-xs text-gray-800 line-clamp-2 leading-snug">
-                <span className="font-extrabold mr-1">@{post.handle}</span>
+                <span className="font-extrabold mr-1">@{post.handle || 'reoti_handloom'}</span>
                 {post.caption}
               </p>
             </div>

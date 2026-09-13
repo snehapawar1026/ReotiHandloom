@@ -33,7 +33,7 @@ const ARCH_ITEMS: ArchCategory[] = [
     title: 'Fusion Sets',
     subtitle: 'to shine in',
     image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=chatai-border-special',
+    link: '/products?category=garbha-reshami-special',
   },
   {
     title: 'Heritage sarees',
@@ -53,9 +53,15 @@ export const FestiveArchSection = () => {
   return (
     <section className="my-10 py-12 bg-[#e63956] text-white font-sans overflow-hidden shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl sm:text-4xl font-serif font-extrabold mb-8 tracking-tight">
-          Get Ready For Ganesh Chaturthi
-        </h2>
+        <div className="text-center mb-8">
+          <span className="text-xs font-extrabold tracking-[0.25em] uppercase text-amber-200 block mb-1">
+            FESTIVE CELEBRATIONS
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-serif font-extrabold tracking-wide text-white">
+            Get Ready For Ganesh Chaturthi
+          </h2>
+          <div className="w-24 h-0.5 bg-amber-300/60 mx-auto mt-3 rounded-full" />
+        </div>
 
         {/* Horizontal Arch Door Cards Carousel (Exact Nykaa Screenshot 2 Replica) */}
         <div className="flex gap-5 overflow-x-auto pb-4 scrollbar-none">

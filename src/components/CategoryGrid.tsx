@@ -28,27 +28,27 @@ export const CategoryGrid = () => {
   if (categories.length === 0) return null;
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex items-center justify-between mb-6">
+    <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div>
-          <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-rose-700 block">
+          <span className="text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase text-rose-700 block">
             EXPLORE BY WEAVE & FABRIC
           </span>
-          <h2 className="text-xl sm:text-2xl font-serif font-extrabold text-amber-950 flex items-center gap-2">
+          <h2 className="text-lg sm:text-2xl font-serif font-extrabold text-amber-950 flex items-center gap-1.5 sm:gap-2">
             <span>Maheshwari Categories</span>
-            <Sparkles className="w-5 h-5 text-amber-600" />
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
           </h2>
         </div>
         <Link
           href="/products"
-          className="text-xs font-bold text-rose-700 hover:text-rose-900 flex items-center gap-1 group"
+          className="text-xs font-bold text-rose-700 hover:text-rose-900 flex items-center gap-1 group shrink-0"
         >
           <span>View All</span>
           <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
         {categories.map((cat) => (
           <Link
             key={cat.id}
@@ -62,16 +62,16 @@ export const CategoryGrid = () => {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <span className="absolute bottom-2 right-2 text-[10px] font-bold bg-white/90 text-amber-950 px-2 py-0.5 rounded-full shadow">
+              <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 text-[9px] sm:text-[10px] font-bold bg-white/90 text-amber-950 px-1.5 sm:px-2 py-0.5 rounded-full shadow">
                 {cat._count?.products || 0} Designs
               </span>
             </div>
 
-            <div className="p-3.5 text-center bg-white flex-1 flex flex-col justify-center">
-              <h3 className="font-serif font-bold text-xs sm:text-sm text-amber-950 group-hover:text-rose-700 transition-colors">
+            <div className="p-2.5 sm:p-3.5 text-center bg-white flex-1 flex flex-col justify-center">
+              <h3 className="font-serif font-bold text-xs sm:text-sm text-amber-950 group-hover:text-rose-700 transition-colors line-clamp-1">
                 {cat.name}
               </h3>
-              <p className="text-[10px] text-gray-500 line-clamp-1 mt-0.5 font-medium">
+              <p className="text-[10px] text-gray-500 line-clamp-1 mt-0.5 font-medium hidden min-[360px]:block">
                 {cat.description}
               </p>
             </div>

@@ -1,3 +1,4 @@
+import path from 'path';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaClient } from '@prisma/client';
 
@@ -5,7 +6,19 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const adapter = new PrismaBetterSqlite3({ url: 'file:dev.db' });
+// Invalidate cached Prisma instance if schema models or fields were updated
+if (globalForPrisma.prisma && (
+  !(globalForPrisma.prisma as any).instaPost ||
+  !(globalForPrisma.prisma as any).product ||
+  !(globalForPrisma.prisma as any)._runtimeDataModel?.models?.Product?.fields?.some((f: any) => f.name === 'isTrending') ||
+  !(globalForPrisma.prisma as any)._runtimeDataModel?.models?.Category?.fields?.some((f: any) => f.name === 'parentId') ||
+  !(globalForPrisma.prisma as any)._runtimeDataModel?.models?.Category?.fields?.some((f: any) => f.name === 'isParent')
+)) {
+  globalForPrisma.prisma = undefined;
+}
+
+const dbPath = path.resolve(process.cwd(), 'prisma/dev.db');
+const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
 
 export const prisma =
   globalForPrisma.prisma ??

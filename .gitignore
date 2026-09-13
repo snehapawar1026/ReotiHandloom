@@ -41,3 +41,13 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# database & scratch
+*.db
+prisma/dev.db
+prisma/backups/
+scratch_cats.js
+update_parent_cat_images.js
+upsert_categories.js
+upsert_hierarchy.js
+

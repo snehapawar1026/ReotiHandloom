@@ -7,24 +7,33 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get('category');
     const fabric = searchParams.get('fabric');
     const weaveType = searchParams.get('weaveType');
+    const borderType = searchParams.get('borderType');
     const color = searchParams.get('color');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
     const search = searchParams.get('search');
     const featured = searchParams.get('featured');
     const bestSeller = searchParams.get('bestSeller');
+    const trending = searchParams.get('trending');
+    const inStock = searchParams.get('inStock');
     const sort = searchParams.get('sort');
 
     const where: any = {};
 
     if (category) {
-      where.category = { slug: category };
+      where.OR = [
+        { category: { slug: category } },
+        { category: { parent: { slug: category } } },
+      ];
     }
     if (fabric) {
-      where.fabric = { equals: fabric };
+      where.fabric = { contains: fabric };
     }
     if (weaveType) {
       where.weaveType = { contains: weaveType };
+    }
+    if (borderType) {
+      where.borderType = { contains: borderType };
     }
     if (color) {
       where.color = { contains: color };
@@ -34,6 +43,12 @@ export async function GET(req: NextRequest) {
     }
     if (bestSeller === 'true') {
       where.isBestSeller = true;
+    }
+    if (trending === 'true') {
+      where.isTrending = true;
+    }
+    if (inStock === 'true') {
+      where.isOutOfStock = false;
     }
     if (minPrice || maxPrice) {
       where.price = {};

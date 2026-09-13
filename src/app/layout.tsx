@@ -5,6 +5,9 @@ import { ShopProvider } from '@/context/ShopContext';
 import { Navbar } from '@/components/Navbar';
 import { CartDrawer } from '@/components/CartDrawer';
 import { Footer } from '@/components/Footer';
+import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
+import { PushNotificationPrompt } from '@/components/PushNotificationPrompt';
+import { TrustQualityWidget } from '@/components/TrustQualityWidget';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -21,7 +24,7 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL('https://reotihandloom.com'),
   title: 'Reoti Handloom | Authentic Maheshwari Sarees Online Store',
-  description: 'Shop authentic handcrafted Maheshwari sarees directly from Maheshwar fort artisans. Silk-Cotton, Pure Silk, Tissue Zari, and Chatai Border Sarees.',
+  description: 'Shop authentic handcrafted Maheshwari sarees directly from Maheshwar fort artisans. Silk-Cotton, Pure Silk, Tissue Zari, and Garbha Reshami Sarees.',
   keywords: ['Reoti Handloom', 'Maheshwari Sarees', 'Pure Silk Sarees', 'Silk Cotton Sarees', 'Maheshwar Handloom', 'Tissue Zari Saree'],
   openGraph: {
     title: 'Reoti Handloom | Authentic Maheshwari Sarees',
@@ -45,6 +48,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartDrawer />
           <main className="flex-1">{children}</main>
           <Footer />
+          <FloatingWhatsApp />
+          <TrustQualityWidget />
+          <PushNotificationPrompt />
         </ShopProvider>
       </body>
     </html>

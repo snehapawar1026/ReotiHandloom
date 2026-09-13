@@ -107,8 +107,8 @@ export const CartDrawer = () => {
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-full sm:max-w-md bg-white shadow-2xl flex flex-col justify-between">
           
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-amber-50">
@@ -322,12 +322,16 @@ export const CartDrawer = () => {
               <>
                 {/* Cart Items */}
                 <div className="space-y-3">
-                  {cart.map(({ product, quantity }) => {
+                  {cart.map(({ product, quantity, hasFallPico, fallPicoPrice }) => {
                     const parsedImages = JSON.parse(product.images || '[]');
                     const imgUrl = parsedImages[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c';
+                    const unitPico = hasFallPico ? (fallPicoPrice || 200) : 0;
+                    const itemUnitPrice = product.price + unitPico;
+                    const itemUnitOriginal = product.originalPrice + unitPico;
+
                     return (
                       <div
-                        key={product.id}
+                        key={`${product.id}_${hasFallPico ? 'fall' : 'standard'}`}
                         className="flex gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg relative"
                       >
                         <div className="w-20 h-24 relative rounded overflow-hidden shrink-0 bg-gray-200">
@@ -345,8 +349,8 @@ export const CartDrawer = () => {
                                 {product.title}
                               </h4>
                               <button
-                                onClick={() => removeFromCart(product.id)}
-                                className="text-gray-400 hover:text-rose-600"
+                                onClick={() => removeFromCart(product.id, hasFallPico)}
+                                className="text-gray-400 hover:text-rose-600 cursor-pointer"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -354,21 +358,26 @@ export const CartDrawer = () => {
                             <p className="text-[10px] text-amber-800 font-semibold mt-0.5">
                               {product.fabric} • {product.weaveType}
                             </p>
+                            {hasFallPico && (
+                              <div className="mt-1 inline-flex items-center gap-1 bg-amber-100/90 text-amber-950 text-[10px] font-extrabold px-2 py-0.5 rounded border border-amber-300">
+                                <span>+ Fall & Pico Bidding (₹200)</span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex items-center justify-between mt-2">
                             {/* Quantity Controls */}
                             <div className="flex items-center border border-gray-300 rounded bg-white">
                               <button
-                                onClick={() => updateQuantity(product.id, quantity - 1)}
-                                className="p-1 text-gray-600 hover:bg-gray-100"
+                                onClick={() => updateQuantity(product.id, quantity - 1, hasFallPico)}
+                                className="p-1 text-gray-600 hover:bg-gray-100 cursor-pointer"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
                               <span className="px-2.5 font-bold text-xs">{quantity}</span>
                               <button
-                                onClick={() => updateQuantity(product.id, quantity + 1)}
-                                className="p-1 text-gray-600 hover:bg-gray-100"
+                                onClick={() => updateQuantity(product.id, quantity + 1, hasFallPico)}
+                                className="p-1 text-gray-600 hover:bg-gray-100 cursor-pointer"
                               >
                                 <Plus className="w-3 h-3" />
                               </button>
@@ -377,10 +386,10 @@ export const CartDrawer = () => {
                             {/* Price */}
                             <div className="text-right">
                               <span className="font-bold text-rose-700 text-sm">
-                                ₹{(product.price * quantity).toLocaleString()}
+                                ₹{(itemUnitPrice * quantity).toLocaleString()}
                               </span>
                               <span className="text-[10px] text-gray-400 line-through block">
-                                ₹{(product.originalPrice * quantity).toLocaleString()}
+                                ₹{(itemUnitOriginal * quantity).toLocaleString()}
                               </span>
                             </div>
                           </div>

@@ -46,6 +46,37 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Auto-mark ordered sarees as OUT OF STOCK
+    try {
+      const orderItems = typeof items === 'string' ? JSON.parse(items) : items;
+      if (Array.isArray(orderItems)) {
+        for (const item of orderItems) {
+          const prodId = item.product?.id || item.id || item.productId;
+          if (prodId) {
+            await prisma.product.update({
+              where: { id: prodId },
+              data: {
+                isOutOfStock: true,
+                stock: 0,
+              },
+            });
+          }
+        }
+      }
+    } catch (stockErr) {
+      console.error('Error updating product stock status on order:', stockErr);
+    }
+
+    // Log Activity for Store Owner / Admin Dashboard
+    await prisma.activityLog.create({
+      data: {
+        type: 'ORDER',
+        title: `🛍️ New Order Received: #${orderNumber}`,
+        details: `Customer: ${customerName} (${customerPhone}) | Amount: ₹${totalAmount}`,
+        userEmail: customerEmail || null,
+      },
+    }).catch(() => {});
+
     return NextResponse.json({ success: true, order });
   } catch (error: any) {
     console.error('Error creating order:', error);

@@ -14,6 +14,7 @@ export interface ProductItem {
   weaveType: string;
   borderType?: string;
   color: string;
+  blouseColor?: string;
   lengthWithBlouse?: string;
   occasion?: string;
   images: string;
@@ -23,11 +24,16 @@ export interface ProductItem {
   isAuthenticCraft?: boolean;
   isBestSeller?: boolean;
   isFeatured?: boolean;
+  isTrending?: boolean;
+  stock?: number;
+  isOutOfStock?: boolean;
 }
 
 export interface CartItem {
   product: ProductItem;
   quantity: number;
+  hasFallPico?: boolean;
+  fallPicoPrice?: number;
 }
 
 export interface AuthUser {
@@ -45,9 +51,9 @@ interface ShopContextType {
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
   isCartOpen: boolean;
-  addToCart: (product: ProductItem) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: ProductItem, options?: { hasFallPico?: boolean; fallPicoPrice?: number }) => void;
+  removeFromCart: (productId: string, hasFallPico?: boolean) => void;
+  updateQuantity: (productId: string, quantity: number, hasFallPico?: boolean) => void;
   clearCart: () => void;
   toggleWishlist: (product: ProductItem) => void;
   isInWishlist: (productId: string) => boolean;
@@ -105,30 +111,39 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
-  const addToCart = (product: ProductItem) => {
+  const addToCart = (product: ProductItem, options?: { hasFallPico?: boolean; fallPicoPrice?: number }) => {
+    const hasFallPico = !!options?.hasFallPico;
+    const fallPicoPrice = hasFallPico ? (options?.fallPicoPrice ?? 200) : 0;
+
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
+      const existingIdx = prev.findIndex(
+        (item) => item.product.id === product.id && !!item.hasFallPico === hasFallPico
+      );
+      if (existingIdx > -1) {
+        const updated = [...prev];
+        updated[existingIdx].quantity += 1;
+        return updated;
       }
-      return [...prev, { product, quantity: 1 }];
+      return [...prev, { product, quantity: 1, hasFallPico, fallPicoPrice }];
     });
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeFromCart = (productId: string, hasFallPico?: boolean) => {
+    setCart((prev) =>
+      prev.filter((item) => !(item.product.id === productId && !!item.hasFallPico === !!hasFallPico))
+    );
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, hasFallPico?: boolean) => {
     if (quantity <= 0) {
-      removeFromCart(productId);
+      removeFromCart(productId, hasFallPico);
       return;
     }
     setCart((prev) =>
-      prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item))
+      prev.map((item) =>
+        item.product.id === productId && !!item.hasFallPico === !!hasFallPico ? { ...item, quantity } : item
+      )
     );
   };
 
@@ -149,8 +164,16 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
     return wishlist.some((item) => item.id === productId);
   };
 
-  const totalCartPrice = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  const totalOriginalPrice = cart.reduce((acc, item) => acc + item.product.originalPrice * item.quantity, 0);
+  const totalCartPrice = cart.reduce(
+    (acc, item) =>
+      acc + (item.product.price + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0)) * item.quantity,
+    0
+  );
+  const totalOriginalPrice = cart.reduce(
+    (acc, item) =>
+      acc + (item.product.originalPrice + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0)) * item.quantity,
+    0
+  );
   const totalDiscount = totalOriginalPrice - totalCartPrice;
 
   return (

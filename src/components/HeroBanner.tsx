@@ -41,7 +41,7 @@ export const HeroBanner = () => {
   const activeBanner = banners[currentIndex];
 
   return (
-    <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[560px] bg-neutral-950 overflow-hidden font-sans group">
+    <div className="relative w-full h-[340px] sm:h-[480px] lg:h-[560px] bg-neutral-950 overflow-hidden font-sans group">
       {/* Background Image with Crisp Lighting & Vignette Overlay */}
       <div className="absolute inset-0">
         <img
@@ -55,26 +55,26 @@ export const HeroBanner = () => {
       </div>
 
       {/* Slide Content Overlay */}
-      <div className="relative max-w-7xl mx-auto h-full px-6 sm:px-12 flex flex-col justify-center text-white space-y-4">
+      <div className="relative max-w-7xl mx-auto h-full px-4 sm:px-12 flex flex-col justify-center text-white space-y-2.5 sm:space-y-4">
         {activeBanner.tag && (
-          <span className="inline-flex items-center gap-1.5 self-start bg-gradient-to-r from-rose-700 to-amber-700 text-white font-extrabold text-[11px] px-3.5 py-1 rounded-full tracking-widest uppercase shadow-md border border-amber-300/30">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+          <span className="inline-flex items-center gap-1.5 self-start bg-gradient-to-r from-rose-700 to-amber-700 text-white font-extrabold text-[10px] sm:text-[11px] px-3 py-0.5 sm:py-1 rounded-full tracking-widest uppercase shadow-md border border-amber-300/30">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300" />
             <span>{activeBanner.tag}</span>
           </span>
         )}
         
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-extrabold text-amber-100 tracking-tight drop-shadow-2xl max-w-2xl leading-none">
+        <h1 className="text-2xl sm:text-5xl lg:text-6xl font-serif font-extrabold text-amber-100 tracking-tight drop-shadow-2xl max-w-2xl leading-tight sm:leading-none">
           {activeBanner.title}
         </h1>
         
-        <p className="text-sm sm:text-base text-amber-100/90 max-w-lg font-medium drop-shadow leading-relaxed">
+        <p className="text-xs sm:text-base text-amber-100/90 max-w-lg font-medium drop-shadow leading-relaxed line-clamp-2 sm:line-clamp-none">
           {activeBanner.subtitle}
         </p>
 
-        <div className="pt-3 flex items-center gap-4">
+        <div className="pt-2 sm:pt-3 flex items-center gap-4">
           <Link
             href={activeBanner.link}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-amber-950 font-extrabold text-xs px-8 py-4 rounded-full uppercase tracking-widest shadow-xl transition-all active:scale-95 border border-amber-200"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-amber-950 font-extrabold text-[11px] sm:text-xs px-5 sm:px-8 py-3 sm:py-4 rounded-full uppercase tracking-widest shadow-xl transition-all active:scale-95 border border-amber-200"
           >
             <span>SHOP COLLECTION NOW</span>
           </Link>

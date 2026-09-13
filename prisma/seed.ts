@@ -68,11 +68,11 @@ async function main() {
     },
   });
 
-  const catChataiBorder = await prisma.category.create({
+  const catGarbhaReshami = await prisma.category.create({
     data: {
-      name: 'Chatai Border Special',
-      slug: 'chatai-border-special',
-      description: 'Authentic Maheshwari mat-weave (Chatai) reversible borders crafted by master artisans.',
+      name: 'Garbha Reshami Special',
+      slug: 'garbha-reshami-special',
+      description: 'Authentic Maheshwari Garbha Reshami reversible borders crafted by master artisans.',
       image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
     },
   });
@@ -82,12 +82,12 @@ async function main() {
     {
       title: 'Royal Crimson Gold Zari Maheshwari Silk Cotton Saree',
       slug: 'royal-crimson-gold-zari-maheshwari-silk-cotton-saree',
-      description: 'Handcrafted in Maheshwar, Madhya Pradesh. Features traditional Chatai border with reversible zari work, rich pallu, and light airy drape.',
+      description: 'Handcrafted in Maheshwar, Madhya Pradesh. Features traditional Garbha Reshami border with reversible zari work, rich pallu, and light airy drape.',
       price: 4499,
       originalPrice: 7499,
       discountPercent: 40,
       fabric: 'Silk Cotton',
-      weaveType: 'Chatai Weave Border',
+      weaveType: 'Garbha Reshami Border',
       borderType: 'Gold Zari',
       color: 'Crimson Red',
       lengthWithBlouse: '6.3 Meters (With Unstitched Blouse Piece)',
@@ -173,7 +173,7 @@ async function main() {
       rating: 4.7,
       reviewCount: 41,
       stock: 15,
-      categoryId: catChataiBorder.id,
+      categoryId: catGarbhaReshami.id,
       images: JSON.stringify([
         'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
@@ -190,7 +190,7 @@ async function main() {
     data: {
       title: 'ROYAL MAHESHWARI HERITAGE',
       subtitle: 'Authentic Handloom Sarees Woven Direct from Maheshwar Fort Artisans',
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=80',
+      image: '/uploads/maheshwari_legacy_banner.png',
       tag: 'FESTIVE SALE • UP TO 40% OFF',
       link: '/products',
       sortOrder: 1,

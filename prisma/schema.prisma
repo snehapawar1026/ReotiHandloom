@@ -9,14 +9,20 @@ datasource db {
 }
 
 model Category {
-  id          String    @id @default(uuid())
+  id          String     @id @default(uuid())
   name        String
-  slug        String    @unique
+  slug        String     @unique
   description String?
-  image       String?
+  image       String?    // Circle Avatar Image
+  bannerImage String?    // Category Hero Banner Image
+  parentId    String?
+  parent      Category?  @relation("ParentChild", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("ParentChild")
+  isParent    Boolean    @default(false)
+  isHidden    Boolean    @default(false)
   products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Product {
@@ -28,17 +34,21 @@ model Product {
   originalPrice     Float
   discountPercent   Int
   fabric            String   // e.g. "Silk Cotton", "Pure Silk", "Tissue Silk", "Cotton"
-  weaveType         String   // e.g. "Chatai Weave", "Narmada Border", "Bugdi Border", "Zari Border"
+  weaveType         String   // e.g. "Garbha Reshami Weave", "Narmada Border", "Bugdi Border", "Zari Border"
   borderType        String   // e.g. "Gold Zari", "Silver Zari", "Tissue Zari", "Traditional"
   color             String
+  blouseColor       String?  // e.g. "Contrast Maroon", "Running Match", "Golden Zari", "Black"
+  designCode        String?  // e.g. "MS-SILVER-ZARI", "GARBHA-ROYAL" for grouping color variants
   lengthWithBlouse  String   @default("6.3 Meters (With Blouse Piece)")
   occasion          String   @default("Festive & Wedding")
   isFeatured        Boolean  @default(false)
   isBestSeller      Boolean  @default(false)
+  isTrending        Boolean  @default(false)
   isAuthenticCraft  Boolean  @default(true)
-  rating            Float    @default(4.8)
-  reviewCount       Int      @default(42)
+  rating            Float    @default(0)
+  reviewCount       Int      @default(0)
   stock             Int      @default(15)
+  isOutOfStock      Boolean  @default(false)
   images            String   // Stored as JSON string of image URLs
   categoryId        String
   category          Category @relation(fields: [categoryId], references: [id])
@@ -104,3 +114,35 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userEmail String?
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  type      String   // "VISIT" | "REGISTER" | "LOGIN" | "ORDER" | "INQUIRY"
+  title     String
+  details   String?
+  userEmail String?
+  userIp    String?
+  pageUrl   String?
+  createdAt DateTime @default(now())
+}
+
+model InstaPost {
+  id        String   @id @default(uuid())
+  handle    String   @default("reoti_handloom")
+  image     String
+  postUrl   String   @default("https://www.instagram.com/reoti_handloom")
+  caption   String
+  likes     String   @default("1,840")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+

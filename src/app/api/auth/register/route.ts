@@ -27,6 +27,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Log Activity for Seller / Admin Dashboard
+    await prisma.activityLog.create({
+      data: {
+        type: 'REGISTER',
+        title: `👤 New Customer Registered: ${name}`,
+        details: `Email: ${email} | Phone: ${phone || 'N/A'}`,
+        userEmail: email,
+      },
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone },

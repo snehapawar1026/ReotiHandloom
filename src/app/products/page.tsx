@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/ProductCard';
+import { HandloomMotifDivider } from '@/components/HandloomMotifDivider';
 import { ProductItem } from '@/context/ShopContext';
 import {
   SlidersHorizontal,
@@ -12,7 +13,143 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
+  Flame,
+  Check,
+  Palette,
+  Tag,
+  Layers,
+  Sparkle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
+
+const COLOR_PALETTE = [
+  { name: 'Peach', label: 'Peach / Orange', hex: '#f97316' },
+  { name: 'Blue', label: 'Sky Blue', hex: '#0284c7' },
+  { name: 'Yellow', label: 'Yellow / Mustard', hex: '#eab308' },
+  { name: 'Rose', label: 'Dusty Rose / Pink', hex: '#ec4899' },
+  { name: 'Lavender', label: 'Lavender / Purple', hex: '#a855f7' },
+  { name: 'Olive', label: 'Olive / Green', hex: '#16a34a' },
+  { name: 'Red', label: 'Red / Crimson', hex: '#dc2626' },
+  { name: 'Black', label: 'Black / Dark', hex: '#18181b' },
+  { name: 'Beige', label: 'Beige / Cream', hex: '#d4d4d8' },
+];
+
+const CATEGORY_HERO_MAP: Record<string, { title: string; description: string; image: string }> = {
+  'maheshwari-sarees': {
+    title: 'Maheshwari Sarees',
+    description:
+      'Explore authentic handcrafted Maheshwari Sarees woven direct from master artisans of Rewa & Maheshwar. Celebrated for iconic Narmada river borders, rich zari work, and timeless royal heritage.',
+    image: '/uploads/maheshwari_legacy_banner.png',
+  },
+  'garbha-reshami-special': {
+    title: 'Garbha Reshami Silk Sarees',
+    description:
+      'Buy Garbha Reshami Silk Sarees online handcrafted by skilled weavers of Rewa situated in Maheshwar, Madhya Pradesh. Garbha Reshami from the name itself 75 percent Mulberry Silk in Garbha (in the womb) and 25 percent Mercerised Cotton, Shop online for authentic Maheshwari Garbha Reshami Sarees made from naturally dyed and pure natural threads on Handloom certified by India Handloom Brand ~ Rewa.',
+    image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+  },
+  'silk-cotton-maheshwari': {
+    title: 'Silk Cotton Maheshwari Sarees',
+    description:
+      'Explore lightweight & comfortable Silk Cotton Maheshwari Sarees woven with pure mulberry silk warp and fine mercerised cotton weft. Handcrafted by master weavers in Maheshwar with traditional Bugdi, Zari, and Narmada river border motifs.',
+    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+  },
+  'pure-silk-maheshwari': {
+    title: 'Pure Silk Maheshwari Sarees',
+    description:
+      'Indulge in luxurious 100% Pure Silk Maheshwari Sarees adorned with rich golden zari borders and intricate woven butis. Perfect for royal weddings, grand celebrations, and festive occasions.',
+    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
+  },
+  'tissue-zari-maheshwari': {
+    title: 'Tissue Zari Maheshwari Sarees',
+    description:
+      'Experience shimmering elegance with Tissue Zari Maheshwari Sarees featuring silver and gold zari threads woven continuously with pure silk. Delicate, lightweight, and radiant for evening celebrations.',
+    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
+  },
+  'katan-silk': {
+    title: 'Katan Silk Maheshwari Sarees',
+    description:
+      'Experience the timeless elegance of authentic Maheshwari handloom in luxurious Katan Silk. Lightweight, graceful and beautifully woven with big traditional butas, reflecting the rich heritage of Maheshwar.',
+    image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+  },
+  'nayantara-maheshwari-handloom-sarees': {
+    title: 'Nayantara Maheshwari Handloom Sarees',
+    description:
+      'Discover the timeless elegance of Nayantara Maheshwari Handloom Sarees, beautifully crafted to bring together traditional artistry and contemporary style. Woven by skilled artisans with Chokha border & detailed butis.',
+    image: '/uploads/saree_1789233209397_zszzb.jpeg',
+  },
+};
+
+function getHeroContent(
+  selectedCategory: string,
+  selectedFabric: string,
+  selectedColor: string,
+  isTrending: boolean,
+  isBestSeller: boolean,
+  categories: any[]
+) {
+  if (selectedCategory) {
+    const cat = categories.find((c) => c.slug === selectedCategory);
+    if (cat) {
+      return {
+        title: cat.name,
+        description: cat.description || CATEGORY_HERO_MAP[selectedCategory]?.description || `Handcrafted ${cat.name} online from authentic Maheshwari handloom weavers.`,
+        image: cat.bannerImage || CATEGORY_HERO_MAP[selectedCategory]?.image || cat.image || '/uploads/maheshwari_legacy_banner.png',
+      };
+    }
+    if (CATEGORY_HERO_MAP[selectedCategory]) {
+      return CATEGORY_HERO_MAP[selectedCategory];
+    }
+  }
+
+  if (selectedFabric) {
+    const matchingKey = Object.keys(CATEGORY_HERO_MAP).find((key) =>
+      CATEGORY_HERO_MAP[key].title.toLowerCase().includes(selectedFabric.toLowerCase())
+    );
+    if (matchingKey) return CATEGORY_HERO_MAP[matchingKey];
+    return {
+      title: `${selectedFabric} Maheshwari Sarees`,
+      description: `Handcrafted ${selectedFabric} Maheshwari sarees woven by skilled artisans in Rewa & Maheshwar.`,
+      image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+    };
+  }
+
+  if (isTrending) {
+    return {
+      title: '🔥 Trending Maheshwari Collection',
+      description:
+        'Explore our most sought-after and popular Maheshwari handloom sarees trending among saree connoisseurs across India.',
+      image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+    };
+  }
+
+  if (isBestSeller) {
+    return {
+      title: '★ Best Seller Maheshwari Sarees',
+      description:
+        'Discover our highest-rated and most demanded authentic Maheshwari sarees, featuring iconic Narmada borders and fine zari craft.',
+      image: '/uploads/saree_1789233209397_zszzb.jpeg',
+    };
+  }
+
+  if (selectedColor) {
+    return {
+      title: `${selectedColor} Maheshwari Sarees`,
+      description: `Handcrafted ${selectedColor} tone Maheshwari sarees woven with authentic zari borders and pure natural threads.`,
+      image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+    };
+  }
+
+  return {
+    title: 'Authentic Maheshwari Handloom Sarees',
+    description:
+      'Shop handcrafted Maheshwari Sarees directly from Rewa & Maheshwar artisans. Featuring authentic Silk Cotton, Pure Silk, Katan Silk, Garbha Reshami, and Tissue Zari with traditional Narmada and Bugdi borders.',
+    image: '/uploads/maheshwari_legacy_banner.png',
+  };
+}
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -20,35 +157,59 @@ function ProductsContent() {
 
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [parentCategories, setParentCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
+  // Active URL Filters
   const selectedCategory = searchParams.get('category') || '';
   const selectedFabric = searchParams.get('fabric') || '';
-  const searchQuery = searchParams.get('search') || '';
+  const selectedBorder = searchParams.get('borderType') || '';
+  const selectedColor = searchParams.get('color') || '';
   const selectedSort = searchParams.get('sort') || '';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
+  const searchQuery = searchParams.get('search') || '';
+  const isTrending = searchParams.get('trending') === 'true';
+  const isBestSeller = searchParams.get('bestSeller') === 'true';
+  const isFeatured = searchParams.get('featured') === 'true';
+  const inStockOnly = searchParams.get('inStock') === 'true';
 
   const [isFilterOpenMobile, setIsFilterOpenMobile] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [hideCategoryStrip, setHideCategoryStrip] = useState<boolean>(false);
 
-  // Accordion toggle states
-  const [openAccordions, setOpenAccordions] = useState<{ [key: string]: boolean }>({
-    category: true,
-    fabric: true,
-    price: true,
-    discount: true,
-  });
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('reoti_hide_categories');
+      if (saved === 'true') setHideCategoryStrip(true);
+    }
+  }, []);
 
-  const toggleAccordion = (key: string) => {
-    setOpenAccordions((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleHideCategoryStrip = () => {
+    const next = !hideCategoryStrip;
+    setHideCategoryStrip(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('reoti_hide_categories', String(next));
+    }
+  };
+
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategories = (direction: 'left' | 'right') => {
+    if (categoryScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -350 : 350;
+      categoryScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
-    fetch('/api/categories')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) setCategories(data.categories);
+    Promise.all([
+      fetch('/api/categories?parentOnly=true').then((res) => res.json()),
+      fetch('/api/categories').then((res) => res.json()),
+    ])
+      .then(([parentData, allCatData]) => {
+        if (parentData.success) setParentCategories(parentData.categories || []);
+        if (allCatData.success) setCategories(allCatData.categories || []);
       })
       .catch(console.error);
   }, []);
@@ -58,19 +219,36 @@ function ProductsContent() {
     const params = new URLSearchParams();
     if (selectedCategory) params.set('category', selectedCategory);
     if (selectedFabric) params.set('fabric', selectedFabric);
+    if (selectedBorder) params.set('borderType', selectedBorder);
+    if (selectedColor) params.set('color', selectedColor);
     if (searchQuery) params.set('search', searchQuery);
     if (selectedSort) params.set('sort', selectedSort);
     if (minPrice) params.set('minPrice', minPrice);
     if (maxPrice) params.set('maxPrice', maxPrice);
+    if (isTrending) params.set('trending', 'true');
+    if (isBestSeller) params.set('bestSeller', 'true');
+    if (isFeatured) params.set('featured', 'true');
 
     fetch(`/api/products?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.success) setProducts(data.products);
+        if (data.success) setProducts(data.products || []);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedCategory, selectedFabric, searchQuery, selectedSort, minPrice, maxPrice]);
+  }, [
+    selectedCategory,
+    selectedFabric,
+    selectedBorder,
+    selectedColor,
+    searchQuery,
+    selectedSort,
+    minPrice,
+    maxPrice,
+    isTrending,
+    isBestSeller,
+    isFeatured,
+  ]);
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -82,207 +260,508 @@ function ProductsContent() {
     router.push(`/products?${params.toString()}`);
   };
 
+  const setPriceRange = (min: string, max: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (min) params.set('minPrice', min);
+    else params.delete('minPrice');
+
+    if (max) params.set('maxPrice', max);
+    else params.delete('maxPrice');
+
+    router.push(`/products?${params.toString()}`);
+  };
+
   const clearAllFilters = () => {
     router.push('/products');
   };
 
+  const activeFiltersCount = [
+    selectedCategory,
+    selectedFabric,
+    selectedBorder,
+    selectedColor,
+    minPrice,
+    maxPrice,
+    searchQuery,
+    isTrending ? 'trending' : '',
+    isBestSeller ? 'bestseller' : '',
+    isFeatured ? 'featured' : '',
+  ].filter(Boolean).length;
+
+  const hasCategoryOrFilterSelected = Boolean(
+    selectedCategory || selectedFabric || isTrending || isBestSeller || isFeatured || selectedColor
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans">
-      {/* Breadcrumb Path (Nykaa Style) */}
-      <div className="text-xs text-gray-500 mb-2 font-medium">
-        <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/')}>Home</span>
-        <span className="mx-1.5">/</span>
-        <span className="hover:text-rose-600 cursor-pointer">Designers</span>
-        <span className="mx-1.5">/</span>
-        <span className="text-gray-900 font-bold">Reoti Handloom Maheshwari</span>
-      </div>
-
-      {/* Header Title & Items Count */}
-      <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Breadcrumb Path & Header Reset Button */}
+      <div className="text-xs text-gray-500 mb-4 font-medium flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-serif font-extrabold text-gray-900 flex items-baseline gap-2">
-            <span>
-              {selectedCategory
-                ? categories.find((c) => c.slug === selectedCategory)?.name || 'Maheshwari Sarees'
-                : searchQuery
-                ? `Search results for "${searchQuery}"`
-                : 'Buy Maheshwari Sarees Online'}
-            </span>
-            <span className="text-xs font-normal text-gray-500">
-              • {products.length} items
-            </span>
-          </h1>
+          <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/')}>Home</span>
+          <span className="mx-1.5">/</span>
+          <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/products')}>Catalog</span>
+          <span className="mx-1.5">/</span>
+          <span className="text-gray-900 font-bold">
+            {selectedCategory
+              ? categories.find((c) => c.slug === selectedCategory)?.name || 'Category'
+              : 'Maheshwari Sarees'}
+          </span>
         </div>
 
-        {/* Sort & Mobile Filter Buttons */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setIsFilterOpenMobile(true)}
-            className="md:hidden flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded text-xs font-bold text-gray-800 bg-white"
-          >
-            <Filter className="w-3.5 h-3.5 text-rose-600" />
-            <span>FILTERS</span>
-          </button>
-
-          {/* Nykaa Style Sort Dropdown */}
-          <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-xs font-bold text-gray-800">
-            <span>Sort by Popularity</span>
-            <select
-              value={selectedSort}
-              onChange={(e) => updateFilter('sort', e.target.value)}
-              className="bg-transparent focus:outline-none cursor-pointer text-gray-800"
-            >
-              <option value="">Popularity</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="rating">Customer Rating</option>
-              <option value="discount">Discount</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Filter Chips Pill Bar (Nykaa Screenshot 4 Style) */}
-      <div className="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-gray-200">
-        <span className="text-xs font-extrabold text-gray-900 mr-2">Filters:</span>
-        
-        {(selectedCategory || selectedFabric || minPrice || searchQuery) && (
+        {activeFiltersCount > 0 && (
           <button
             onClick={clearAllFilters}
-            className="text-xs font-bold text-rose-600 hover:underline px-2 py-1 bg-rose-50 rounded border border-rose-200"
+            className="text-xs font-extrabold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
           >
-            Reset
+            <RefreshCw className="w-3 h-3 text-rose-600" />
+            <span>Reset All Filters</span>
           </button>
         )}
-
-        {selectedCategory && (
-          <span className="inline-flex items-center gap-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full">
-            <span>Category: {selectedCategory}</span>
-            <X className="w-3.5 h-3.5 cursor-pointer" onClick={() => updateFilter('category', '')} />
-          </span>
-        )}
-
-        {selectedFabric && (
-          <span className="inline-flex items-center gap-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full">
-            <span>Fabric: {selectedFabric}</span>
-            <X className="w-3.5 h-3.5 cursor-pointer" onClick={() => updateFilter('fabric', '')} />
-          </span>
-        )}
-
-        <span className="inline-flex items-center gap-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full cursor-pointer">
-          <span>All discounted products</span>
-          <X className="w-3.5 h-3.5" />
-        </span>
       </div>
 
-      <div className="flex gap-8">
-        {/* Sidebar Accordion Filters (Nykaa Screenshot 4 Style) */}
-        <aside className="hidden md:block w-64 shrink-0 space-y-4">
-          
-          {/* Category Accordion */}
-          <div className="border-b border-gray-200 pb-3">
-            <button
-              onClick={() => toggleAccordion('category')}
-              className="w-full flex justify-between items-center py-2 font-bold text-xs text-gray-900 uppercase tracking-wider"
-            >
-              <span>Category</span>
-              {openAccordions.category ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-            </button>
-            {openAccordions.category && (
-              <div className="space-y-1.5 text-xs pt-1">
-                <button
-                  onClick={() => updateFilter('category', '')}
-                  className={`w-full text-left py-1 text-gray-600 hover:text-rose-600 ${!selectedCategory ? 'font-extrabold text-rose-600' : ''}`}
-                >
-                  All Categories
-                </button>
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => updateFilter('category', cat.slug)}
-                    className={`w-full text-left py-1 text-gray-600 hover:text-rose-600 flex justify-between ${
-                      selectedCategory === cat.slug ? 'font-extrabold text-rose-600' : ''
-                    }`}
-                  >
-                    <span>{cat.name}</span>
-                    <span className="text-[10px] text-gray-400">({cat._count?.products || 0})</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+      {/* Full-Width Category Split Hero Banner */}
+      {hasCategoryOrFilterSelected && (() => {
+        const hero = getHeroContent(
+          selectedCategory,
+          selectedFabric,
+          selectedColor,
+          isTrending,
+          isBestSeller,
+          categories
+        );
 
-          {/* Fabric Accordion */}
-          <div className="border-b border-gray-200 pb-3">
-            <button
-              onClick={() => toggleAccordion('fabric')}
-              className="w-full flex justify-between items-center py-2 font-bold text-xs text-gray-900 uppercase tracking-wider"
-            >
-              <span>Fabric</span>
-              {openAccordions.fabric ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-            </button>
-            {openAccordions.fabric && (
-              <div className="space-y-1.5 text-xs pt-1">
-                {['Silk Cotton', 'Pure Silk', 'Tissue Silk'].map((fab) => (
-                  <button
-                    key={fab}
-                    onClick={() => updateFilter('fabric', selectedFabric === fab ? '' : fab)}
-                    className={`w-full text-left py-1 text-gray-600 hover:text-rose-600 ${
-                      selectedFabric === fab ? 'font-extrabold text-rose-600' : ''
-                    }`}
-                  >
-                    {fab}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+        const isLegacyAhilyabai = hero.image.includes('maheshwari_legacy_banner');
 
-          {/* Price Accordion */}
-          <div className="border-b border-gray-200 pb-3">
-            <button
-              onClick={() => toggleAccordion('price')}
-              className="w-full flex justify-between items-center py-2 font-bold text-xs text-gray-900 uppercase tracking-wider"
-            >
-              <span>Price</span>
-              {openAccordions.price ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-            </button>
-            {openAccordions.price && (
-              <div className="space-y-1.5 text-xs pt-1 text-gray-600">
-                <button onClick={() => { updateFilter('minPrice', ''); updateFilter('maxPrice', '5000'); }} className="block py-1 hover:text-rose-600">
-                  Under ₹5,000
-                </button>
-                <button onClick={() => { updateFilter('minPrice', '5000'); updateFilter('maxPrice', '10000'); }} className="block py-1 hover:text-rose-600">
-                  ₹5,000 - ₹10,000
-                </button>
-                <button onClick={() => { updateFilter('minPrice', '10000'); updateFilter('maxPrice', ''); }} className="block py-1 hover:text-rose-600">
-                  Above ₹10,000
-                </button>
+        return (
+          <div className="w-full bg-[#FAF7F2] border border-[#E8DFC8] rounded-2xl overflow-hidden mb-6 shadow-2xs font-sans">
+            <div className="grid grid-cols-1 md:grid-cols-12 items-center">
+              {/* Left Side: Craft Story & Title */}
+              <div className="md:col-span-6 lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-center text-center space-y-3 overflow-hidden">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
+                  {hero.title} <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl lg:text-3xl block sm:inline mt-1 sm:mt-0">माहेश्वरी साड़ियाँ</span>
+                </h1>
+                <p className="text-xs sm:text-sm text-[#8B4513]/80 font-bold tracking-wider uppercase">
+                  गाहेश्वरी साड़ियाँ ~ माहेश्वरी শাড়ি ~ மகேஸ்வரி புடவைகள் ~ મહેશ્વરી સાડીઓ
+                </p>
+                <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium max-w-xl mx-auto line-clamp-3">
+                  {hero.description}
+                </p>
               </div>
-            )}
-          </div>
-        </aside>
 
-        {/* Product Grid */}
-        <main className="flex-1">
-          {loading ? (
-            <div className="py-20 text-center text-gray-500 space-y-2">
-              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-rose-600" />
-              <p className="text-xs font-bold">Loading Sarees...</p>
+              {/* Right Side: 100% Filled Image Container */}
+              <div className="md:col-span-6 lg:col-span-5 relative w-full h-64 sm:h-72 md:h-[260px] lg:h-[280px] overflow-hidden bg-amber-950 shrink-0">
+                <img
+                  src={hero.image}
+                  alt={hero.title}
+                  className={`w-full h-full ${
+                    isLegacyAhilyabai
+                      ? 'object-cover object-[30%_20%]'
+                      : 'object-cover object-center'
+                  }`}
+                />
+                
+                {/* Soft Bottom Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+
+                {/* Authentic Reoti Handloom Heritage Watermark Badge */}
+                <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
+                  <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-300 shrink-0">
+                    <img src="/logo.jpg" alt="Reoti Logo" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="font-serif font-extrabold text-[#FDE68A] tracking-wider text-[10px]">
+                    REOTI HANDLOOM
+                  </span>
+                </div>
+              </div>
             </div>
-          ) : products.length === 0 ? (
-            <div className="py-16 text-center bg-slate-50 rounded-xl border border-gray-200 p-8">
-              <h3 className="text-lg font-serif font-bold text-gray-900">No Sarees Found</h3>
-              <p className="text-xs text-gray-500 mt-1">Try resetting filters to see more handcrafted options.</p>
+          </div>
+        );
+      })()}
+
+      <div className="w-full">
+        {/* Main Content Area (Full-Width Rewa Handloom Style Layout) */}
+        <main className="w-full space-y-4">
+
+          {/* Active Filter Chips Pill Bar (Nykaa Screenshot Style) */}
+          {activeFiltersCount > 0 && (
+            <div className="flex flex-wrap items-center gap-2 py-2 border-b border-gray-200">
+              <span className="text-xs font-extrabold text-gray-900 mr-1 flex items-center gap-1">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-rose-600" />
+                <span>Active Filters:</span>
+              </span>
+
               <button
                 onClick={clearAllFilters}
-                className="mt-4 px-5 py-2 bg-rose-600 text-white font-bold text-xs rounded hover:bg-rose-700"
+                className="text-xs font-extrabold text-rose-700 hover:text-rose-900 px-3 py-1 bg-rose-100/80 hover:bg-rose-200 rounded-full border border-rose-300 transition-colors shadow-2xs cursor-pointer"
               >
-                Reset Filters
+                Reset All
+              </button>
+
+              {selectedColor && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-gray-900 border border-gray-300 px-3 py-1 rounded-full shadow-2xs">
+                  <span className="w-2.5 h-2.5 rounded-full border border-gray-400" style={{ backgroundColor: COLOR_PALETTE.find(c => c.name.toLowerCase() === selectedColor.toLowerCase())?.hex || '#94a3b8' }} />
+                  <span>Color: {selectedColor}</span>
+                  <X className="w-3.5 h-3.5 text-gray-500 hover:text-rose-600 cursor-pointer" onClick={() => updateFilter('color', '')} />
+                </span>
+              )}
+
+              {selectedCategory && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-gray-900 border border-gray-300 px-3 py-1 rounded-full shadow-2xs">
+                  <span>Category: {categories.find((c) => c.slug === selectedCategory)?.name || selectedCategory}</span>
+                  <X className="w-3.5 h-3.5 text-gray-500 hover:text-rose-600 cursor-pointer" onClick={() => updateFilter('category', '')} />
+                </span>
+              )}
+
+              {selectedFabric && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-gray-900 border border-gray-300 px-3 py-1 rounded-full shadow-2xs">
+                  <span>Fabric: {selectedFabric}</span>
+                  <X className="w-3.5 h-3.5 text-gray-500 hover:text-rose-600 cursor-pointer" onClick={() => updateFilter('fabric', '')} />
+                </span>
+              )}
+
+              {selectedBorder && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-gray-900 border border-gray-300 px-3 py-1 rounded-full shadow-2xs">
+                  <span>Border: {selectedBorder}</span>
+                  <X className="w-3.5 h-3.5 text-gray-500 hover:text-rose-600 cursor-pointer" onClick={() => updateFilter('borderType', '')} />
+                </span>
+              )}
+
+              {(minPrice || maxPrice) && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-gray-900 border border-gray-300 px-3 py-1 rounded-full shadow-2xs">
+                  <span>Price: {minPrice ? `₹${minPrice}` : 'Min'} - {maxPrice ? `₹${maxPrice}` : 'Max'}</span>
+                  <X className="w-3.5 h-3.5 text-gray-500 hover:text-rose-600 cursor-pointer" onClick={() => setPriceRange('', '')} />
+                </span>
+              )}
+
+              {isTrending && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-orange-50 text-orange-900 border border-orange-200 px-3 py-1 rounded-full shadow-2xs">
+                  <span>🔥 Trending</span>
+                  <X className="w-3.5 h-3.5 text-orange-600 hover:text-orange-900 cursor-pointer" onClick={() => updateFilter('trending', '')} />
+                </span>
+              )}
+
+              {isBestSeller && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-rose-50 text-rose-900 border border-rose-200 px-3 py-1 rounded-full shadow-2xs">
+                  <span>★ Best Seller</span>
+                  <X className="w-3.5 h-3.5 text-rose-600 hover:text-rose-900 cursor-pointer" onClick={() => updateFilter('bestSeller', '')} />
+                </span>
+              )}
+
+              {isFeatured && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200 px-3 py-1 rounded-full shadow-2xs">
+                  <span>✨ Featured</span>
+                  <X className="w-3.5 h-3.5 text-amber-600 hover:text-amber-900 cursor-pointer" onClick={() => updateFilter('featured', '')} />
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Authentic Maheshwari Circular Scalloped Category Avatars Carousel with Left & Right Arrows (Matching Rewa Handloom media_1789235863819.png) */}
+          <div className="relative group w-full bg-[#FAF7F2]/80 border-y border-[#E8DFC8] py-5 mb-3">
+              
+              {/* Left Carousel Arrow Button */}
+              <button
+                onClick={() => scrollCategories('left')}
+                className="hidden sm:flex absolute left-2 top-[42%] -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/95 text-[#581C1C] border border-[#E8DFC8] shadow-lg hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95"
+                aria-label="Scroll Left"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              {/* Right Carousel Arrow Button */}
+              <button
+                onClick={() => scrollCategories('right')}
+                className="hidden sm:flex absolute right-2 top-[42%] -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/95 text-[#581C1C] border border-[#E8DFC8] shadow-lg hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95"
+                aria-label="Scroll Right"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+
+              {/* Scrollable Container */}
+              <div
+                ref={categoryScrollRef}
+                className="w-full overflow-x-auto scrollbar-none px-6 sm:px-12"
+              >
+                <div className="flex items-start gap-5 sm:gap-7 min-w-max">
+                
+                {/* ALL SAREES Circular Avatar */}
+                <button
+                  onClick={() => updateFilter('category', '')}
+                  className="flex flex-col items-center group cursor-pointer"
+                >
+                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
+                    {/* Authentic Scalloped Bead Ring SVG */}
+                    <svg
+                      className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
+                        !selectedCategory ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
+                      }`}
+                      viewBox="0 0 100 100"
+                      fill="none"
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const angle = (i * 360) / 24;
+                        const rad = (angle * Math.PI) / 180;
+                        const cx = 50 + 44 * Math.cos(rad);
+                        const cy = 50 + 44 * Math.sin(rad);
+                        return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
+                      })}
+                      <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={!selectedCategory ? '3' : '2'} />
+                    </svg>
+                    <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
+                      <img
+                        src="/uploads/saree_1789221965397_lf0kg.jpeg"
+                        alt="All Sarees"
+                        className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                  </div>
+                  <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-tight max-w-[110px] sm:max-w-[130px] ${
+                    !selectedCategory ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
+                  }`}>
+                    All Sarees
+                  </span>
+                </button>
+
+                {/* Dynamic Parent Category Circular Avatars Only */}
+                {parentCategories.map((cat) => {
+                  const isSelected = selectedCategory === cat.slug;
+                  const imgUrl = cat.image || CATEGORY_HERO_MAP[cat.slug]?.image || '/uploads/saree_1789221965397_lf0kg.jpeg';
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => updateFilter('category', isSelected ? '' : cat.slug)}
+                      className="flex flex-col items-center group cursor-pointer"
+                    >
+                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
+                        {/* Authentic Scalloped Bead Ring SVG */}
+                        <svg
+                          className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
+                            isSelected ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
+                          }`}
+                          viewBox="0 0 100 100"
+                          fill="none"
+                        >
+                          {Array.from({ length: 24 }).map((_, i) => {
+                            const angle = (i * 360) / 24;
+                            const rad = (angle * Math.PI) / 180;
+                            const cx = 50 + 44 * Math.cos(rad);
+                            const cy = 50 + 44 * Math.sin(rad);
+                            return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
+                          })}
+                          <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={isSelected ? '3' : '2'} />
+                        </svg>
+                        <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
+                          <img
+                            src={imgUrl}
+                            alt={cat.name}
+                            className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                          />
+                        </div>
+                      </div>
+                      <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-snug max-w-[110px] sm:max-w-[135px] ${
+                        isSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
+                      }`}>
+                        {cat.name}
+                      </span>
+                    </button>
+                  );
+                })}
+
+              </div>
+            </div>
+          </div>
+
+          {/* Rewa Handloom Style Horizontal Filter Bar (Matching media_1789234404852.png) */}
+          <div className="w-full bg-[#FAF7F2]/90 border border-[#E8DFC8] rounded-xl p-3 shadow-2xs font-sans flex flex-col md:flex-row items-center justify-between gap-3">
+            <div className="text-xs font-serif font-extrabold text-[#581C1C] tracking-wide">
+              <span>{products.length} Maheshwari {products.length === 1 ? 'Saree' : 'Sarees'}</span>
+            </div>
+
+            {/* Horizontal Filter Pill Dropdowns */}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+              
+              {/* CATEGORY Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'category' ? null : 'category')}
+                  className={`px-3 py-1.5 border rounded-lg uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    selectedCategory ? 'border-[#581C1C] bg-[#581C1C] text-white font-bold' : 'border-amber-950/40 bg-white hover:border-amber-950 text-amber-950'
+                  }`}
+                >
+                  <span>{selectedCategory ? (categories.find(c => c.slug === selectedCategory)?.name || 'CATEGORY') : 'CATEGORY'}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {openDropdown === 'category' && (
+                  <div className="absolute right-0 mt-1 w-56 bg-white border border-amber-200 rounded-xl shadow-xl z-40 p-2 space-y-1">
+                    <button
+                      onClick={() => { updateFilter('category', ''); setOpenDropdown(null); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedCategory ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                    >
+                      All Categories
+                    </button>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => { updateFilter('category', cat.slug); setOpenDropdown(null); }}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${selectedCategory === cat.slug ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* COLOR Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'color' ? null : 'color')}
+                  className={`px-3 py-1.5 border rounded-lg uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    selectedColor ? 'border-[#581C1C] bg-[#581C1C] text-white font-bold' : 'border-amber-950/40 bg-white hover:border-amber-950 text-amber-950'
+                  }`}
+                >
+                  <span>{selectedColor ? `COLOR: ${selectedColor}` : 'COLOR'}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {openDropdown === 'color' && (
+                  <div className="absolute right-0 mt-1 w-52 bg-white border border-amber-200 rounded-xl shadow-xl z-40 p-2 space-y-1 max-h-60 overflow-y-auto">
+                    <button
+                      onClick={() => { updateFilter('color', ''); setOpenDropdown(null); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedColor ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                    >
+                      All Colors
+                    </button>
+                    {COLOR_PALETTE.map((c) => (
+                      <button
+                        key={c.name}
+                        onClick={() => { updateFilter('color', c.name); setOpenDropdown(null); }}
+                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 ${selectedColor.toLowerCase() === c.name.toLowerCase() ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                      >
+                        <span className="w-3 h-3 rounded-full border shrink-0" style={{ backgroundColor: c.hex }} />
+                        <span>{c.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* AVAILABILITY Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'availability' ? null : 'availability')}
+                  className={`px-3 py-1.5 border rounded-lg uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    inStockOnly ? 'border-[#581C1C] bg-[#581C1C] text-white font-bold' : 'border-amber-950/40 bg-white hover:border-amber-950 text-amber-950'
+                  }`}
+                >
+                  <span>{inStockOnly ? 'IN STOCK' : 'AVAILABILITY'}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {openDropdown === 'availability' && (
+                  <div className="absolute right-0 mt-1 w-44 bg-white border border-amber-200 rounded-xl shadow-xl z-40 p-2 space-y-1">
+                    <button
+                      onClick={() => { updateFilter('inStock', ''); setOpenDropdown(null); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${!inStockOnly ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                    >
+                      All Sarees
+                    </button>
+                    <button
+                      onClick={() => { updateFilter('inStock', 'true'); setOpenDropdown(null); }}
+                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${inStockOnly ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                    >
+                      In Stock Only
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* PRICE Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'price' ? null : 'price')}
+                  className={`px-3 py-1.5 border rounded-lg uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    minPrice || maxPrice ? 'border-[#581C1C] bg-[#581C1C] text-white font-bold' : 'border-amber-950/40 bg-white hover:border-amber-950 text-amber-950'
+                  }`}
+                >
+                  <span>{minPrice || maxPrice ? 'PRICE FILTERED' : 'PRICE'}</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {openDropdown === 'price' && (
+                  <div className="absolute right-0 mt-1 w-48 bg-white border border-amber-200 rounded-xl shadow-xl z-40 p-2 space-y-1">
+                    <button onClick={() => { setPriceRange('', ''); setOpenDropdown(null); }} className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${!minPrice && !maxPrice ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}>All Prices</button>
+                    <button onClick={() => { setPriceRange('', '3000'); setOpenDropdown(null); }} className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${maxPrice === '3000' ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}>Under ₹3,000</button>
+                    <button onClick={() => { setPriceRange('3000', '5000'); setOpenDropdown(null); }} className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${minPrice === '3000' && maxPrice === '5000' ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}>₹3,000 - ₹5,000</button>
+                    <button onClick={() => { setPriceRange('5000', '10000'); setOpenDropdown(null); }} className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${minPrice === '5000' && maxPrice === '10000' ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}>₹5,000 - ₹10,000</button>
+                    <button onClick={() => { setPriceRange('10000', ''); setOpenDropdown(null); }} className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${minPrice === '10000' ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}>Above ₹10,000</button>
+                  </div>
+                )}
+              </div>
+
+              {/* SHOW ALL / RESET Button (Exact Rewa style) */}
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="px-3.5 py-1.5 border border-amber-950/60 bg-amber-50 hover:bg-amber-100 text-amber-950 font-extrabold uppercase tracking-wider rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5 text-amber-900" />
+                <span>SHOW ALL</span>
+              </button>
+
+              {/* SORT BY Dropdown */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setOpenDropdown(openDropdown === 'sort' ? null : 'sort')}
+                  className="px-3 py-1.5 border border-amber-950/40 bg-white hover:border-amber-950 text-amber-950 rounded-lg uppercase tracking-wider flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>SORT BY</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {openDropdown === 'sort' && (
+                  <div className="absolute right-0 mt-1 w-52 bg-white border border-amber-200 rounded-xl shadow-xl z-40 p-2 space-y-1">
+                    <button onClick={() => { updateFilter('sort', ''); setOpenDropdown(null); }} className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-50 text-gray-700">Popularity & Newest</button>
+                    <button onClick={() => { updateFilter('sort', 'price-low'); setOpenDropdown(null); }} className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-50 text-gray-700">Price: Low to High</button>
+                    <button onClick={() => { updateFilter('sort', 'price-high'); setOpenDropdown(null); }} className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-50 text-gray-700">Price: High to Low</button>
+                    <button onClick={() => { updateFilter('sort', 'rating'); setOpenDropdown(null); }} className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-50 text-gray-700">Customer Rating</button>
+                    <button onClick={() => { updateFilter('sort', 'discount'); setOpenDropdown(null); }} className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-amber-50 text-gray-700">Highest Discount</button>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="py-20 text-center text-gray-500 space-y-3">
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto text-rose-600" />
+              <p className="text-xs font-bold">Applying Filters & Fetching Sarees...</p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="py-16 text-center bg-slate-50 rounded-2xl border border-gray-200 p-8 max-w-lg mx-auto space-y-3">
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+                <Filter className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-serif font-bold text-gray-900">No Sarees Found Matching Filters</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                No products match the selected color or combination. Try resetting your active filters to see all available Maheshwari sarees!
+              </p>
+              <button
+                onClick={clearAllFilters}
+                className="mt-2 px-6 py-2.5 bg-rose-600 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-sm hover:bg-rose-700 transition-all cursor-pointer"
+              >
+                Reset All Filters
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
               {products.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -290,13 +769,147 @@ function ProductsContent() {
           )}
         </main>
       </div>
+
+      {/* Mobile Filter Slide-over Drawer Modal */}
+      {isFilterOpenMobile && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end font-sans md:hidden">
+          <div className="w-full max-w-xs bg-white h-full shadow-2xl flex flex-col justify-between animate-fade-in">
+            {/* Drawer Header */}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-rose-50">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-rose-600" />
+                <h3 className="font-extrabold text-sm text-gray-900 uppercase tracking-wider">
+                  FILTERS ({products.length})
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsFilterOpenMobile(false)}
+                className="p-1 rounded-full bg-white border border-gray-300 text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Drawer Content */}
+            <div className="p-4 overflow-y-auto space-y-6 flex-1">
+              
+              {/* Category Filter (TOPMOST FILTER) */}
+              <div className="space-y-2">
+                <h4 className="font-extrabold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-1">
+                  <Tag className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Select Category</span>
+                </h4>
+                <div className="space-y-1 text-xs">
+                  <button
+                    onClick={() => updateFilter('category', '')}
+                    className={`w-full text-left py-2 px-3 rounded-lg border ${
+                      !selectedCategory ? 'bg-rose-600 text-white font-extrabold' : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    All Categories
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => updateFilter('category', selectedCategory === cat.slug ? '' : cat.slug)}
+                      className={`w-full text-left py-2 px-3 rounded-lg border font-semibold ${
+                        selectedCategory === cat.slug ? 'bg-rose-50 border-rose-300 text-rose-900 font-extrabold' : 'border-gray-200 text-gray-700'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Color Filter Swatches */}
+              <div className="space-y-2">
+                <h4 className="font-extrabold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-1">
+                  <Palette className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Select Color</span>
+                </h4>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {COLOR_PALETTE.map((c) => {
+                    const isSelected = selectedColor.toLowerCase() === c.name.toLowerCase();
+                    return (
+                      <button
+                        key={c.name}
+                        onClick={() => updateFilter('color', isSelected ? '' : c.name)}
+                        className={`py-2 px-2 rounded-lg border text-xs font-semibold flex items-center gap-2 ${
+                          isSelected ? 'border-rose-600 bg-rose-50 text-rose-900 font-extrabold' : 'border-gray-200 text-gray-700'
+                        }`}
+                      >
+                        <span className="w-3.5 h-3.5 rounded-full border shrink-0" style={{ backgroundColor: c.hex }} />
+                        <span className="truncate">{c.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Collections Filter */}
+              <div className="space-y-2">
+                <h4 className="font-extrabold text-xs text-gray-900 uppercase tracking-wider flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-orange-600" />
+                  <span>Collections</span>
+                </h4>
+                <div className="space-y-1 text-xs">
+                  <button
+                    onClick={() => updateFilter('trending', isTrending ? '' : 'true')}
+                    className={`w-full text-left py-2 px-3 rounded-lg border font-semibold ${
+                      isTrending ? 'bg-orange-50 border-orange-300 text-orange-900 font-extrabold' : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    🔥 Trending Collection
+                  </button>
+                  <button
+                    onClick={() => updateFilter('bestSeller', isBestSeller ? '' : 'true')}
+                    className={`w-full text-left py-2 px-3 rounded-lg border font-semibold ${
+                      isBestSeller ? 'bg-rose-50 border-rose-300 text-rose-900 font-extrabold' : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    ★ Best Sellers
+                  </button>
+                  <button
+                    onClick={() => updateFilter('featured', isFeatured ? '' : 'true')}
+                    className={`w-full text-left py-2 px-3 rounded-lg border font-semibold ${
+                      isFeatured ? 'bg-amber-50 border-amber-300 text-amber-900 font-extrabold' : 'border-gray-200 text-gray-700'
+                    }`}
+                  >
+                    ✨ Featured Heritage
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer Footer CTA */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+              <button
+                onClick={() => {
+                  clearAllFilters();
+                  setIsFilterOpenMobile(false);
+                }}
+                className="flex-1 py-3 border border-gray-300 rounded-lg text-xs font-bold text-gray-800 bg-white"
+              >
+                CLEAR ALL
+              </button>
+              <button
+                onClick={() => setIsFilterOpenMobile(false)}
+                className="flex-1 py-3 bg-rose-600 text-white rounded-lg text-xs font-extrabold uppercase tracking-wider shadow-md"
+              >
+                APPLY ({products.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-xs">Loading page...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-xs font-bold">Loading Sarees catalog...</div>}>
       <ProductsContent />
     </Suspense>
   );
