@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'reotihandloom@gmail.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'reotihandloom@hotmail.com';
 const ADMIN_PHONE = '9617444445';
 
 // Create Nodemailer Transporter (uses Gmail or custom SMTP if configured in .env)
