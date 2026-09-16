@@ -159,13 +159,10 @@ export default function Home() {
   const filteredSuits = getFilteredSuits();
 
   return (
-    <div className="space-y-8 sm:space-y-12 font-sans bg-white pb-16">
+    <div className="space-y-6 sm:space-y-8 font-sans bg-white pb-16">
       
-      {/* 1. Hero Banner Carousel (Top Banner right under Navbar) */}
-      <HeroBanner />
-
-      {/* 2. Authentic Scalloped Parent Categories Carousel (Placed Right Below Main Hero Banner) */}
-      <section className="w-full bg-[#FAF7F2]/90 border-y border-[#E8DFC8] py-4 relative">
+      {/* 1. Authentic Scalloped Parent Categories Carousel (Placed at the very Top above Hero Banner) */}
+      <section className="w-full bg-[#FAF7F2]/90 border-b border-[#E8DFC8] py-4 relative">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 relative group/carousel">
           
           {/* Left Scroll Arrow */}
@@ -228,6 +225,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* 2. Hero Banner Carousel */}
+      <HeroBanner />
 
       {/* 3. Ganesh Chaturthi Festive Celebration Section (Rounded Corner Radius Container as requested in media_1789239858140.png) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 my-6">
