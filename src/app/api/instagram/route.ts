@@ -1,60 +1,15 @@
 import { NextResponse } from 'next/server';
-import path from 'path';
 import { prisma } from '@/lib/prisma';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '@prisma/client';
+import storeData from '@/data/storeData.json';
 
-let fallbackPrisma: any = null;
-
-const DEFAULT_POSTS = [
-  {
-    id: 'default-1',
-    handle: 'reoti_handloom',
-    image: '/uploads/saree_1789062703690_a4mpx.jpeg',
-    postUrl: 'https://www.instagram.com/reoti_handloom',
-    caption: 'Bright Yellow & Black Maheshwari Silk Cotton Saree with Silver Zari Border • Woven direct from Maheshwar fort looms. Authentic Handloom Mark.',
-    likes: '1,842',
-  },
-  {
-    id: 'default-2',
-    handle: 'reoti_handloom',
-    image: '/uploads/saree_1789059507283_4f5xe.jpeg',
-    postUrl: 'https://www.instagram.com/reoti_handloom',
-    caption: 'Dusty Rose & Black Maheshwari Silk Cotton Saree with Silver Zari Border • Royal Heritage Maheshwari Collection 2026.',
-    likes: '2,490',
-  },
-  {
-    id: 'default-3',
-    handle: 'reoti_handloom',
-    image: '/uploads/saree_1789150613406_pewc9.jpeg',
-    postUrl: 'https://www.instagram.com/reoti_handloom',
-    caption: 'Peach Beige & Black Maheshwari Handloom Saree with Silver Zari Border • Glimmering Festive Wear.',
-    likes: '1,924',
-  },
-  {
-    id: 'default-4',
-    handle: 'reoti_handloom',
-    image: '/uploads/saree_1789062433334_nf5up.jpg',
-    postUrl: 'https://www.instagram.com/reoti_handloom',
-    caption: 'Authentic Royal Maheshwari Silk Cotton Saree • Handmade Perfection by Master Artisans.',
-    likes: '3,105',
-  },
-];
+const DEFAULT_POSTS = storeData.instaPosts || [];
 
 const getInstaModel = () => {
-  if ((prisma as any)?.instaPost || (prisma as any)?.InstaPost) {
-    return (prisma as any).instaPost || (prisma as any).InstaPost;
+  try {
+    return (prisma as any)?.instaPost || (prisma as any)?.InstaPost;
+  } catch (e) {
+    return null;
   }
-  if (!fallbackPrisma) {
-    try {
-      const dbPath = path.resolve(process.cwd(), 'prisma/dev.db');
-      const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
-      fallbackPrisma = new PrismaClient({ adapter });
-    } catch (e) {
-      fallbackPrisma = prisma;
-    }
-  }
-  return fallbackPrisma?.instaPost || fallbackPrisma?.InstaPost;
 };
 
 export async function GET() {

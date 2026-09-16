@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
@@ -26,7 +26,7 @@ import {
   MapPin,
 } from 'lucide-react';
 
-export const Navbar = () => {
+const NavbarContent = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -603,3 +603,9 @@ export const Navbar = () => {
     </>
   );
 };
+
+export const Navbar = () => (
+  <Suspense fallback={null}>
+    <NavbarContent />
+  </Suspense>
+);

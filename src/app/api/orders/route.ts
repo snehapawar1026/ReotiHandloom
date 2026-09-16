@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendAdminEmail } from '@/lib/notifications';
+import { createOrderInStore, logActivityInStore, getStoreData, updateProductInStore } from '@/lib/storeManager';
 
 export async function GET() {
   try {
     const orders = await prisma.order.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json({ success: true, orders });
+    if (orders && orders.length > 0) {
+      return NextResponse.json({ success: true, orders });
+    }
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.warn('[FALLBACK] Serving orders from storeManager:', error.message);
   }
+
+  const storeOrders = getStoreData().orders || [];
+  return NextResponse.json({ success: true, orders: storeOrders });
 }
 
 export async function POST(req: NextRequest) {
@@ -32,25 +38,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing required order details' }, { status: 400 });
     }
 
-    const orderNumber = 'REOTI-' + Math.floor(100000 + Math.random() * 900000);
+    // 1. Save in storeManager
+    const order = createOrderInStore(body);
 
-    const order = await prisma.order.create({
-      data: {
-        orderNumber,
-        customerName,
-        customerEmail: customerEmail || 'customer@reoti.com',
-        customerPhone,
-        shippingAddress,
-        totalAmount: parseFloat(totalAmount),
-        paymentMethod: paymentMethod || 'UPI',
-        paymentStatus: paymentStatus || (paymentMethod === 'COD' ? 'PENDING' : 'PAID'),
-        status: 'PROCESSING',
-        items: typeof items === 'string' ? items : JSON.stringify(items),
-      },
-    });
-
-    // Auto-mark ordered sarees as OUT OF STOCK
+    // 2. Auto-mark ordered items as OUT OF STOCK in storeManager
     try {
+      const orderItems = typeof items === 'string' ? JSON.parse(items) : items;
+      if (Array.isArray(orderItems)) {
+        for (const item of orderItems) {
+          const prodId = item.product?.id || item.id || item.productId;
+          if (prodId) {
+            updateProductInStore(prodId, { isOutOfStock: true, stock: 0 });
+          }
+        }
+      }
+    } catch (e) {}
+
+    // 3. Try Prisma
+    try {
+      await prisma.order.create({
+        data: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customerName,
+          customerEmail: customerEmail || 'customer@reoti.com',
+          customerPhone,
+          shippingAddress,
+          totalAmount: parseFloat(totalAmount),
+          paymentMethod: paymentMethod || 'UPI',
+          paymentStatus: paymentStatus || (paymentMethod === 'COD' ? 'PENDING' : 'PAID'),
+          status: 'PROCESSING',
+          items: typeof items === 'string' ? items : JSON.stringify(items),
+        },
+      });
+
+      // Auto-mark ordered sarees as OUT OF STOCK in DB
       const orderItems = typeof items === 'string' ? JSON.parse(items) : items;
       if (Array.isArray(orderItems)) {
         for (const item of orderItems) {
@@ -62,26 +84,35 @@ export async function POST(req: NextRequest) {
                 isOutOfStock: true,
                 stock: 0,
               },
-            });
+            }).catch(() => {});
           }
         }
       }
-    } catch (stockErr) {
-      console.error('Error updating product stock status on order:', stockErr);
+    } catch (prismaErr: any) {
+      console.warn('[Orders POST] Prisma notice:', prismaErr.message);
     }
 
     // Log Activity for Store Owner / Admin Dashboard
-    const title = `🛍️ New Order Received: #${orderNumber}`;
+    const title = `🛍️ New Order Received: #${order.orderNumber}`;
     const details = `Customer: ${customerName} (${customerPhone}) | Amount: ₹${totalAmount} | Address: ${shippingAddress}`;
 
-    await prisma.activityLog.create({
-      data: {
-        type: 'ORDER',
-        title,
-        details,
-        userEmail: customerEmail || null,
-      },
-    }).catch(() => {});
+    logActivityInStore({
+      type: 'ORDER',
+      title,
+      details,
+      userEmail: customerEmail || null,
+    });
+
+    try {
+      await prisma.activityLog.create({
+        data: {
+          type: 'ORDER',
+          title,
+          details,
+          userEmail: customerEmail || null,
+        },
+      });
+    } catch (e) {}
 
     sendAdminEmail({
       title,

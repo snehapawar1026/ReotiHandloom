@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 import { ProductCard } from '@/components/ProductCard';
 import { HandloomMotifDivider } from '@/components/HandloomMotifDivider';
 import { ProductItem } from '@/context/ShopContext';

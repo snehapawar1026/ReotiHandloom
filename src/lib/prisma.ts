@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaClient } from '@prisma/client';
@@ -17,7 +18,24 @@ if (globalForPrisma.prisma && (
   globalForPrisma.prisma = undefined;
 }
 
-const dbPath = path.resolve(process.cwd(), 'prisma/dev.db');
+function getDbPath(): string {
+  const candidatePaths = [
+    process.env.DATABASE_URL?.replace(/^file:/, ''),
+    '/home/fbaqsmhn/reotihandloom/prisma/dev.db',
+    path.resolve(process.cwd(), 'prisma/dev.db'),
+    path.resolve(process.cwd(), 'reotihandloom/prisma/dev.db'),
+    path.resolve(process.cwd(), 'dev.db'),
+  ].filter(Boolean) as string[];
+
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return candidatePaths[0] || path.resolve(process.cwd(), 'prisma/dev.db');
+}
+
+const dbPath = getDbPath();
 const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
 
 export const prisma =
@@ -28,3 +46,4 @@ export const prisma =
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+

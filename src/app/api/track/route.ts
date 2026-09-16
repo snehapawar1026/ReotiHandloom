@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, activity });
   } catch (error: any) {
-    console.error('Tracking error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.warn('Tracking notice (skipped silently):', error.message);
+    return NextResponse.json({ success: true, skipped: true });
   }
 }

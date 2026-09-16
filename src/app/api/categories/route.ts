@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  getAllCategories,
+  createCategoryInStore,
+  updateCategoryInStore,
+  deleteCategoryInStore,
+} from '@/lib/storeManager';
 
 export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const parentOnly = searchParams.get('parentOnly') === 'true';
-    const includeHidden = searchParams.get('includeHidden') === 'true';
+  const { searchParams } = new URL(req.url);
+  const parentOnly = searchParams.get('parentOnly') === 'true';
+  const includeHidden = searchParams.get('includeHidden') === 'true';
 
+  try {
     const where: any = {};
     if (!includeHidden) {
       where.OR = [
@@ -38,56 +44,56 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'asc' },
     });
 
-    return NextResponse.json({ success: true, categories });
-  } catch (error: any) {
-    try {
-      const categories = await prisma.category.findMany({
-        where: { parentId: null },
-        include: {
-          children: true,
-          parent: true,
-          _count: {
-            select: { products: true },
-          },
-        },
-        orderBy: { createdAt: 'asc' },
-      });
+    if (categories && categories.length > 0) {
       return NextResponse.json({ success: true, categories });
-    } catch (e: any) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
+  } catch (error: any) {
+    console.warn('[FALLBACK] Serving categories from storeManager:', error.message);
   }
+
+  let allCats = getAllCategories();
+  if (!includeHidden) {
+    allCats = allCats.filter((c) => !c.isHidden);
+  }
+  if (parentOnly) {
+    allCats = allCats.filter((c) => c.isParent || !c.parentId);
+  }
+
+  return NextResponse.json({ success: true, categories: allCats });
 }
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, description, image, bannerImage, slug: customSlug, parentId, isParent, isHidden } = body;
+    const { name } = body;
 
     if (!name) {
       return NextResponse.json({ success: false, error: 'Category name is required.' }, { status: 400 });
     }
 
-    const slug = (customSlug || name)
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)+/g, '');
+    // 1. Save in storeManager
+    const newCategory = createCategoryInStore(body);
 
-    const category = await prisma.category.create({
-      data: {
-        name,
-        slug,
-        description: description || null,
-        image: image || null,
-        bannerImage: bannerImage || null,
-        parentId: parentId || null,
-        isParent: isParent ?? !parentId,
-        isHidden: isHidden ?? false,
-      },
-    });
+    // 2. Try Prisma
+    try {
+      await prisma.category.create({
+        data: {
+          id: newCategory.id,
+          name: newCategory.name,
+          slug: newCategory.slug,
+          description: newCategory.description,
+          image: newCategory.image,
+          bannerImage: newCategory.bannerImage,
+          parentId: newCategory.parentId,
+          isParent: newCategory.isParent,
+          isHidden: newCategory.isHidden,
+        },
+      });
+    } catch (prismaErr: any) {
+      console.warn('[Category POST] Prisma notice:', prismaErr.message);
+    }
 
-    return NextResponse.json({ success: true, category });
+    return NextResponse.json({ success: true, category: newCategory });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -96,34 +102,43 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, name, description, image, bannerImage, slug: customSlug, parentId, isParent, isHidden } = body;
+    const { id } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'Category ID is required.' }, { status: 400 });
     }
 
-    const updateData: any = {};
-    if (name) {
-      updateData.name = name;
-      updateData.slug = (customSlug || name)
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
+    // 1. Update in storeManager
+    const updatedCategory = updateCategoryInStore(id, body);
+
+    // 2. Try Prisma
+    try {
+      const { name, description, image, bannerImage, slug: customSlug, parentId, isParent, isHidden } = body;
+      const updateData: any = {};
+      if (name) {
+        updateData.name = name;
+        updateData.slug = (customSlug || name)
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '');
+      }
+      if (description !== undefined) updateData.description = description;
+      if (image !== undefined) updateData.image = image;
+      if (bannerImage !== undefined) updateData.bannerImage = bannerImage;
+      if (parentId !== undefined) updateData.parentId = parentId;
+      if (isParent !== undefined) updateData.isParent = isParent;
+      if (isHidden !== undefined) updateData.isHidden = isHidden;
+
+      await prisma.category.update({
+        where: { id },
+        data: updateData,
+      });
+    } catch (prismaErr: any) {
+      console.warn('[Category PUT] Prisma notice:', prismaErr.message);
     }
-    if (description !== undefined) updateData.description = description;
-    if (image !== undefined) updateData.image = image;
-    if (bannerImage !== undefined) updateData.bannerImage = bannerImage;
-    if (parentId !== undefined) updateData.parentId = parentId;
-    if (isParent !== undefined) updateData.isParent = isParent;
-    if (isHidden !== undefined) updateData.isHidden = isHidden;
 
-    const category = await prisma.category.update({
-      where: { id },
-      data: updateData,
-    });
-
-    return NextResponse.json({ success: true, category });
+    return NextResponse.json({ success: true, category: updatedCategory });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -138,26 +153,20 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Category ID is required.' }, { status: 400 });
     }
 
-    const count = await prisma.product.count({
-      where: { categoryId: id },
-    });
+    // 1. Delete in storeManager (will throw if products exist)
+    deleteCategoryInStore(id);
 
-    if (count > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Cannot delete category: ${count} saree product(s) are currently assigned to this category. Please reassign or remove those products first.`,
-        },
-        { status: 400 }
-      );
+    // 2. Try Prisma
+    try {
+      await prisma.category.delete({
+        where: { id },
+      });
+    } catch (prismaErr: any) {
+      console.warn('[Category DELETE] Prisma notice:', prismaErr.message);
     }
-
-    await prisma.category.delete({
-      where: { id },
-    });
 
     return NextResponse.json({ success: true, message: 'Category deleted successfully.' });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import storeData from '@/data/storeData.json';
 
 export async function GET() {
   try {
@@ -8,8 +9,9 @@ export async function GET() {
       orderBy: { sortOrder: 'asc' },
     });
 
-    return NextResponse.json({ success: true, banners });
+    return NextResponse.json({ success: true, banners: banners && banners.length > 0 ? banners : storeData.banners });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.warn('[FALLBACK] Serving banners from storeData:', error.message);
+    return NextResponse.json({ success: true, banners: storeData.banners });
   }
 }

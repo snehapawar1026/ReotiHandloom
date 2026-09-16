@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAllProducts, getProductBySlugOrId } from '@/lib/storeManager';
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  try {
-    const { slug } = await params;
-    const decodedSlug = decodeURIComponent(slug).trim().toLowerCase();
+  const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug || '').trim().toLowerCase();
 
-    // 1. Try finding by exact slug, decoded slug, or id
+  try {
+    // 1. Try finding by exact slug, decoded slug, or id in Prisma database
     let product = await prisma.product.findFirst({
       where: {
         OR: [
@@ -26,7 +27,7 @@ export async function GET(
       },
     });
 
-    // 2. Fallback: If not found, fetch all products and find matching slug/title
+    // 2. Fallback in DB: If not found, fetch all products and find matching slug/title
     if (!product) {
       const allProducts = await prisma.product.findMany({
         include: {
@@ -44,46 +45,87 @@ export async function GET(
         ) || null;
     }
 
-    if (!product) {
-      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
-    }
+    if (product) {
+      // Fetch color variants
+      let colorVariants: any[] = [];
+      if (product.designCode) {
+        colorVariants = await prisma.product.findMany({
+          where: { designCode: product.designCode },
+        });
+      } else {
+        colorVariants = await prisma.product.findMany({
+          where: {
+            categoryId: product.categoryId,
+            fabric: product.fabric,
+            weaveType: product.weaveType,
+          },
+        });
+      }
 
-    // Fetch color variants (products sharing the same designCode OR same category+fabric+weaveType)
-    let colorVariants: any[] = [];
-    if (product.designCode) {
-      colorVariants = await prisma.product.findMany({
-        where: { designCode: product.designCode },
-      });
-    } else {
-      colorVariants = await prisma.product.findMany({
+      if (colorVariants.length <= 1) {
+        colorVariants = await prisma.product.findMany({
+          where: { categoryId: product.categoryId },
+          take: 6,
+        });
+      }
+
+      // Fetch related products
+      const relatedProducts = await prisma.product.findMany({
         where: {
           categoryId: product.categoryId,
-          fabric: product.fabric,
-          weaveType: product.weaveType,
+          NOT: { id: product.id },
         },
+        take: 4,
       });
+
+      return NextResponse.json({ success: true, product, colorVariants, relatedProducts });
     }
-
-    // Fallback: If only 1 product found, include related products from same category as color options
-    if (colorVariants.length <= 1) {
-      colorVariants = await prisma.product.findMany({
-        where: { categoryId: product.categoryId },
-        take: 6,
-      });
-    }
-
-    // Fetch related products from the same category
-    const relatedProducts = await prisma.product.findMany({
-      where: {
-        categoryId: product.categoryId,
-        NOT: { id: product.id },
-      },
-      take: 4,
-    });
-
-    return NextResponse.json({ success: true, product, colorVariants, relatedProducts });
   } catch (error: any) {
-    console.error('Error fetching product by slug:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.warn('[FALLBACK] Serving product slug from storeManager:', error.message);
   }
+
+  // --- SAFE FALLBACK TO storeManager ---
+  const allProds = getAllProducts();
+  let fallbackProduct = getProductBySlugOrId(slug);
+
+  if (!fallbackProduct && allProds.length > 0) {
+    fallbackProduct = allProds[0];
+  }
+
+  if (!fallbackProduct) {
+    return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+  }
+
+  // Find color variants in storeManager
+  let colorVariants = allProds.filter(
+    (p) =>
+      (fallbackProduct.designCode && p.designCode === fallbackProduct.designCode) ||
+      (p.categoryId === fallbackProduct.categoryId && p.fabric === fallbackProduct.fabric)
+  );
+
+  if (colorVariants.length <= 1) {
+    colorVariants = allProds.filter((p) => p.categoryId === fallbackProduct.categoryId).slice(0, 6);
+  }
+  if (colorVariants.length === 0) {
+    colorVariants = [fallbackProduct];
+  }
+
+  // Find related products in storeManager
+  let relatedProducts = allProds
+    .filter((p) => p.categoryId === fallbackProduct.categoryId && p.id !== fallbackProduct.id)
+    .slice(0, 4);
+
+  if (relatedProducts.length === 0) {
+    relatedProducts = allProds.filter((p) => p.id !== fallbackProduct.id).slice(0, 4);
+  }
+
+  return NextResponse.json({
+    success: true,
+    product: {
+      ...fallbackProduct,
+      reviews: fallbackProduct.reviews || [],
+    },
+    colorVariants,
+    relatedProducts,
+  });
 }

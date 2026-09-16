@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
 import { ShieldCheck, Lock, Mail, Phone, User, CheckCircle, Eye, EyeOff, ShoppingBag } from 'lucide-react';
 
-export default function LoginPage() {
+export const dynamic = 'force-dynamic';
+
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTarget = searchParams ? searchParams.get('redirect') : null;
@@ -308,5 +310,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-12 text-gray-400 text-xs">Loading login...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

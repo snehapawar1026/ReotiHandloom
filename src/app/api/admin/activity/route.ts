@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getStoreData } from '@/lib/storeManager';
 
 export async function GET() {
   try {
@@ -8,8 +9,13 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
     });
 
-    return NextResponse.json({ success: true, activities });
+    if (activities && activities.length > 0) {
+      return NextResponse.json({ success: true, activities });
+    }
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.warn('[FALLBACK] Serving activities from storeManager:', error.message);
   }
+
+  const storeActivities = (getStoreData().activities || []).slice(0, 20);
+  return NextResponse.json({ success: true, activities: storeActivities });
 }
