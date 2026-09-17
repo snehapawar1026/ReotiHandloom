@@ -187,7 +187,7 @@ export default function Home() {
 
           <div
             ref={homeCategoryScrollRef}
-            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-3 pt-1 scrollbar-none justify-start px-8 sm:px-12 touch-pan-x snap-x snap-mandatory scroll-smooth w-full select-none"
+            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-3 pt-1 scrollbar-none justify-start px-8 sm:px-12 scroll-smooth w-full select-none overscroll-x-contain"
           >
             {categories.map((cat) => (
               <Link
@@ -261,7 +261,7 @@ export default function Home() {
 
               <div
                 ref={festiveScrollRef}
-                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none justify-start px-6 touch-pan-x snap-x snap-mandatory scroll-smooth"
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none justify-start px-6 scroll-smooth overscroll-x-contain"
               >
                 {GANESH_FESTIVE_CARDS.map((card, idx) => (
                   <Link
