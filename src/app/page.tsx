@@ -187,13 +187,13 @@ export default function Home() {
 
           <div
             ref={homeCategoryScrollRef}
-            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-3 pt-1 scrollbar-none justify-start px-8 sm:px-12 scroll-smooth w-full select-none overscroll-x-contain"
+            className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-3 pt-1 scrollbar-none justify-start px-8 sm:px-12 scroll-smooth w-full overscroll-x-contain"
           >
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={`/products?category=${cat.slug}`}
-                className="flex flex-col items-center group cursor-pointer shrink-0 snap-start"
+                className="flex flex-col items-center group cursor-pointer shrink-0"
               >
                 <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center shrink-0">
                   {/* Authentic Scalloped Bead Ring SVG */}
@@ -267,7 +267,7 @@ export default function Home() {
                   <Link
                     key={idx}
                     href={card.link}
-                    className="group relative w-48 sm:w-60 h-80 sm:h-[380px] shrink-0 snap-start rounded-t-full rounded-b-2xl overflow-hidden border-2 border-[#D4AF37] shadow-2xl hover:scale-105 transition-all duration-500 block bg-[#F4E3B5]"
+                    className="group relative w-48 sm:w-60 h-80 sm:h-[380px] shrink-0 rounded-t-full rounded-b-2xl overflow-hidden border-2 border-[#D4AF37] shadow-2xl hover:scale-105 transition-all duration-500 block bg-[#F4E3B5]"
                   >
                     {/* Damask Floral Wallpaper Backdrop */}
                     <div className="absolute inset-0 bg-[#F4E3B5] bg-[radial-gradient(#D4AF37_1.5px,transparent_1.5px)] [background-size:14px_14px] opacity-60" />
