@@ -4,13 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { useShop, ProductItem } from '@/context/ShopContext';
 import { Heart, Star } from 'lucide-react';
+import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 
 interface ProductCardProps {
   product: ProductItem;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
-  const { addToCart, toggleWishlist, isInWishlist } = useShop();
+  const { toggleWishlist, isInWishlist } = useShop();
 
   const isLiked = isInWishlist(product.id);
   const parsedImages = JSON.parse(product.images || '[]');
@@ -29,9 +30,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         </Link>
 
+        {/* Automatic Diagonal Watermark Overlay */}
+        <WatermarkOverlay variant="card" />
+
         {/* Status Badges Container (Top-Left Corner - Authentic Heritage Pills) */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 items-start z-10 pointer-events-none">
-          {product.isOutOfStock || (product.stock !== undefined && product.stock <= 0) ? (
+          {product.isOutOfStock ? (
             <span className="bg-rose-950/90 text-rose-100 text-[8px] sm:text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow-xs border border-rose-800 tracking-wider">
               OUT OF STOCK
             </span>
@@ -120,8 +124,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </span>
         </div>
 
-        {/* Add to Bag Button */}
-        {product.isOutOfStock || (product.stock !== undefined && product.stock <= 0) ? (
+        {/* Add to Bag Button -> Opens Item Description Page */}
+        {product.isOutOfStock ? (
           <button
             disabled
             className="w-full mt-2 py-1.5 sm:py-2 bg-gray-200 text-gray-500 font-serif font-bold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg cursor-not-allowed border border-gray-300"
@@ -129,12 +133,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             OUT OF STOCK
           </button>
         ) : (
-          <button
-            onClick={() => addToCart(product)}
-            className="w-full mt-2 py-1.5 sm:py-2 bg-[#581C1C] hover:bg-[#722424] text-amber-50 font-serif font-semibold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg transition-colors active:scale-98 shadow-2xs flex items-center justify-center gap-1 cursor-pointer"
+          <Link
+            href={`/products/${product.slug}`}
+            className="w-full mt-2 py-1.5 sm:py-2 bg-[#581C1C] hover:bg-[#722424] text-amber-50 font-serif font-semibold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg transition-colors active:scale-98 shadow-2xs flex items-center justify-center gap-1 cursor-pointer text-center"
           >
             <span>ADD TO BAG</span>
-          </button>
+          </Link>
         )}
       </div>
     </div>

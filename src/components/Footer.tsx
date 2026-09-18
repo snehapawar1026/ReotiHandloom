@@ -2,9 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ShieldCheck, Truck, RefreshCw, Phone, MapPin, Mail, Sparkles, Star } from 'lucide-react';
 
 export const Footer = () => {
+  const pathname = usePathname();
+  if (pathname === '/checkout') return null;
+
   return (
     <footer className="bg-amber-950 text-amber-100 font-sans border-t-4 border-amber-600">
       {/* Handloom Quality Guarantee Strip */}

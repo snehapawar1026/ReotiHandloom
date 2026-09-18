@@ -185,7 +185,7 @@ export default function ContactPage() {
               </p>
             </div>
             <div className="pt-2 text-[11px] font-bold text-rose-800 border-t border-amber-100">
-              🏡 Family Home Studio & Handloom Loom (Opp. MPGB Bank, Bazar Chowk)
+              🏡 Family Home Studio & Handloom Loom
             </div>
           </div>
 

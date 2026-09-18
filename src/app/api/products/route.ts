@@ -17,6 +17,9 @@ export async function GET(req: NextRequest) {
   const trending = searchParams.get('trending');
   const inStock = searchParams.get('inStock');
   const sort = searchParams.get('sort');
+  const includeAll = searchParams.get('includeAll') === 'true';
+
+  const isSemiRequested = category === 'semi-maheshwari-sarees' || category === 'semi-maheshwari';
 
   try {
     const where: any = {};
@@ -26,6 +29,13 @@ export async function GET(req: NextRequest) {
         { category: { slug: category } },
         { category: { parent: { slug: category } } },
       ];
+    } else if (!includeAll) {
+      // By default exclude Semi Maheshwari from all general queries, home, new arrivals, etc.
+      where.category = {
+        slug: {
+          notIn: ['semi-maheshwari-sarees', 'semi-maheshwari'],
+        },
+      };
     }
     if (fabric) {
       where.fabric = { contains: fabric };
@@ -92,6 +102,14 @@ export async function GET(req: NextRequest) {
   if (category) {
     storeProducts = storeProducts.filter(
       (p) => p.category?.slug === category || p.categoryId === category || (p.category as any)?.parent?.slug === category
+    );
+  } else if (!includeAll) {
+    // Exclude Semi Maheshwari from general fallback listing
+    storeProducts = storeProducts.filter(
+      (p) =>
+        p.category?.slug !== 'semi-maheshwari-sarees' &&
+        p.category?.slug !== 'semi-maheshwari' &&
+        p.categoryId !== 'semi-maheshwari-sarees-id'
     );
   }
   if (fabric) {

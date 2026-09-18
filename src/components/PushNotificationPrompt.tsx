@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Bell, X, CheckCircle2, Sparkles } from 'lucide-react';
 
 const VAPID_PUBLIC_KEY =
@@ -19,12 +20,14 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export const PushNotificationPrompt = () => {
+  const pathname = usePathname();
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [showPrompt, setShowPrompt] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
+    if (pathname === '/checkout') return;
     if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
       setPermission('unsupported');
       return;

@@ -1,8 +1,12 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 
 export const FloatingWhatsApp = () => {
+  const pathname = usePathname();
+  if (pathname === '/checkout') return null;
+
   const handleGeneralWhatsApp = () => {
     const message = `Hello Reoti Handloom! 🙏\n\nI am visiting your website and I would like to inquire about your Maheshwari Handloom Sarees:\n\n🏬 *Wholesale & Retail Inquiries*\n📖 *Latest Catalogs & Rate List*\n📦 *Bulk Orders & Shipping Details*\n\nPlease connect with me and share details!`;
     const whatsappUrl = `https://wa.me/919617444445?text=${encodeURIComponent(message)}`;

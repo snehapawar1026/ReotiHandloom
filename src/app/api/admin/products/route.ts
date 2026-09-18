@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
           isFeatured: isFeatured || false,
           isBestSeller: isBestSeller || false,
           isTrending: isTrending || false,
-          isOutOfStock: isOutOfStock || false,
-          stock: isOutOfStock ? 0 : (stock ? parseInt(stock) : 15),
+          isOutOfStock: Boolean(isOutOfStock),
+          stock: (stock !== undefined && stock !== null && stock !== '') ? parseInt(stock) : null,
         },
       });
     } catch (prismaErr: any) {
@@ -107,6 +107,11 @@ export async function PUT(req: NextRequest) {
 
       const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
 
+      let parsedStock: number | null | undefined = undefined;
+      if (stock !== undefined) {
+        parsedStock = (stock !== null && stock !== '') ? parseInt(stock) : null;
+      }
+
       await prisma.product.update({
         where: { id },
         data: {
@@ -130,8 +135,8 @@ export async function PUT(req: NextRequest) {
           ...(isFeatured !== undefined && { isFeatured }),
           ...(isBestSeller !== undefined && { isBestSeller }),
           ...(isTrending !== undefined && { isTrending }),
-          ...(isOutOfStock !== undefined && { isOutOfStock, stock: isOutOfStock ? 0 : 15 }),
-          ...(stock !== undefined && { stock: parseInt(stock) }),
+          ...(isOutOfStock !== undefined && { isOutOfStock }),
+          ...(parsedStock !== undefined && { stock: parsedStock }),
         },
       });
     } catch (prismaErr: any) {

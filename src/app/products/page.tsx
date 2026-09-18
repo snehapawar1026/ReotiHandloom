@@ -83,6 +83,12 @@ const CATEGORY_HERO_MAP: Record<string, { title: string; description: string; im
       'Discover the timeless elegance of Nayantara Maheshwari Handloom Sarees, beautifully crafted to bring together traditional artistry and contemporary style. Woven by skilled artisans with Chokha border & detailed butis.',
     image: '/uploads/saree_1789233209397_zszzb.jpeg',
   },
+  'semi-maheshwari-sarees': {
+    title: 'Semi Maheshwari Sarees',
+    description:
+      'Lightweight Semi Maheshwari Sarees featuring elegant zari borders and beautiful traditional patterns. These sarees are not handcrafted or handloom, and are made using modern manufacturing techniques while maintaining the classic Maheshwari-inspired look. Perfect for festive occasions, celebrations, and everyday elegance.',
+    image: '/uploads/saree_1789233209397_zszzb.jpeg',
+  },
 };
 
 function getHeroContent(
@@ -340,12 +346,25 @@ function ProductsContent() {
               {/* Left Side: Craft Story & Title */}
               <div className="md:col-span-6 lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-center text-center space-y-3 overflow-hidden">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
-                  {hero.title} <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl lg:text-3xl block sm:inline mt-1 sm:mt-0">माहेश्वरी साड़ियाँ</span>
+                  {hero.title}{' '}
+                  <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl lg:text-3xl block sm:inline mt-1 sm:mt-0">
+                    {selectedCategory === 'semi-maheshwari-sarees' || selectedCategory === 'semi-maheshwari'
+                      ? 'सेमी माहेश्वरी साड़ियाँ'
+                      : selectedCategory.includes('suit')
+                      ? 'माहेश्वरी सूट सेट्स'
+                      : selectedCategory.includes('dupatta')
+                      ? 'दुपट्टे'
+                      : 'माहेश्वरी साड़ियाँ'}
+                  </span>
                 </h1>
                 <p className="text-xs sm:text-sm text-[#8B4513]/80 font-bold tracking-wider uppercase">
-                  गाहेश्वरी साड़ियाँ ~ माहेश्वरी শাড়ি ~ மகேஸ்வரி புடவைகள் ~ મહેશ્વરી સાડીઓ
+                  {selectedCategory === 'semi-maheshwari-sarees' || selectedCategory === 'semi-maheshwari'
+                    ? 'सेमी माहेश्वरी साड़ियाँ ~ সেমি মাহেশ্বরী শাড়ি ~ செமி மகேஸ்வரி புடவைகள் ~ સેમી મહેશ્વરી સાડીઓ'
+                    : selectedCategory.includes('suit')
+                    ? 'माहेश्वरी सूट ~ মাহেশ্বরী স্যুট ~ மகேஸ்வரி சூட்கள் ~ મહેશ્વરી સૂટ'
+                    : 'माहेश्वरी साड़ियाँ ~ माहेश्वरी শাড়ি ~ மகேஸ்வரி புடவைகள் ~ મહેશ્વરી સાડીઓ'}
                 </p>
-                <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium max-w-xl mx-auto line-clamp-3">
+                <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium max-w-xl mx-auto line-clamp-4 sm:line-clamp-none">
                   {hero.description}
                 </p>
               </div>

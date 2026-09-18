@@ -59,9 +59,10 @@ const NavbarContent = () => {
 
   const isHomeActive = pathname === '/';
   const isNewArrivalsActive = pathname === '/products' && sortParam === 'newest';
+  const isSemiMaheshwariActive = pathname === '/products' && categoryParam !== null && (categoryParam === 'semi-maheshwari-sarees' || categoryParam === 'semi-maheshwari');
   const isSuitsActive = pathname === '/products' && categoryParam !== null && (categoryParam.includes('suit') || categoryParam.includes('unstitched'));
   const isOtherActive = pathname === '/products' && categoryParam !== null && (categoryParam.includes('dupatta') || categoryParam.includes('bagh-print') || categoryParam.includes('premium'));
-  const isSareesActive = pathname === '/products' && !isNewArrivalsActive && !isSuitsActive && !isOtherActive;
+  const isSareesActive = pathname === '/products' && !isNewArrivalsActive && !isSuitsActive && !isOtherActive && !isSemiMaheshwariActive;
   const isAboutActive = pathname === '/about';
   const isContactActive = pathname === '/contact';
   const isWholesaleActive = pathname === '/wholesale';
@@ -69,6 +70,9 @@ const NavbarContent = () => {
   const linkBaseStyle = "py-1 transition-all flex items-center gap-1 font-bold text-xs uppercase tracking-wider";
   const activeLinkStyle = "text-rose-800 font-extrabold border-b-2 border-rose-800 pb-0.5";
   const inactiveLinkStyle = "text-amber-950 hover:text-rose-700";
+
+  // Hide global navbar on checkout page for clean, focused checkout experience
+  if (pathname === '/checkout') return null;
 
   return (
     <>
@@ -181,27 +185,63 @@ const NavbarContent = () => {
                   </Link>
 
                   {/* Dropdown Menu on Hover */}
-                  <div className="absolute right-0 top-full pt-2 hidden group-hover:block w-48 z-50">
-                    <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-3 text-xs space-y-2">
-                      <p className="font-bold text-gray-900 border-b border-gray-100 pb-1">
-                        {user.name}
-                      </p>
+                  <div className="absolute right-0 top-full pt-2 hidden group-hover:block w-52 z-50">
+                    <div className="bg-white border border-[#E8DFC8] rounded-2xl shadow-xl p-3 text-xs space-y-2 font-sans">
+                      <div className="border-b border-gray-100 pb-2">
+                        <p className="font-bold text-gray-900 truncate">
+                          {user.name}
+                        </p>
+                        <p className="text-[10px] text-gray-500 truncate">
+                          {user.email}
+                        </p>
+                      </div>
+
+                      <Link 
+                        href="/login" 
+                        className="flex items-center gap-2 text-gray-700 hover:text-[#581C1C] font-medium py-1"
+                      >
+                        <User className="w-3.5 h-3.5 text-amber-900" />
+                        <span>My Account Profile</span>
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsTrackOrderModalOpen(true)}
+                        className="w-full text-left flex items-center gap-2 text-gray-700 hover:text-[#581C1C] font-medium py-1 cursor-pointer"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 text-amber-900" />
+                        <span>Track My Orders</span>
+                      </button>
+
+                      <Link 
+                        href="/wishlist" 
+                        className="flex items-center gap-2 text-gray-700 hover:text-rose-700 font-medium py-1"
+                      >
+                        <Heart className="w-3.5 h-3.5 text-rose-700" />
+                        <span>Saved Wishlist</span>
+                      </Link>
+
                       {user.role === 'admin' && (
-                        <Link href="/reoti-studio-manage" className="flex items-center gap-1.5 text-amber-900 font-bold hover:text-rose-700">
-                          <ShieldCheck className="w-3.5 h-3.5" />
+                        <Link 
+                          href="/reoti-studio-manage" 
+                          className="flex items-center gap-2 text-amber-900 font-bold hover:text-rose-700 py-1 bg-amber-50/60 px-2 rounded-lg"
+                        >
+                          <ShieldCheck className="w-3.5 h-3.5 text-amber-800" />
                           <span>Seller Admin Panel</span>
                         </Link>
                       )}
+
                       <button
                         onClick={logout}
-                        className="w-full text-left flex items-center gap-1.5 text-rose-600 font-bold hover:underline pt-1 border-t border-gray-100"
+                        className="w-full text-left flex items-center gap-2 text-rose-600 font-bold hover:underline pt-2 border-t border-gray-100 cursor-pointer"
                       >
                         <LogOut className="w-3.5 h-3.5" />
-                        <span>Logout</span>
+                        <span>Sign Out</span>
                       </button>
                     </div>
                   </div>
                 </div>
+
               ) : (
                 <Link href="/login" className="flex flex-col items-center text-amber-950 hover:text-rose-700 transition-colors">
                   <User className="w-5 h-5" />
@@ -373,6 +413,14 @@ const NavbarContent = () => {
                 </div>
               </div>
 
+              {/* Semi Maheshwari Sarees */}
+              <Link
+                href="/products?category=semi-maheshwari-sarees"
+                className={`${linkBaseStyle} ${isSemiMaheshwariActive ? activeLinkStyle : inactiveLinkStyle}`}
+              >
+                <span>Semi Maheshwari Sarees</span>
+              </Link>
+
               {/* Other Collection ▾ Dropdown */}
               <div className="relative group">
                 <Link
@@ -513,6 +561,19 @@ const NavbarContent = () => {
                 </div>
               )}
             </div>
+
+              {/* Mobile Semi Maheshwari Sarees */}
+              <div className="border-b border-gray-100 pb-2">
+                <Link
+                  href="/products?category=semi-maheshwari-sarees"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block py-2 font-bold text-xs uppercase tracking-wider ${
+                    isSemiMaheshwariActive ? 'text-rose-700 font-extrabold' : 'text-gray-900 hover:text-rose-700'
+                  }`}
+                >
+                  Semi Maheshwari Sarees
+                </Link>
+              </div>
 
             {/* Mobile Other Collection Accordion */}
             <div className="border-b border-gray-100 pb-2">

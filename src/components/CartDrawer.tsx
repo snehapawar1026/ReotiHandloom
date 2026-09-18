@@ -28,6 +28,8 @@ export const CartDrawer = () => {
     user,
     isCartOpen,
     setIsCartOpen,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
     updateQuantity,
     removeFromCart,
     clearCart,
@@ -41,9 +43,7 @@ export const CartDrawer = () => {
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponError, setCouponError] = useState('');
 
-  // Checkout modal states
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [showLoginNotice, setShowLoginNotice] = useState(false);
+  // Checkout form field states
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -52,16 +52,18 @@ export const CartDrawer = () => {
   const [pincode, setPincode] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('UPI');
 
-  const handleProceedToCheckout = () => {
-    if (!user) {
-      setShowLoginNotice(true);
-      return;
+  // Auto populate user info on checkout
+  React.useEffect(() => {
+    if (user && isCheckoutOpen) {
+      if (!customerName && user.name) setCustomerName(user.name);
+      if (!customerEmail && user.email) setCustomerEmail(user.email);
+      if (!customerPhone && user.phone) setCustomerPhone(user.phone);
     }
-    setCustomerName(user.name || '');
-    setCustomerEmail(user.email || '');
-    setCustomerPhone(user.phone || '');
-    setShowLoginNotice(false);
-    setIsCheckoutOpen(true);
+  }, [user, isCheckoutOpen]);
+
+  const handleProceedToCheckout = () => {
+    setIsCartOpen(false);
+    router.push('/checkout');
   };
 
   // Payment Gateway Modal State
@@ -190,51 +192,6 @@ export const CartDrawer = () => {
                 >
                   CONTINUE SHOPPING
                 </button>
-              </div>
-            ) : showLoginNotice ? (
-              /* Mandatory Login Prompt View */
-              <div className="text-center py-10 px-2 space-y-5">
-                <div className="w-16 h-16 bg-amber-100 text-amber-900 rounded-full flex items-center justify-center mx-auto border-2 border-amber-300">
-                  <Lock className="w-8 h-8" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-serif font-bold text-amber-950 uppercase tracking-wide">
-                    Login Required to Order
-                  </h3>
-                  <p className="text-xs text-gray-600 max-w-xs mx-auto leading-relaxed">
-                    Aap hampers, sarees aur pricing freely dekh sakte hain! Order confirm karne ke liye kripya apne customer account me <strong>Login</strong> karein ya <strong>New Account</strong> banayein.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-left space-y-2 text-xs">
-                  <div className="flex items-center gap-2 font-bold text-amber-950">
-                    <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                    <span>Safe & Verified Ordering</span>
-                  </div>
-                  <p className="text-[11px] text-gray-600">
-                    Account create karne par aap apne orders track kar sakte hain aur fast checkout benefits prapt kar sakte hain.
-                  </p>
-                </div>
-
-                <div className="space-y-2 pt-2">
-                  <button
-                    onClick={() => {
-                      setIsCartOpen(false);
-                      setShowLoginNotice(false);
-                      router.push('/login?redirect=cart');
-                    }}
-                    className="w-full bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs py-3.5 rounded-lg shadow-md uppercase tracking-wider flex items-center justify-center gap-2 transition-transform active:scale-98"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span>LOGIN / CREATE ACCOUNT TO ORDER</span>
-                  </button>
-                  <button
-                    onClick={() => setShowLoginNotice(false)}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs py-2.5 rounded-lg"
-                  >
-                    Back to Shopping Bag
-                  </button>
-                </div>
               </div>
             ) : isCheckoutOpen ? (
               /* Checkout Form View */
@@ -537,7 +494,7 @@ export const CartDrawer = () => {
           </div>
 
           {/* Footer CTA */}
-          {!orderSuccess && !isCheckoutOpen && !showLoginNotice && cart.length > 0 && (
+          {!orderSuccess && !isCheckoutOpen && cart.length > 0 && (
             <div className="p-4 border-t border-gray-200 bg-white">
               <button
                 onClick={handleProceedToCheckout}

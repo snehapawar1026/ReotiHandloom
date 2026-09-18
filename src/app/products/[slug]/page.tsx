@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useShop, ProductItem } from '@/context/ShopContext';
 import { ProductCard } from '@/components/ProductCard';
+import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 import {
   Heart,
   ShoppingBag,
@@ -35,6 +36,7 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
+  Zap,
 } from 'lucide-react';
 
 const WhatsAppIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -81,7 +83,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const { user, addToCart, toggleWishlist, isInWishlist, setIsCartOpen } = useShop();
+  const { user, addToCart, buyNow, toggleWishlist, isInWishlist, setIsCartOpen } = useShop();
 
   const [product, setProduct] = useState<ProductItem | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<ProductItem[]>([]);
@@ -443,6 +445,9 @@ export default function ProductDetailPage() {
                   className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-300"
                 />
 
+                {/* Automatic Diagonal Heritage Watermark Overlay */}
+                <WatermarkOverlay variant="pdp" />
+
                 {/* Nykaa-style Translucent Hover Lens Box over Image */}
                 {isHoverZooming && (
                   <div
@@ -606,6 +611,23 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
+          {/* Stock Scarcity Indicator Bar (Matching Reference - Visible ONLY when stock is specified and > 0) */}
+          {!product.isOutOfStock && product.stock !== undefined && product.stock !== null && product.stock > 0 && (
+            <div className="py-2.5 px-3.5 bg-amber-50/70 border border-amber-200/90 rounded-xl space-y-1.5 shadow-2xs">
+              <p className="text-xs text-gray-900 font-medium">
+                Only <span className="font-extrabold text-gray-950">{product.stock} {product.stock === 1 ? 'item is' : 'items are'} in stock!</span>
+              </p>
+              <div className="w-full bg-gray-200/80 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-amber-500 h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${Math.min(100, Math.max(12, (product.stock / 10) * 100))}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Fall and Pico Bidding Box (Matching Design Reference) */}
           <div className="bg-[#FAF7F2] border border-dashed border-[#D5CBB9] rounded-xl p-4 space-y-1 font-sans">
             <h4 className="font-bold text-sm text-gray-900">
@@ -699,17 +721,18 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Out of Stock Alert Banner */}
-          {(product.isOutOfStock || (product.stock !== undefined && product.stock <= 0)) && (
+          {Boolean(product.isOutOfStock) && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 font-bold text-xs flex items-center gap-2 shadow-2xs">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping shrink-0" />
               <span>🚫 Currently Out of Stock. Contact us on WhatsApp for loom pre-orders!</span>
             </div>
           )}
 
-          {/* Action Buttons: ADD TO BAG, WISHLIST & WHATSAPP WHOLESALE INQUIRY */}
-          <div className="space-y-3 pt-2">
+          {/* Action Buttons: ADD TO BAG, WISHLIST, BUY IT NOW & WHATSAPP WHOLESALE INQUIRY */}
+          <div className="space-y-2.5 pt-2">
+            {/* Row 1: Add to Bag & Wishlist */}
             <div className="flex gap-3">
-              {product.isOutOfStock || (product.stock !== undefined && product.stock <= 0) ? (
+              {product.isOutOfStock ? (
                 <button
                   disabled
                   className="flex-1 py-3.5 bg-slate-200 text-slate-500 font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-xs cursor-not-allowed flex items-center justify-center gap-2 border border-slate-300"
@@ -722,7 +745,7 @@ export default function ProductDetailPage() {
                     addToCart(product, { hasFallPico, fallPicoPrice: 200 });
                     setIsCartOpen(true);
                   }}
-                  className="flex-1 py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 py-3.5 bg-[#E11D48] hover:bg-[#BE123C] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShoppingBag className="w-4 h-4" />
                   <span>Add To Bag</span>
@@ -731,8 +754,8 @@ export default function ProductDetailPage() {
 
               <button
                 onClick={() => toggleWishlist(product)}
-                className={`px-5 py-3.5 border rounded-lg font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
-                  isLiked ? 'border-rose-600 bg-rose-50 text-rose-600' : 'border-gray-300 text-gray-800 hover:border-gray-900'
+                className={`px-5 py-3.5 border rounded-lg font-extrabold text-xs uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer ${
+                  isLiked ? 'border-rose-600 bg-rose-50 text-rose-600' : 'border-gray-300 text-gray-800 hover:border-gray-900 bg-white'
                 }`}
               >
                 <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-600 text-rose-600' : ''}`} />
@@ -740,7 +763,22 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
-            {/* Direct WhatsApp Wholesale Inquiry Button */}
+            {/* Row 2: BUY IT NOW Button (Deep Luxury Royal Maroon / Crimson Button matching Reference Image) */}
+            {!product.isOutOfStock && (
+              <button
+                onClick={() => {
+                  addToCart(product, { hasFallPico, fallPicoPrice: 200 });
+                  setIsCartOpen(false);
+                  router.push('/checkout');
+                }}
+                className="w-full py-3.5 bg-[#4A0E17] hover:bg-[#380A11] text-amber-50 font-black text-xs uppercase tracking-widest rounded-lg shadow-md hover:shadow-lg transition-all active:scale-98 flex items-center justify-center gap-2 border border-amber-900/30 cursor-pointer"
+              >
+                <Zap className="w-4 h-4 text-amber-300 fill-amber-300" />
+                <span>BUY IT NOW</span>
+              </button>
+            )}
+
+            {/* Row 3: Direct WhatsApp Wholesale Inquiry Button */}
             <button
               onClick={handleWhatsAppInquiry}
               className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 border border-emerald-600/30 cursor-pointer"
@@ -1360,18 +1398,31 @@ export default function ProductDetailPage() {
               addToCart(product, { hasFallPico, fallPicoPrice: 200 });
               setIsCartOpen(true);
             }}
-            className="px-4 sm:px-8 py-2.5 sm:py-3 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider rounded-lg shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
+            className="px-3 sm:px-4 py-2 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[11px] sm:text-xs uppercase tracking-wider rounded-lg shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer"
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span>ADD TO BAG</span>
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span className="hidden min-[420px]:inline">ADD TO BAG</span>
+            <span className="min-[420px]:hidden">BAG</span>
+          </button>
+
+          <button
+            onClick={() => {
+              addToCart(product, { hasFallPico, fallPicoPrice: 200 });
+              setIsCartOpen(false);
+              router.push('/checkout');
+            }}
+            className="px-3.5 sm:px-5 py-2 sm:py-2.5 bg-[#4A0E17] hover:bg-[#380A11] text-amber-50 font-black text-[11px] sm:text-xs uppercase tracking-wider rounded-lg shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 cursor-pointer border border-amber-900/40"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+            <span>BUY NOW</span>
           </button>
 
           <button
             onClick={handleWhatsAppInquiry}
-            className="px-3 sm:px-4 py-2.5 sm:py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider rounded-lg shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 cursor-pointer"
+            className="px-2.5 sm:px-3.5 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-lg shadow-md flex items-center justify-center gap-1.5 transition-all active:scale-95 shrink-0 cursor-pointer"
             aria-label="WhatsApp Wholesale Inquiry"
           >
-            <WhatsAppIcon className="w-4 h-4 fill-current" />
+            <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
             <span className="hidden md:inline">WHOLESALE</span>
           </button>
         </div>
@@ -1408,11 +1459,14 @@ export default function ProductDetailPage() {
             onClick={(e) => e.stopPropagation()}
             className="max-w-5xl max-h-[85vh] flex flex-col items-center justify-center relative"
           >
-            <img
-              src={parsedImages[currentImageIdx] || selectedImage}
-              alt={product.title}
-              className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/10"
-            />
+            <div className="relative overflow-hidden rounded-lg">
+              <img
+                src={parsedImages[currentImageIdx] || selectedImage}
+                alt={product.title}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/10"
+              />
+              <WatermarkOverlay variant="lightbox" />
+            </div>
 
             {/* Bottom Caption Bar */}
             <div className="mt-4 flex items-center gap-3 text-white text-xs font-bold bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-full border border-gray-700 shadow-md">

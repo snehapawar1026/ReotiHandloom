@@ -140,7 +140,12 @@ export function createProductInStore(productInput: any) {
   }
 
   const isOutOfStock = Boolean(productInput.isOutOfStock);
-  const stock = isOutOfStock ? 0 : productInput.stock !== undefined ? parseInt(productInput.stock) : 15;
+  let stock: number | undefined = undefined;
+  if (productInput.stock !== undefined && productInput.stock !== null && productInput.stock !== '') {
+    stock = parseInt(productInput.stock);
+  } else {
+    stock = undefined;
+  }
 
   const newProduct = {
     id,
@@ -204,12 +209,15 @@ export function updateProductInStore(id: string, updateInput: any) {
 
   const isOutOfStock =
     updateInput.isOutOfStock !== undefined ? Boolean(updateInput.isOutOfStock) : existing.isOutOfStock;
-  const stock =
-    isOutOfStock
-      ? 0
-      : updateInput.stock !== undefined
-      ? parseInt(updateInput.stock)
-      : existing.stock;
+  
+  let stock: number | undefined = existing.stock;
+  if (updateInput.stock !== undefined) {
+    if (updateInput.stock === '' || updateInput.stock === null) {
+      stock = undefined;
+    } else {
+      stock = parseInt(updateInput.stock);
+    }
+  }
 
   const updatedProduct = {
     ...existing,

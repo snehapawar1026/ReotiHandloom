@@ -47,7 +47,7 @@ model Product {
   isAuthenticCraft  Boolean  @default(true)
   rating            Float    @default(0)
   reviewCount       Int      @default(0)
-  stock             Int      @default(15)
+  stock             Int?
   isOutOfStock      Boolean  @default(false)
   images            String   // Stored as JSON string of image URLs
   categoryId        String

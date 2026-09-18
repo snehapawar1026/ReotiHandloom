@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendAdminEmail } from '@/lib/notifications';
+import { sendCustomerOrderConfirmationEmail } from '@/lib/mailService';
 import { createOrderInStore, logActivityInStore, getStoreData, updateProductInStore } from '@/lib/storeManager';
 
 export async function GET() {
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
       });
     } catch (e) {}
 
+    // Send Email to Admin & Customer
     sendAdminEmail({
       title,
       type: 'ORDER',
@@ -122,6 +124,21 @@ export async function POST(req: NextRequest) {
       userPhone: customerPhone,
       amount: parseFloat(totalAmount),
     }).catch(() => {});
+
+    // Send Luxury Receipt to Customer
+    try {
+      const orderItems = typeof items === 'string' ? JSON.parse(items) : items;
+      sendCustomerOrderConfirmationEmail({
+        orderNumber: order.orderNumber,
+        customerName,
+        customerEmail: customerEmail || '',
+        customerPhone,
+        shippingAddress,
+        totalAmount: parseFloat(totalAmount),
+        paymentMethod: paymentMethod || 'UPI',
+        items: Array.isArray(orderItems) ? orderItems : [],
+      }).catch(() => {});
+    } catch {}
 
     return NextResponse.json({ success: true, order });
   } catch (error: any) {

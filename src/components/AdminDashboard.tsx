@@ -36,6 +36,62 @@ import {
   Phone,
   MessageSquare,
 } from 'lucide-react';
+import { WatermarkOverlay } from '@/components/WatermarkOverlay';
+
+const SAREE_LENGTH_OPTIONS = [
+  '6.3 Meters (With Blouse Piece)',
+  '5.5 Meters (Without Blouse Piece)',
+  '6.5 Meters (With Heavy Blouse Piece)',
+  '6.2 Meters (Standard Handloom)',
+];
+
+const SUIT_LENGTH_OPTIONS = [
+  'Top 2.5 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters (3-Piece Set)',
+  'Top 2.5 Meters, Dupatta 2.5 Meters (2-Piece Set)',
+  'Top 2.5 Meters, Bottom 2.0 Meters, Dupatta 2.5 Meters',
+  'Top 3.0 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters',
+  'Top 2.5m, Bottom 2.5m, Dupatta 2.25m',
+];
+
+const POPULAR_COLORS = [
+  'Crimson Red',
+  'Turquoise Blue',
+  'Mustard Yellow',
+  'Bottle Green',
+  'Royal Navy Blue',
+  'Rani Pink',
+  'Maroon',
+  'Emerald Green',
+  'Black',
+  'Purple / Lavender',
+  'Pastel Peach',
+  'Beige / Off-White',
+  'Rust Orange',
+  'Pista Green',
+  'Wine Red',
+  'Rama Green',
+  'Golden Yellow',
+  'Magenta',
+];
+
+const SAREE_BLOUSE_OPTIONS = [
+  'Contrast Maroon',
+  'Running Match',
+  'Contrast Gold',
+  'Contrast Green',
+  'Contrast Navy Blue',
+  'Tone on Tone Matching',
+  'Without Blouse',
+];
+
+const SUIT_DUPATTA_OPTIONS = [
+  'Matching Dupatta (Self)',
+  'Contrast Zari Dupatta',
+  'Handblock Printed Dupatta',
+  'Multi-color Dupatta',
+  'Contrast Border Dupatta',
+  'Chiffon / Silk Dupatta',
+];
 
 export default function AdminDashboard() {
   const { user, setUser, logout } = useShop();
@@ -143,7 +199,8 @@ export default function AdminDashboard() {
   const [authError, setAuthError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // New Saree Form state
+  // New Product (Saree / Suit) Form state
+  const [productType, setProductType] = useState<'saree' | 'suit'>('saree');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -164,10 +221,12 @@ export default function AdminDashboard() {
   const [isBestSeller, setIsBestSeller] = useState(false);
   const [isTrending, setIsTrending] = useState(false);
   const [isOutOfStock, setIsOutOfStock] = useState(false);
+  const [stock, setStock] = useState('');
   const [formMsg, setFormMsg] = useState('');
 
-  // Edit Saree Modal state
+  // Edit Product Modal state
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [editProductType, setEditProductType] = useState<'saree' | 'suit'>('saree');
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editPrice, setEditPrice] = useState('');
@@ -186,6 +245,7 @@ export default function AdminDashboard() {
   const [editIsBestSeller, setEditIsBestSeller] = useState(false);
   const [editIsTrending, setEditIsTrending] = useState(false);
   const [editIsOutOfStock, setEditIsOutOfStock] = useState(false);
+  const [editStock, setEditStock] = useState('');
   const [isEditUploading, setIsEditUploading] = useState(false);
   const [editMsg, setEditMsg] = useState('');
 
@@ -231,7 +291,7 @@ export default function AdminDashboard() {
     try {
       const [resOrders, resProducts, resCategories, resActivity, resCustomers] = await Promise.all([
         fetch('/api/orders').then((r) => r.json()),
-        fetch('/api/products').then((r) => r.json()),
+        fetch('/api/products?includeAll=true').then((r) => r.json()),
         fetch('/api/categories?includeHidden=true').then((r) => r.json()),
         fetch('/api/admin/activity').then((r) => r.json()),
         fetch('/api/admin/customers').then((r) => r.json()),
@@ -488,6 +548,7 @@ export default function AdminDashboard() {
           isBestSeller,
           isTrending,
           isOutOfStock,
+          stock: stock.trim() !== '' ? parseInt(stock) : undefined,
         }),
       });
 
@@ -503,6 +564,7 @@ export default function AdminDashboard() {
         setImageUrl('');
         setUploadedPreview('');
         setImagesList([]);
+        setStock('');
         setIsBestSeller(false);
         setIsFeatured(false);
         setIsTrending(false);
@@ -518,6 +580,13 @@ export default function AdminDashboard() {
 
   const openEditModal = (p: any) => {
     setEditingProduct(p);
+    const isSuit = Boolean(
+      (p.title && /suit|kurta|dress material/i.test(p.title)) ||
+      (p.lengthWithBlouse && /top|dupatta|duppta|pant|salwar/i.test(p.lengthWithBlouse)) ||
+      (categories.find((c) => c.id === p.categoryId)?.slug?.includes('suit')) ||
+      (categories.find((c) => c.id === p.categoryId)?.name?.toLowerCase().includes('suit'))
+    );
+    setEditProductType(isSuit ? 'suit' : 'saree');
     setEditTitle(p.title || '');
     setEditDescription(p.description || '');
     setEditPrice(p.price?.toString() || '');
@@ -527,10 +596,11 @@ export default function AdminDashboard() {
     setEditBorderType(p.borderType || 'Gold Zari');
     setEditColor(p.color || 'Crimson Red');
     setEditBlouseColor(p.blouseColor || '');
-    setEditLengthWithBlouse(p.lengthWithBlouse || '6.3 Meters (With Blouse Piece)');
+    setEditLengthWithBlouse(p.lengthWithBlouse || (isSuit ? 'Top 2.5 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters (3-Piece Set)' : '6.3 Meters (With Blouse Piece)'));
     setEditDesignCode(p.designCode || '');
     setEditCategoryId(p.categoryId || categories[0]?.id || '');
-    setEditIsOutOfStock(p.isOutOfStock || p.stock === 0);
+    setEditIsOutOfStock(Boolean(p.isOutOfStock));
+    setEditStock(p.stock !== undefined && p.stock !== null ? p.stock.toString() : '');
     setEditIsFeatured(p.isFeatured || false);
     setEditIsBestSeller(p.isBestSeller || false);
     setEditIsTrending(p.isTrending || false);
@@ -576,6 +646,7 @@ export default function AdminDashboard() {
           designCode: editDesignCode.trim() || null,
           categoryId: editCategoryId,
           isOutOfStock: editIsOutOfStock,
+          stock: editStock.trim() !== '' ? parseInt(editStock) : '',
           images: JSON.stringify(finalEditImages),
           isFeatured: editIsFeatured,
           isBestSeller: editIsBestSeller,
@@ -1378,11 +1449,14 @@ export default function AdminDashboard() {
               const imgs = JSON.parse(p.images || '[]');
               return (
                 <div key={p.id} className="p-3.5 border border-slate-200 rounded-xl flex gap-3.5 bg-white shadow-xs hover:border-amber-300 transition-all relative group">
-                  <img
-                    src={imgs[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c'}
-                    alt={p.title}
-                    className="w-20 h-28 object-cover rounded-lg bg-slate-100 shrink-0 border border-slate-100"
-                  />
+                  <div className="relative w-20 h-28 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-100">
+                    <img
+                      src={imgs[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c'}
+                      alt={p.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <WatermarkOverlay variant="card" className="scale-75" />
+                  </div>
                   <div className="flex-1 text-xs space-y-1.5 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -1406,18 +1480,17 @@ export default function AdminDashboard() {
                           <span className="line-through text-gray-400 text-[11px]">₹{p.originalPrice.toLocaleString()}</span>
                         )}
                       </div>
-                      <div className="mt-1">
-                        {p.isOutOfStock || p.stock === 0 ? (
+                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                        {p.isOutOfStock ? (
                           <span className="text-[10px] text-rose-700 font-extrabold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
                             OUT OF STOCK
                           </span>
-                        ) : (
-                          <span className="text-[10px] text-emerald-700 font-extrabold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                            IN STOCK
+                        ) : p.stock !== undefined && p.stock !== null && p.stock !== '' && Number(p.stock) > 0 ? (
+                          <span className="text-[10px] text-amber-900 font-extrabold bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            📦 Stock: {p.stock} units
                           </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
 
@@ -1446,27 +1519,72 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Tab 3: Add Saree Form */}
+      {/* Tab 3: Add Product (Saree / Suit) Form */}
       {activeTab === 'add' && (
         <div className="mt-6 max-w-2xl bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-          <h3 className="text-lg font-serif font-bold text-amber-950 mb-4 pb-2 border-b border-gray-100">
-            Add New Maheshwari Saree Details
-          </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
+            <div>
+              <h3 className="text-lg font-serif font-bold text-amber-950">
+                Add New {productType === 'suit' ? 'Suit / Dress Material' : 'Maheshwari Saree'} Details
+              </h3>
+              <p className="text-[11px] text-gray-500">
+                {productType === 'suit' ? 'Add authentic handcrafted suit sets & unstitched dress materials' : 'Add authentic handcrafted Maheshwari sarees to store inventory'}
+              </p>
+            </div>
+
+            {/* Product Type Switcher Dropdown / Pills */}
+            <div className="flex items-center gap-1 bg-amber-50 p-1 rounded-xl border border-amber-200 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setProductType('saree');
+                  if (lengthWithBlouse.includes('Top') || !lengthWithBlouse) {
+                    setLengthWithBlouse('6.3 Meters (With Blouse Piece)');
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  productType === 'saree'
+                    ? 'bg-amber-950 text-white shadow-xs'
+                    : 'text-amber-900 hover:bg-amber-100/70'
+                }`}
+              >
+                <span>🥻 Saree (साड़ी)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setProductType('suit');
+                  if (lengthWithBlouse === '6.3 Meters (With Blouse Piece)' || !lengthWithBlouse) {
+                    setLengthWithBlouse('Top 2.5 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters (3-Piece Set)');
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  productType === 'suit'
+                    ? 'bg-rose-900 text-white shadow-xs'
+                    : 'text-amber-900 hover:bg-rose-50'
+                }`}
+              >
+                <span>👗 Suit (सूट)</span>
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleAddProduct} className="space-y-4 text-xs">
             <div>
-              <label className="block text-gray-700 font-bold mb-1">Saree Title *</label>
+              <label className="block text-gray-700 font-bold mb-1">
+                {productType === 'suit' ? 'Suit Title *' : 'Saree Title *'}
+              </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Royal Crimson Gold Zari Maheshwari Silk Saree"
+                placeholder={productType === 'suit' ? 'e.g. Pure Handloom Maheshwari Silk Cotton Suit Set with Zari Dupatta' : 'e.g. Royal Crimson Gold Zari Maheshwari Silk Saree'}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full border border-gray-300 rounded p-2.5 focus:ring-1 focus:ring-amber-800 text-xs"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div>
                 <label className="block text-gray-700 font-bold mb-1">Selling Price (₹) *</label>
                 <input
@@ -1490,6 +1608,21 @@ export default function AdminDashboard() {
                   className="w-full border border-gray-300 rounded p-2.5 focus:ring-1 focus:ring-amber-800 text-xs"
                 />
               </div>
+
+              <div>
+                <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                  <span>Stock Quantity</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Optional</span>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="e.g. 4 (Leave blank if unmanaged)"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  className="w-full border border-gray-300 rounded p-2.5 focus:ring-1 focus:ring-amber-800 text-xs"
+                />
+              </div>
             </div>
 
             {/* Collection Badges & Highlight Checkboxes */}
@@ -1507,7 +1640,7 @@ export default function AdminDashboard() {
                     className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
                   />
                   <span className="bg-rose-100 text-rose-800 px-2.5 py-1 rounded text-xs font-extrabold uppercase tracking-wide">
-                    ★ Mark as BESTSELLER Saree
+                    ★ Mark as BESTSELLER {productType === 'suit' ? 'Suit' : 'Saree'}
                   </span>
                 </label>
 
@@ -1531,7 +1664,7 @@ export default function AdminDashboard() {
                     className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 cursor-pointer"
                   />
                   <span className="bg-orange-100 text-orange-900 px-2.5 py-1 rounded text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
-                    🔥 Mark as TRENDING Saree
+                    🔥 Mark as TRENDING {productType === 'suit' ? 'Suit' : 'Saree'}
                   </span>
                 </label>
 
@@ -1551,10 +1684,35 @@ export default function AdminDashboard() {
 
             {/* Product Specifications Section */}
             <div className="p-3.5 bg-amber-50/50 border border-amber-200/80 rounded-xl space-y-3">
-              <h4 className="font-bold text-amber-950 text-xs flex items-center gap-1.5 uppercase tracking-wider border-b border-amber-200/60 pb-1.5">
-                <Sliders className="w-3.5 h-3.5 text-amber-800" />
-                <span>Product Specifications</span>
-              </h4>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2">
+                <div className="flex items-center gap-1.5">
+                  <Sliders className="w-4 h-4 text-amber-800" />
+                  <span className="font-bold text-amber-950 text-xs uppercase tracking-wider">
+                    Specification Heading (हेडिंग चुनें):
+                  </span>
+                </div>
+
+                <select
+                  value={productType}
+                  onChange={(e) => {
+                    const type = e.target.value as 'saree' | 'suit';
+                    setProductType(type);
+                    if (type === 'suit') {
+                      if (lengthWithBlouse === '6.3 Meters (With Blouse Piece)' || !lengthWithBlouse) {
+                        setLengthWithBlouse('Top 2.5 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters (3-Piece Set)');
+                      }
+                    } else {
+                      if (lengthWithBlouse.includes('Top') || !lengthWithBlouse) {
+                        setLengthWithBlouse('6.3 Meters (With Blouse Piece)');
+                      }
+                    }
+                  }}
+                  className="border-2 border-amber-700 bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-amber-950 shadow-xs focus:ring-2 focus:ring-amber-800 cursor-pointer"
+                >
+                  <option value="saree">🥻 SAREE SPECIFICATIONS (साड़ी)</option>
+                  <option value="suit">👗 SUIT SPECIFICATIONS (सूट)</option>
+                </select>
+              </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
@@ -1568,6 +1726,7 @@ export default function AdminDashboard() {
                     <option value="Pure Silk">Pure Silk</option>
                     <option value="Tissue Silk">Tissue Silk</option>
                     <option value="Cotton">Cotton</option>
+                    <option value="Chanderi Silk">Chanderi Silk</option>
                   </select>
                 </div>
 
@@ -1599,7 +1758,7 @@ export default function AdminDashboard() {
                   {(!existingBorderTypes.includes(borderType) || borderType === '') && (
                     <input
                       type="text"
-                      placeholder="Type new Border Type (e.g. Kadhwa Zari)"
+                      placeholder="Type new Border Type (e.g. Kadhwa Zari / Zari Border)"
                       value={borderType}
                       onChange={(e) => setBorderType(e.target.value)}
                       className="w-full border border-amber-400 bg-amber-50/50 rounded p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
@@ -1607,37 +1766,115 @@ export default function AdminDashboard() {
                   )}
                 </div>
 
+                {/* Dynamic Color Field with Dropdown + Custom Input */}
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">Saree Color</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Crimson Red / Turquoise Blue"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="w-full border border-gray-300 rounded p-2 text-xs font-medium"
-                  />
+                  <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                    <span>{productType === 'suit' ? 'Suit Color' : 'Saree Color'}</span>
+                    <span className="text-[10px] text-amber-800 font-normal">Select or type custom</span>
+                  </label>
+                  <select
+                    value={POPULAR_COLORS.includes(color) ? color : (color ? 'CUSTOM' : '')}
+                    onChange={(e) => {
+                      if (e.target.value === 'CUSTOM') {
+                        setColor('');
+                      } else {
+                        setColor(e.target.value);
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded p-2 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
+                  >
+                    <option value="">-- Select {productType === 'suit' ? 'Suit' : 'Saree'} Color --</option>
+                    {POPULAR_COLORS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                    <option value="CUSTOM">➕ Type Custom Color...</option>
+                  </select>
+
+                  {(!POPULAR_COLORS.includes(color) || color === '') && (
+                    <input
+                      type="text"
+                      placeholder={`Type ${productType === 'suit' ? 'Suit' : 'Saree'} Color (e.g. Crimson Red / Mustard Yellow)`}
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      className="w-full border border-amber-400 bg-amber-50/50 rounded p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
+                    />
+                  )}
                 </div>
 
+                {/* Dynamic Blouse / Dupatta Color Field with Dropdown + Custom Input */}
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">Blouse Color</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Contrast Maroon / Running Match"
-                    value={blouseColor}
-                    onChange={(e) => setBlouseColor(e.target.value)}
-                    className="w-full border border-gray-300 rounded p-2 text-xs font-medium"
-                  />
+                  <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                    <span>{productType === 'suit' ? 'Dupatta Color' : 'Blouse Color'}</span>
+                    <span className="text-[10px] text-amber-800 font-normal">Select or type custom</span>
+                  </label>
+                  <select
+                    value={(productType === 'suit' ? SUIT_DUPATTA_OPTIONS : SAREE_BLOUSE_OPTIONS).includes(blouseColor) ? blouseColor : (blouseColor ? 'CUSTOM' : '')}
+                    onChange={(e) => {
+                      if (e.target.value === 'CUSTOM') {
+                        setBlouseColor('');
+                      } else {
+                        setBlouseColor(e.target.value);
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded p-2 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
+                  >
+                    <option value="">-- Select {productType === 'suit' ? 'Dupatta' : 'Blouse'} Color --</option>
+                    {(productType === 'suit' ? SUIT_DUPATTA_OPTIONS : SAREE_BLOUSE_OPTIONS).map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                    <option value="CUSTOM">➕ Type Custom {productType === 'suit' ? 'Dupatta' : 'Blouse'} Color...</option>
+                  </select>
+
+                  {(!(productType === 'suit' ? SUIT_DUPATTA_OPTIONS : SAREE_BLOUSE_OPTIONS).includes(blouseColor) || blouseColor === '') && (
+                    <input
+                      type="text"
+                      placeholder={`Type ${productType === 'suit' ? 'Dupatta' : 'Blouse'} Color (e.g. Contrast Maroon / Running Match)`}
+                      value={blouseColor}
+                      onChange={(e) => setBlouseColor(e.target.value)}
+                      className="w-full border border-amber-400 bg-amber-50/50 rounded p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
+                    />
+                  )}
                 </div>
 
+                {/* Dynamic Length / Dimensions Field with Dropdown + Custom Input */}
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">Length / Blouse</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 6.3 Meters (With Blouse Piece)"
-                    value={lengthWithBlouse}
-                    onChange={(e) => setLengthWithBlouse(e.target.value)}
-                    className="w-full border border-gray-300 rounded p-2 text-xs font-medium"
-                  />
+                  <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                    <span>{productType === 'suit' ? 'Suit Dimensions / Length' : 'Length / Blouse'}</span>
+                    <span className="text-[10px] text-amber-800 font-normal">Select or type custom</span>
+                  </label>
+                  <select
+                    value={(productType === 'suit' ? SUIT_LENGTH_OPTIONS : SAREE_LENGTH_OPTIONS).includes(lengthWithBlouse) ? lengthWithBlouse : (lengthWithBlouse ? 'CUSTOM' : '')}
+                    onChange={(e) => {
+                      if (e.target.value === 'CUSTOM') {
+                        setLengthWithBlouse('');
+                      } else {
+                        setLengthWithBlouse(e.target.value);
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded p-2 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
+                  >
+                    <option value="">-- Select Length / Dimensions --</option>
+                    {(productType === 'suit' ? SUIT_LENGTH_OPTIONS : SAREE_LENGTH_OPTIONS).map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                    <option value="CUSTOM">➕ Type Custom Length / Dimensions...</option>
+                  </select>
+
+                  {(!(productType === 'suit' ? SUIT_LENGTH_OPTIONS : SAREE_LENGTH_OPTIONS).includes(lengthWithBlouse) || lengthWithBlouse === '') && (
+                    <input
+                      type="text"
+                      placeholder={productType === 'suit' ? 'e.g. 2.5 Meters top 2.5 Meters Duppta' : 'e.g. 6.3 Meters (With Blouse Piece)'}
+                      value={lengthWithBlouse}
+                      onChange={(e) => setLengthWithBlouse(e.target.value)}
+                      className="w-full border border-amber-400 bg-amber-50/50 rounded p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
+                    />
+                  )}
                 </div>
 
                 <div>
@@ -1718,7 +1955,7 @@ export default function AdminDashboard() {
                 <div>
                   <label className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5 uppercase tracking-wider">
                     <Upload className="w-4 h-4 text-amber-800" />
-                    <span>Upload Saree Photos ({imagesList.length} Photos Added)</span>
+                    <span>Upload {productType === 'suit' ? 'Suit' : 'Saree'} Photos ({imagesList.length} Photos Added)</span>
                   </label>
                   <p className="text-[11px] text-amber-900/80 font-medium mt-0.5">
                     📸 Select 1 or multiple photos from PC/Mobile. The photo with <span className="font-bold text-amber-950">⭐ PRIMARY DEFAULT COVER</span> badge will be default thumbnail!
@@ -1750,40 +1987,47 @@ export default function AdminDashboard() {
                       <div
                         key={idx}
                         className={`group relative bg-white border-2 rounded-xl overflow-hidden shadow-2xs flex flex-col justify-between p-1.5 transition-all ${
-                          idx === 0 ? 'border-amber-500 ring-2 ring-amber-300/60 shadow-md' : 'border-gray-200 hover:border-amber-300'
+                          idx === 0
+                            ? 'border-amber-600 ring-2 ring-amber-400/50 bg-amber-50/30'
+                            : 'border-gray-200 hover:border-amber-400'
                         }`}
                       >
-                        {/* Primary Cover Badge */}
-                        {idx === 0 ? (
-                          <div className="bg-amber-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded text-center shadow-2xs mb-1 tracking-tight flex items-center justify-center gap-1">
-                            <span>⭐ PRIMARY DEFAULT</span>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => handleSetPrimaryImage(idx)}
-                            className="bg-amber-100 hover:bg-amber-600 text-amber-950 hover:text-white text-[9px] font-extrabold px-2 py-0.5 rounded text-center transition-colors mb-1 truncate cursor-pointer"
-                            title="Make this photo the default cover"
-                          >
-                            ★ Set as Default Cover
-                          </button>
-                        )}
+                        <div className="relative aspect-4/5 w-full rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={imgUrl}
+                            alt={`Preview ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <WatermarkOverlay />
 
-                        {/* Thumbnail Image */}
-                        <div className="w-full h-32 rounded-lg overflow-hidden bg-slate-100 relative">
-                          <img src={imgUrl} alt={`Saree Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                          {/* Primary Cover Badge */}
+                          {idx === 0 ? (
+                            <span className="absolute top-1 left-1 bg-amber-900 text-amber-50 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow flex items-center gap-1 uppercase tracking-wider z-10">
+                              ⭐ Primary Cover
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimaryImage(idx)}
+                              className="absolute top-1 left-1 bg-black/75 hover:bg-amber-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow opacity-90 hover:opacity-100 transition-all cursor-pointer z-10"
+                            >
+                              ★ Set as Cover
+                            </button>
+                          )}
+
+                          {/* Delete Photo Button */}
                           <button
                             type="button"
                             onClick={() => handleRemoveImage(idx)}
-                            className="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1 shadow-md transition-transform active:scale-95"
-                            title="Delete this photo"
+                            className="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full shadow transition-all cursor-pointer z-10"
+                            title="Remove photo"
                           >
-                            <X className="w-3 h-3" />
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
 
                         {/* Reorder Buttons */}
-                        <div className="flex items-center justify-between pt-1 text-[10px] font-bold text-gray-500">
+                        <div className="flex items-center justify-between mt-1 text-[10px] text-gray-500 font-bold px-0.5">
                           <button
                             type="button"
                             disabled={idx === 0}
@@ -1818,7 +2062,7 @@ export default function AdminDashboard() {
               </label>
               <textarea
                 rows={4}
-                placeholder="Enter detailed craft story, weave style, heritage details, color contrast notes..."
+                placeholder={productType === 'suit' ? 'Enter detailed suit fabric details, dupatta styling, weave style, heritage details...' : 'Enter detailed craft story, weave style, heritage details, color contrast notes...'}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full border border-amber-300 bg-amber-50/20 rounded p-2.5 text-xs font-medium focus:ring-1 focus:ring-amber-800"
@@ -1833,15 +2077,15 @@ export default function AdminDashboard() {
 
             <button
               type="submit"
-              className="w-full py-3.5 bg-amber-950 hover:bg-black text-white font-extrabold text-xs rounded-lg uppercase tracking-wider shadow-md transition-all"
+              className="w-full py-3.5 bg-amber-950 hover:bg-black text-white font-extrabold text-xs rounded-lg uppercase tracking-wider shadow-md transition-all cursor-pointer"
             >
-              SAVE SAREE TO INVENTORY
+              SAVE {productType === 'suit' ? 'SUIT' : 'SAREE'} TO INVENTORY
             </button>
           </form>
         </div>
       )}
 
-      {/* Edit Saree Modal Overlay */}
+      {/* Edit Product (Saree / Suit) Modal Overlay */}
       {editingProduct && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-start justify-center p-4 sm:p-6 pt-10 sm:pt-14 overflow-hidden">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl border border-amber-900/20 relative text-xs overflow-hidden">
@@ -1850,33 +2094,70 @@ export default function AdminDashboard() {
               <div className="flex items-center gap-2">
                 <Pencil className="w-4 h-4 text-amber-400" />
                 <h3 className="text-base font-serif font-bold text-amber-100">
-                  Edit Saree Details & Badges
+                  Edit {editProductType === 'suit' ? 'Suit / Dress Material' : 'Saree'} Details
                 </h3>
               </div>
-              <button
-                type="button"
-                onClick={() => setEditingProduct(null)}
-                className="p-1 rounded-full text-amber-300 hover:text-white hover:bg-amber-800/80 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              <div className="flex items-center gap-3">
+                {/* Product Type Toggle in Edit Modal */}
+                <div className="flex items-center gap-1 bg-amber-900/80 p-0.5 rounded-lg border border-amber-800">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditProductType('saree');
+                      if (editLengthWithBlouse.includes('Top') || !editLengthWithBlouse) {
+                        setEditLengthWithBlouse('6.3 Meters (With Blouse Piece)');
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                      editProductType === 'saree' ? 'bg-amber-400 text-amber-950 shadow-xs' : 'text-amber-200 hover:text-white'
+                    }`}
+                  >
+                    🥻 Saree
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditProductType('suit');
+                      if (editLengthWithBlouse === '6.3 Meters (With Blouse Piece)' || !editLengthWithBlouse) {
+                        setEditLengthWithBlouse('Top 2.5 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters (3-Piece Set)');
+                      }
+                    }}
+                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                      editProductType === 'suit' ? 'bg-rose-500 text-white shadow-xs' : 'text-amber-200 hover:text-white'
+                    }`}
+                  >
+                    👗 Suit
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setEditingProduct(null)}
+                  className="p-1 rounded-full text-amber-300 hover:text-white hover:bg-amber-800/80 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* Modal Form with Scrollable Body & Fixed Footer */}
             <form onSubmit={handleSaveEditProduct} className="flex flex-col flex-1 min-h-0 bg-white">
               <div className="p-6 overflow-y-auto flex-1 space-y-4">
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">Saree Title *</label>
+                  <label className="block text-gray-700 font-bold mb-1">
+                    {editProductType === 'suit' ? 'Suit Title *' : 'Saree Title *'}
+                  </label>
                   <input
                     type="text"
                     required
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium"
+                    className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium focus:ring-1 focus:ring-amber-800"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-gray-700 font-bold mb-1">Selling Price (₹) *</label>
                     <input
@@ -1884,7 +2165,7 @@ export default function AdminDashboard() {
                       required
                       value={editPrice}
                       onChange={(e) => setEditPrice(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium focus:ring-1 focus:ring-amber-800"
                     />
                   </div>
                   <div>
@@ -1894,7 +2175,21 @@ export default function AdminDashboard() {
                       required
                       value={editOriginalPrice}
                       onChange={(e) => setEditOriginalPrice(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium"
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium focus:ring-1 focus:ring-amber-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                      <span>Stock Quantity</span>
+                      <span className="text-[10px] text-gray-400 font-normal">Optional</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 4 (Leave blank if unmanaged)"
+                      value={editStock}
+                      onChange={(e) => setEditStock(e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium focus:ring-1 focus:ring-amber-800"
                     />
                   </div>
                 </div>
@@ -1914,7 +2209,7 @@ export default function AdminDashboard() {
                         className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
                       />
                       <span className="bg-rose-100 text-rose-800 px-2.5 py-1 rounded text-xs font-extrabold uppercase tracking-wide">
-                        ★ Mark as BESTSELLER Saree
+                        ★ Mark as BESTSELLER {editProductType === 'suit' ? 'Suit' : 'Saree'}
                       </span>
                     </label>
 
@@ -1938,7 +2233,7 @@ export default function AdminDashboard() {
                         className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 cursor-pointer"
                       />
                       <span className="bg-orange-100 text-orange-900 px-2.5 py-1 rounded text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
-                        🔥 Mark as TRENDING Saree
+                        🔥 Mark as TRENDING {editProductType === 'suit' ? 'Suit' : 'Saree'}
                       </span>
                     </label>
 
@@ -1958,10 +2253,35 @@ export default function AdminDashboard() {
 
                 {/* Edit Product Specifications Section */}
                 <div className="p-3.5 bg-amber-50/50 border border-amber-200/80 rounded-xl space-y-3">
-                  <h4 className="font-bold text-amber-950 text-xs flex items-center gap-1.5 uppercase tracking-wider border-b border-amber-200/60 pb-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-amber-800" />
-                    <span>Edit Product Specifications</span>
-                  </h4>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-200/60 pb-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sliders className="w-4 h-4 text-amber-800" />
+                      <span className="font-bold text-amber-950 text-xs uppercase tracking-wider">
+                        Specification Heading (हेडिंग चुनें):
+                      </span>
+                    </div>
+
+                    <select
+                      value={editProductType}
+                      onChange={(e) => {
+                        const type = e.target.value as 'saree' | 'suit';
+                        setEditProductType(type);
+                        if (type === 'suit') {
+                          if (editLengthWithBlouse === '6.3 Meters (With Blouse Piece)' || !editLengthWithBlouse) {
+                            setEditLengthWithBlouse('Top 2.5 Meters, Bottom 2.5 Meters, Dupatta 2.5 Meters (3-Piece Set)');
+                          }
+                        } else {
+                          if (editLengthWithBlouse.includes('Top') || !editLengthWithBlouse) {
+                            setEditLengthWithBlouse('6.3 Meters (With Blouse Piece)');
+                          }
+                        }
+                      }}
+                      className="border-2 border-amber-700 bg-white rounded-lg px-3 py-1.5 text-xs font-bold text-amber-950 shadow-xs focus:ring-2 focus:ring-amber-800 cursor-pointer"
+                    >
+                      <option value="saree">🥻 SAREE SPECIFICATIONS (साड़ी)</option>
+                      <option value="suit">👗 SUIT SPECIFICATIONS (सूट)</option>
+                    </select>
+                  </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div>
@@ -1969,12 +2289,13 @@ export default function AdminDashboard() {
                       <select
                         value={editFabric}
                         onChange={(e) => setEditFabric(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-white font-medium"
+                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
                       >
                         <option value="Silk Cotton">Silk Cotton</option>
                         <option value="Pure Silk">Pure Silk</option>
                         <option value="Tissue Silk">Tissue Silk</option>
                         <option value="Cotton">Cotton</option>
+                        <option value="Chanderi Silk">Chanderi Silk</option>
                       </select>
                     </div>
 
@@ -2006,7 +2327,7 @@ export default function AdminDashboard() {
                       {(!existingBorderTypes.includes(editBorderType) || editBorderType === '') && (
                         <input
                           type="text"
-                          placeholder="Type new Border Type (e.g. Kadhwa Zari)"
+                          placeholder="Type new Border Type (e.g. Kadhwa Zari / Zari Border)"
                           value={editBorderType}
                           onChange={(e) => setEditBorderType(e.target.value)}
                           className="w-full border border-amber-400 bg-amber-50/50 rounded-lg p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
@@ -2014,37 +2335,115 @@ export default function AdminDashboard() {
                       )}
                     </div>
 
+                    {/* Dynamic Edit Color Field with Dropdown + Custom Input */}
                     <div>
-                      <label className="block text-gray-700 font-bold mb-1">Saree Color</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Crimson Red / Turquoise Blue"
-                        value={editColor}
-                        onChange={(e) => setEditColor(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium"
-                      />
+                      <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                        <span>{editProductType === 'suit' ? 'Suit Color' : 'Saree Color'}</span>
+                        <span className="text-[10px] text-amber-800 font-normal">Select or type custom</span>
+                      </label>
+                      <select
+                        value={POPULAR_COLORS.includes(editColor) ? editColor : (editColor ? 'CUSTOM' : '')}
+                        onChange={(e) => {
+                          if (e.target.value === 'CUSTOM') {
+                            setEditColor('');
+                          } else {
+                            setEditColor(e.target.value);
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
+                      >
+                        <option value="">-- Select {editProductType === 'suit' ? 'Suit' : 'Saree'} Color --</option>
+                        {POPULAR_COLORS.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                        <option value="CUSTOM">➕ Type Custom Color...</option>
+                      </select>
+
+                      {(!POPULAR_COLORS.includes(editColor) || editColor === '') && (
+                        <input
+                          type="text"
+                          placeholder={`Type ${editProductType === 'suit' ? 'Suit' : 'Saree'} Color (e.g. Crimson Red / Mustard Yellow)`}
+                          value={editColor}
+                          onChange={(e) => setEditColor(e.target.value)}
+                          className="w-full border border-amber-400 bg-amber-50/50 rounded-lg p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
+                        />
+                      )}
                     </div>
 
+                    {/* Dynamic Edit Blouse / Dupatta Color Field with Dropdown + Custom Input */}
                     <div>
-                      <label className="block text-gray-700 font-bold mb-1">Blouse Color</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Contrast Maroon / Running Match"
-                        value={editBlouseColor}
-                        onChange={(e) => setEditBlouseColor(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium"
-                      />
+                      <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                        <span>{editProductType === 'suit' ? 'Dupatta Color' : 'Blouse Color'}</span>
+                        <span className="text-[10px] text-amber-800 font-normal">Select or type custom</span>
+                      </label>
+                      <select
+                        value={(editProductType === 'suit' ? SUIT_DUPATTA_OPTIONS : SAREE_BLOUSE_OPTIONS).includes(editBlouseColor) ? editBlouseColor : (editBlouseColor ? 'CUSTOM' : '')}
+                        onChange={(e) => {
+                          if (e.target.value === 'CUSTOM') {
+                            setEditBlouseColor('');
+                          } else {
+                            setEditBlouseColor(e.target.value);
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
+                      >
+                        <option value="">-- Select {editProductType === 'suit' ? 'Dupatta' : 'Blouse'} Color --</option>
+                        {(editProductType === 'suit' ? SUIT_DUPATTA_OPTIONS : SAREE_BLOUSE_OPTIONS).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                        <option value="CUSTOM">➕ Type Custom {editProductType === 'suit' ? 'Dupatta' : 'Blouse'} Color...</option>
+                      </select>
+
+                      {(!(editProductType === 'suit' ? SUIT_DUPATTA_OPTIONS : SAREE_BLOUSE_OPTIONS).includes(editBlouseColor) || editBlouseColor === '') && (
+                        <input
+                          type="text"
+                          placeholder={`Type ${editProductType === 'suit' ? 'Dupatta' : 'Blouse'} Color (e.g. Contrast Maroon / Running Match)`}
+                          value={editBlouseColor}
+                          onChange={(e) => setEditBlouseColor(e.target.value)}
+                          className="w-full border border-amber-400 bg-amber-50/50 rounded-lg p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
+                        />
+                      )}
                     </div>
 
+                    {/* Dynamic Edit Length / Dimensions Field with Dropdown + Custom Input */}
                     <div>
-                      <label className="block text-gray-700 font-bold mb-1">Length / Blouse</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. 6.3 Meters (With Blouse Piece)"
-                        value={editLengthWithBlouse}
-                        onChange={(e) => setEditLengthWithBlouse(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs font-medium"
-                      />
+                      <label className="block text-gray-700 font-bold mb-1 flex items-center justify-between">
+                        <span>{editProductType === 'suit' ? 'Suit Dimensions / Length' : 'Length / Blouse'}</span>
+                        <span className="text-[10px] text-amber-800 font-normal">Select or type custom</span>
+                      </label>
+                      <select
+                        value={(editProductType === 'suit' ? SUIT_LENGTH_OPTIONS : SAREE_LENGTH_OPTIONS).includes(editLengthWithBlouse) ? editLengthWithBlouse : (editLengthWithBlouse ? 'CUSTOM' : '')}
+                        onChange={(e) => {
+                          if (e.target.value === 'CUSTOM') {
+                            setEditLengthWithBlouse('');
+                          } else {
+                            setEditLengthWithBlouse(e.target.value);
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded-lg p-2.5 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800"
+                      >
+                        <option value="">-- Select Length / Dimensions --</option>
+                        {(editProductType === 'suit' ? SUIT_LENGTH_OPTIONS : SAREE_LENGTH_OPTIONS).map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                        <option value="CUSTOM">➕ Type Custom Length / Dimensions...</option>
+                      </select>
+
+                      {(!(editProductType === 'suit' ? SUIT_LENGTH_OPTIONS : SAREE_LENGTH_OPTIONS).includes(editLengthWithBlouse) || editLengthWithBlouse === '') && (
+                        <input
+                          type="text"
+                          placeholder={editProductType === 'suit' ? 'e.g. 2.5 Meters top 2.5 Meters Duppta' : 'e.g. 6.3 Meters (With Blouse Piece)'}
+                          value={editLengthWithBlouse}
+                          onChange={(e) => setEditLengthWithBlouse(e.target.value)}
+                          className="w-full border border-amber-400 bg-amber-50/50 rounded-lg p-2 text-xs font-semibold mt-1.5 focus:ring-1 focus:ring-amber-800 text-amber-950 placeholder:font-normal"
+                        />
+                      )}
                     </div>
 
                     <div>
@@ -2116,63 +2515,6 @@ export default function AdminDashboard() {
                         ))}
                       </select>
                     </div>
-
-                    {/* Collection Badges & Display Tags (Edit Modal) */}
-                    <div className="col-span-1 md:col-span-2 p-3 bg-rose-50/50 border border-rose-200/80 rounded-xl space-y-2">
-                      <label className="block text-rose-950 font-bold text-xs flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Collection Badges & Display Tags</span>
-                      </label>
-                      <div className="flex flex-wrap items-center gap-4">
-                        <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-800">
-                          <input
-                            type="checkbox"
-                            checked={editIsBestSeller}
-                            onChange={(e) => setEditIsBestSeller(e.target.checked)}
-                            className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
-                          />
-                          <span className="bg-rose-100 text-rose-800 px-2.5 py-1 rounded text-xs font-extrabold uppercase tracking-wide">
-                            ★ Mark as BESTSELLER Saree
-                          </span>
-                        </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-800">
-                          <input
-                            type="checkbox"
-                            checked={editIsFeatured}
-                            onChange={(e) => setEditIsFeatured(e.target.checked)}
-                            className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
-                          />
-                          <span className="bg-amber-100 text-amber-900 px-2.5 py-1 rounded text-xs font-bold">
-                            Mark as Featured Collection
-                          </span>
-                        </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-800">
-                          <input
-                            type="checkbox"
-                            checked={editIsTrending}
-                            onChange={(e) => setEditIsTrending(e.target.checked)}
-                            className="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 cursor-pointer"
-                          />
-                          <span className="bg-orange-100 text-orange-900 px-2.5 py-1 rounded text-xs font-extrabold uppercase tracking-wide flex items-center gap-1">
-                            🔥 Mark as TRENDING Saree
-                          </span>
-                        </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer font-bold text-gray-800">
-                          <input
-                            type="checkbox"
-                            checked={editIsOutOfStock}
-                            onChange={(e) => setEditIsOutOfStock(e.target.checked)}
-                            className="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 cursor-pointer"
-                          />
-                          <span className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${editIsOutOfStock ? 'bg-rose-600 text-white shadow-xs' : 'bg-slate-100 text-gray-700 hover:bg-slate-200'}`}>
-                            {editIsOutOfStock ? '✕ OUT OF STOCK' : '[ ] Mark as Out of Stock'}
-                          </span>
-                        </label>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
@@ -2182,7 +2524,7 @@ export default function AdminDashboard() {
                     <div>
                       <label className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5 uppercase tracking-wider">
                         <Upload className="w-4 h-4 text-amber-800" />
-                        <span>Saree Photos Gallery ({editImagesList.length} Photos)</span>
+                        <span>{editProductType === 'suit' ? 'Suit' : 'Saree'} Photos Gallery ({editImagesList.length} Photos)</span>
                       </label>
                       <p className="text-[11px] text-amber-900/80 font-medium mt-0.5">
                         📸 Upload 1 or multiple photos. Click <span className="font-bold text-amber-950">"★ Set as Default Cover"</span> to make any photo the primary thumbnail!
@@ -2204,44 +2546,48 @@ export default function AdminDashboard() {
                   {editImagesList.length > 0 && (
                     <div className="pt-2 space-y-2">
                       <span className="text-[11px] font-bold text-gray-700 block uppercase tracking-wider">
-                        Current Saree Photos (Index 0 is default thumbnail):
+                        Current {editProductType === 'suit' ? 'Suit' : 'Saree'} Photos (Index 0 is default thumbnail):
                       </span>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                         {editImagesList.map((imgUrl, idx) => (
                           <div
                             key={idx}
                             className={`group relative bg-white border-2 rounded-xl overflow-hidden shadow-2xs flex flex-col justify-between p-1.5 transition-all ${
-                              idx === 0 ? 'border-amber-500 ring-2 ring-amber-300/60 shadow-md' : 'border-gray-200 hover:border-amber-300'
+                              idx === 0
+                                ? 'border-amber-600 ring-2 ring-amber-400/50 bg-amber-50/30'
+                                : 'border-gray-200 hover:border-amber-400'
                             }`}
                           >
-                            {idx === 0 ? (
-                              <div className="bg-amber-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded text-center shadow-2xs mb-1 tracking-tight flex items-center justify-center gap-1">
-                                <span>⭐ PRIMARY DEFAULT</span>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleEditSetPrimaryImage(idx)}
-                                className="bg-amber-100 hover:bg-amber-600 text-amber-950 hover:text-white text-[9px] font-extrabold px-2 py-0.5 rounded text-center transition-colors mb-1 truncate cursor-pointer"
-                                title="Make this photo default cover"
-                              >
-                                ★ Set as Default Cover
-                              </button>
-                            )}
+                            <div className="relative aspect-4/5 w-full rounded-lg overflow-hidden bg-gray-100">
+                              <img src={imgUrl} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                              <WatermarkOverlay />
 
-                            <div className="w-full h-32 rounded-lg overflow-hidden bg-slate-100 relative">
-                              <img src={imgUrl} alt={`Saree Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                              {/* Primary Cover Badge */}
+                              {idx === 0 ? (
+                                <span className="absolute top-1 left-1 bg-amber-900 text-amber-50 text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow flex items-center gap-1 uppercase tracking-wider z-10">
+                                  ⭐ Primary Cover
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditSetPrimaryImage(idx)}
+                                  className="absolute top-1 left-1 bg-black/75 hover:bg-amber-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow opacity-90 hover:opacity-100 transition-all cursor-pointer z-10"
+                                >
+                                  ★ Set as Cover
+                                </button>
+                              )}
+
                               <button
                                 type="button"
                                 onClick={() => handleEditRemoveImage(idx)}
-                                className="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white rounded-full p-1 shadow-md transition-transform active:scale-95 cursor-pointer"
+                                className="absolute top-1 right-1 bg-rose-600 hover:bg-rose-700 text-white p-1 rounded-full shadow transition-all cursor-pointer z-10"
                                 title="Delete this photo"
                               >
-                                <X className="w-3 h-3" />
+                                <Trash2 className="w-3 h-3" />
                               </button>
                             </div>
 
-                            <div className="flex items-center justify-between pt-1 text-[10px] font-bold text-gray-500">
+                            <div className="flex items-center justify-between mt-1 text-[10px] text-gray-500 font-bold px-0.5">
                               <button
                                 type="button"
                                 disabled={idx === 0}

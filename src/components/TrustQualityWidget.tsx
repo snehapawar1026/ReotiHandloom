@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import {
   ShieldCheck,
   Award,
@@ -15,10 +16,33 @@ import {
 } from 'lucide-react';
 
 export const TrustQualityWidget = () => {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const widgetRef = useRef<HTMLDivElement>(null);
+
+  // Close when clicking outside the popup or anywhere on the page
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (widgetRef.current && !widgetRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  if (pathname === '/checkout') return null;
 
   return (
-    <>
+    <div ref={widgetRef}>
       {/* Floating Bottom-Left Trigger Button (Royal Maroon & Gold) */}
       <div className="fixed bottom-6 left-6 z-40 flex items-center gap-2">
         <button
@@ -179,6 +203,6 @@ export const TrustQualityWidget = () => {
 
         </div>
       )}
-    </>
+    </div>
   );
 };

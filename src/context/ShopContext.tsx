@@ -51,7 +51,10 @@ interface ShopContextType {
   setUser: (user: AuthUser | null) => void;
   logout: () => void;
   isCartOpen: boolean;
+  isCheckoutOpen: boolean;
+  setIsCheckoutOpen: (open: boolean) => void;
   addToCart: (product: ProductItem, options?: { hasFallPico?: boolean; fallPicoPrice?: number }) => void;
+  buyNow: (product: ProductItem, options?: { hasFallPico?: boolean; fallPicoPrice?: number }) => void;
   removeFromCart: (productId: string, hasFallPico?: boolean) => void;
   updateQuantity: (productId: string, quantity: number, hasFallPico?: boolean) => void;
   clearCart: () => void;
@@ -70,6 +73,7 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   const [wishlist, setWishlist] = useState<ProductItem[]>([]);
   const [user, setUserState] = useState<AuthUser | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -140,12 +144,20 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
         (item) => item.product.id === product.id && !!item.hasFallPico === hasFallPico
       );
       if (existingIdx > -1) {
-        const updated = [...prev];
-        updated[existingIdx].quantity += 1;
-        return updated;
+        return prev.map((item, idx) =>
+          idx === existingIdx
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
       }
       return [...prev, { product, quantity: 1, hasFallPico, fallPicoPrice }];
     });
+    setIsCartOpen(true);
+  };
+
+  const buyNow = (product: ProductItem, options?: { hasFallPico?: boolean; fallPicoPrice?: number }) => {
+    addToCart(product, options);
+    setIsCheckoutOpen(true);
     setIsCartOpen(true);
   };
 
@@ -205,7 +217,10 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
         setUser,
         logout,
         isCartOpen,
+        isCheckoutOpen,
+        setIsCheckoutOpen,
         addToCart,
+        buyNow,
         removeFromCart,
         updateQuantity,
         clearCart,
