@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "node server.js",
+    "deploy": "next build && node scripts/package-deploy.mjs",
     "postinstall": "prisma generate",
     "lint": "eslint"
   },
