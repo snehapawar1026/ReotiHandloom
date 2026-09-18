@@ -31,7 +31,7 @@ export async function GET() {
     });
 
     // 3. Compute Summary Statistics
-    const totalUsers = users.filter((u) => u.role !== 'admin').length;
+    const totalUsers = users.filter((u: any) => u.role !== 'admin').length;
     const totalVisits = await prisma.activityLog.count({
       where: { type: 'VISIT' },
     });

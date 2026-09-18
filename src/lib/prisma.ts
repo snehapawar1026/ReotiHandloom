@@ -1,22 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
+  prisma: any;
 };
-
-// Invalidate cached Prisma instance if schema models or fields were updated
-if (globalForPrisma.prisma && (
-  !(globalForPrisma.prisma as any).instaPost ||
-  !(globalForPrisma.prisma as any).product ||
-  !(globalForPrisma.prisma as any)._runtimeDataModel?.models?.Product?.fields?.some((f: any) => f.name === 'isTrending') ||
-  !(globalForPrisma.prisma as any)._runtimeDataModel?.models?.Category?.fields?.some((f: any) => f.name === 'parentId') ||
-  !(globalForPrisma.prisma as any)._runtimeDataModel?.models?.Category?.fields?.some((f: any) => f.name === 'isParent')
-)) {
-  globalForPrisma.prisma = undefined;
-}
 
 function getDbPath(): string {
   const candidatePaths = [
@@ -38,6 +25,9 @@ function getDbPath(): string {
 let prismaInstance: any = null;
 
 try {
+  // Use dynamic require so module load does not fail on Linux if better-sqlite3 is compiled for Windows
+  const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3');
+  const { PrismaClient } = require('@prisma/client');
   const dbPath = getDbPath();
   const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
   prismaInstance = globalForPrisma.prisma ?? new PrismaClient({
@@ -45,20 +35,19 @@ try {
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
 } catch (e: any) {
-  console.warn('[Prisma Init Warning] Native adapter unavailable, falling back to storeManager:', e?.message || e);
+  console.warn('[Prisma Init Warning] Native adapter unavailable, using storeManager fallback:', e?.message || e);
 }
 
-// Create a safe proxy that gracefully handles prisma being unavailable
-export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+// Safe proxy: Any Prisma queries gracefully throw so that API routes catch and serve storeManager / storeData
+export const prisma: any = new Proxy({} as any, {
   get(target, prop: string) {
-    if (prismaInstance && (prismaInstance as any)[prop]) {
-      return (prismaInstance as any)[prop];
+    if (prismaInstance && prismaInstance[prop]) {
+      return prismaInstance[prop];
     }
-    // Return a dummy object whose methods reject with a clear warning so caller try/catch catches it
     return new Proxy({}, {
       get(_, method: string) {
         return async () => {
-          throw new Error(`Prisma unavailable: ${prop}.${method}`);
+          throw new Error(`Prisma adapter unavailable on host for ${prop}.${method}`);
         };
       },
     });

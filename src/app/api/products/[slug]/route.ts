@@ -38,7 +38,7 @@ export async function GET(
 
       product =
         allProducts.find(
-          (p) =>
+          (p: any) =>
             p.slug.toLowerCase().trim() === decodedSlug ||
             p.id === slug ||
             p.title.toLowerCase().includes(decodedSlug.replace(/-/g, ' '))

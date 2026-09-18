@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     let failedCount = 0;
 
     await Promise.all(
-      subscriptions.map(async (sub) => {
+      subscriptions.map(async (sub: any) => {
         const pushSubscription = {
           endpoint: sub.endpoint,
           keys: {
