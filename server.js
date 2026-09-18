@@ -1,25 +1,22 @@
-const { createServer } = require('http');
+﻿const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 
-const dev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'BUILD';
-const hostname = 'localhost';
+const dev = false;
 const port = process.env.PORT || 3000;
-const app = next({ dev, hostname, port });
+
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  createServer(async (req, res) => {
-    try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
-    } catch (err) {
-      console.error('Error occurred handling', req.url, err);
-      res.statusCode = 500;
-      res.end('Internal Server Error');
-    }
+  createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
   }).listen(port, (err) => {
     if (err) throw err;
-    console.log(`> Reoti Handloom Server Ready on port ${port}`);
+    console.log(> Server listening on port );
   });
+}).catch((ex) => {
+  console.error(ex.stack);
+  process.exit(1);
 });
