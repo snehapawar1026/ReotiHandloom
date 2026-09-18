@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { getAllProducts } from '@/lib/storeManager';
 
 export async function GET(req: NextRequest) {
@@ -19,92 +18,13 @@ export async function GET(req: NextRequest) {
   const sort = searchParams.get('sort');
   const includeAll = searchParams.get('includeAll') === 'true';
 
-  const isSemiRequested = category === 'semi-maheshwari-sarees' || category === 'semi-maheshwari';
-
-  try {
-    const where: any = {};
-
-    if (category) {
-      where.OR = [
-        { category: { slug: category } },
-        { category: { parent: { slug: category } } },
-      ];
-    } else if (!includeAll) {
-      // By default exclude Semi Maheshwari from all general queries, home, new arrivals, etc.
-      where.category = {
-        slug: {
-          notIn: ['semi-maheshwari-sarees', 'semi-maheshwari'],
-        },
-      };
-    }
-    if (fabric) {
-      where.fabric = { contains: fabric };
-    }
-    if (weaveType) {
-      where.weaveType = { contains: weaveType };
-    }
-    if (borderType) {
-      where.borderType = { contains: borderType };
-    }
-    if (color) {
-      where.color = { contains: color };
-    }
-    if (featured === 'true') {
-      where.isFeatured = true;
-    }
-    if (bestSeller === 'true') {
-      where.isBestSeller = true;
-    }
-    if (trending === 'true') {
-      where.isTrending = true;
-    }
-    if (inStock === 'true') {
-      where.isOutOfStock = false;
-    }
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) where.price.gte = parseFloat(minPrice);
-      if (maxPrice) where.price.lte = parseFloat(maxPrice);
-    }
-    if (search) {
-      where.OR = [
-        { title: { contains: search } },
-        { description: { contains: search } },
-        { fabric: { contains: search } },
-        { color: { contains: search } },
-      ];
-    }
-
-    let orderBy: any = { createdAt: 'desc' };
-    if (sort === 'price-low') orderBy = { price: 'asc' };
-    if (sort === 'price-high') orderBy = { price: 'desc' };
-    if (sort === 'rating') orderBy = { rating: 'desc' };
-    if (sort === 'discount') orderBy = { discountPercent: 'desc' };
-
-    const products = await prisma.product.findMany({
-      where,
-      orderBy,
-      include: {
-        category: true,
-      },
-    });
-
-    if (products && products.length > 0) {
-      return NextResponse.json({ success: true, products, count: products.length });
-    }
-  } catch (error: any) {
-    console.warn('[FALLBACK] Serving products from storeManager:', error.message);
-  }
-
-  // File-based storeManager fallback
-  let storeProducts = getAllProducts();
+  let storeProducts = getAllProducts() || [];
 
   if (category) {
     storeProducts = storeProducts.filter(
       (p) => p.category?.slug === category || p.categoryId === category || (p.category as any)?.parent?.slug === category
     );
   } else if (!includeAll) {
-    // Exclude Semi Maheshwari from general fallback listing
     storeProducts = storeProducts.filter(
       (p) =>
         p.category?.slug !== 'semi-maheshwari-sarees' &&
