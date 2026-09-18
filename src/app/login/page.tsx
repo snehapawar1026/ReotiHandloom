@@ -535,6 +535,17 @@ function LoginContent() {
         {/* STEP 2A: Existing User Password */}
         {step === 'password' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4 animate-fade-in">
+            {/* Hidden Username for Browser Password Manager */}
+            <input
+              type="text"
+              name="username"
+              value={email}
+              readOnly
+              autoComplete="username"
+              className="sr-only"
+              tabIndex={-1}
+            />
+
             {/* Selected Email Pill */}
             <div className="flex items-center justify-between bg-amber-50/60 border border-[#E8DFC8] px-3.5 py-2.5 rounded-xl text-xs">
               <span className="font-medium text-amber-950 truncate">{email}</span>
@@ -559,7 +570,7 @@ function LoginContent() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-gray-700">Password</label>
+                <label htmlFor="login-password" className="text-xs font-bold text-gray-700">Password</label>
                 <button
                   type="button"
                   onClick={handleInitiateForgotPassword}
@@ -571,10 +582,13 @@ function LoginContent() {
               </div>
               <div className="relative">
                 <input
+                  id="login-password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   required
                   autoFocus
                   className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-xs sm:text-sm font-medium pr-10"
@@ -615,6 +629,17 @@ function LoginContent() {
         {/* STEP 2C: Forgot Password / Reset Password Form */}
         {step === 'forgot' && (
           <form onSubmit={handleResetPasswordSubmit} className="space-y-4 animate-fade-in">
+            {/* Hidden Username for Browser Password Manager */}
+            <input
+              type="text"
+              name="username"
+              value={email}
+              readOnly
+              autoComplete="username"
+              className="sr-only"
+              tabIndex={-1}
+            />
+
             {/* Selected Email Pill */}
             <div className="flex items-center justify-between bg-amber-50/60 border border-[#E8DFC8] px-3.5 py-2.5 rounded-xl text-xs">
               <span className="font-medium text-amber-950 truncate">{email}</span>
@@ -655,7 +680,7 @@ function LoginContent() {
             {/* 6-Digit OTP */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-gray-700">Verification Code (OTP) *</label>
+                <label htmlFor="forgot-otp" className="text-xs font-bold text-gray-700">Verification Code (OTP) *</label>
                 <button
                   type="button"
                   onClick={handleResendOtp}
@@ -666,11 +691,14 @@ function LoginContent() {
                 </button>
               </div>
               <input
+                id="forgot-otp"
+                name="otp"
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="6-digit code"
                 maxLength={6}
+                autoComplete="one-time-code"
                 required
                 autoFocus
                 className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-center text-sm font-bold tracking-widest bg-amber-50/20"
@@ -679,13 +707,16 @@ function LoginContent() {
 
             {/* New Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 block">New Password *</label>
+              <label htmlFor="forgot-new-password" className="text-xs font-bold text-gray-700 block">New Password *</label>
               <div className="relative">
                 <input
+                  id="forgot-new-password"
+                  name="new-password"
                   type={showNewPassword ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="At least 6 characters"
+                  autoComplete="new-password"
                   required
                   className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-xs sm:text-sm font-medium pr-10"
                 />
@@ -701,12 +732,15 @@ function LoginContent() {
 
             {/* Confirm New Password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 block">Confirm New Password *</label>
+              <label htmlFor="forgot-confirm-password" className="text-xs font-bold text-gray-700 block">Confirm New Password *</label>
               <input
+                id="forgot-confirm-password"
+                name="confirm-password"
                 type={showNewPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Re-enter new password"
+                autoComplete="new-password"
                 required
                 className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-xs sm:text-sm font-medium"
               />
@@ -736,10 +770,20 @@ function LoginContent() {
           </form>
         )}
 
-
         {/* STEP 2B: New Customer Registration */}
         {step === 'register' && (
-          <form onSubmit={handleRegisterSubmit} className="space-y-4 animate-fade-in">
+          <form onSubmit={handleRegisterSubmit} className="space-y-4 animate-fade-in" autoComplete="off">
+            {/* Hidden Username for Browser Password Manager so it never fills phone */}
+            <input
+              type="text"
+              name="username"
+              value={email}
+              readOnly
+              autoComplete="username"
+              className="sr-only"
+              tabIndex={-1}
+            />
+
             {/* Selected Email Pill */}
             <div className="flex items-center justify-between bg-amber-50/60 border border-[#E8DFC8] px-3.5 py-2.5 rounded-xl text-xs">
               <span className="font-medium text-amber-950 truncate">{email}</span>
@@ -757,12 +801,15 @@ function LoginContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 block">Full Name *</label>
+              <label htmlFor="reg-fullname" className="text-xs font-bold text-gray-700 block">Full Name *</label>
               <input
+                id="reg-fullname"
+                name="fullname"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Your Name"
+                autoComplete="name"
                 required
                 autoFocus
                 className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-xs sm:text-sm font-medium"
@@ -770,24 +817,30 @@ function LoginContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 block">Mobile Number (Optional)</label>
+              <label htmlFor="reg-phone" className="text-xs font-bold text-gray-700 block">Mobile Number (Optional)</label>
               <input
+                id="reg-phone"
+                name="phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="For WhatsApp order tracking updates"
+                placeholder="10-digit mobile number"
+                autoComplete="tel"
                 className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-xs sm:text-sm font-medium"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-700 block">Set Password *</label>
+              <label htmlFor="reg-password" className="text-xs font-bold text-gray-700 block">Set Password *</label>
               <div className="relative">
                 <input
+                  id="reg-password"
+                  name="new-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
+                  autoComplete="new-password"
                   required
                   className="w-full px-4 py-3 border border-gray-300 focus:border-[#581C1C] focus:ring-1 focus:ring-[#581C1C] rounded-xl text-gray-900 placeholder:text-gray-400 focus:outline-none text-xs sm:text-sm font-medium pr-10"
                 />
@@ -808,6 +861,19 @@ function LoginContent() {
             >
               {loading ? 'Creating Account...' : 'Create Account & Continue'}
             </button>
+
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('password');
+                  setError('');
+                }}
+                className="text-xs text-gray-500 hover:text-[#581C1C] hover:underline cursor-pointer"
+              >
+                Already registered? Sign in with password instead
+              </button>
+            </div>
           </form>
         )}
 
