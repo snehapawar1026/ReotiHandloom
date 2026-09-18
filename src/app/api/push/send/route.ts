@@ -11,7 +11,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Title and message are required' }, { status: 400 });
     }
 
-    const subscriptions = await prisma.pushSubscription.findMany();
+    let subscriptions: any[] = [];
+    try {
+      subscriptions = await prisma.pushSubscription.findMany();
+    } catch (e) {}
 
     if (subscriptions.length === 0) {
       return NextResponse.json({

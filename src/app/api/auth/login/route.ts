@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendAdminEmail } from '@/lib/notifications';
+import { getUserByEmail, logActivityInStore } from '@/lib/storeManager';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,10 +16,7 @@ export async function POST(req: NextRequest) {
     // Fail-proof Admin Check for admin@reotihandloom.com
     if (email === 'admin@reotihandloom.com') {
       if (password === 'Hariom@2618' || password === 'adminpassword123') {
-        const adminUser = await prisma.user.findUnique({
-          where: { email: 'admin@reotihandloom.com' },
-        });
-
+        let adminUser = getUserByEmail('admin@reotihandloom.com');
         return NextResponse.json({
           success: true,
           user: {
@@ -34,10 +32,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Standard Customer Login
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Standard Customer Login from storeManager
+    let user = getUserByEmail(email);
+
+    // If not found in storeManager, try Prisma
+    if (!user) {
+      try {
+        const dbUser = await prisma.user.findUnique({ where: { email } });
+        if (dbUser) {
+          user = dbUser;
+        }
+      } catch (e) {}
+    }
 
     if (!user || user.password !== password) {
       return NextResponse.json({ success: false, error: 'Invalid email or password' }, { status: 401 });
@@ -47,14 +53,23 @@ export async function POST(req: NextRequest) {
     const title = `🔐 Customer Logged In: ${user.name}`;
     const details = `Email: ${user.email} | Phone: ${user.phone || 'N/A'}`;
 
-    await prisma.activityLog.create({
-      data: {
-        type: 'LOGIN',
-        title,
-        details,
-        userEmail: user.email,
-      },
-    }).catch(() => {});
+    logActivityInStore({
+      type: 'LOGIN',
+      title,
+      details,
+      userEmail: user.email,
+    });
+
+    try {
+      await prisma.activityLog.create({
+        data: {
+          type: 'LOGIN',
+          title,
+          details,
+          userEmail: user.email,
+        },
+      });
+    } catch (e) {}
 
     sendAdminEmail({
       title,
@@ -71,7 +86,7 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         phone: user.phone,
-        role: user.role,
+        role: user.role || 'customer',
       },
     });
   } catch (error: any) {
@@ -79,4 +94,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
 

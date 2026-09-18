@@ -359,3 +359,107 @@ export function logActivityInStore(activityInput: any) {
   saveStoreData({ activities });
   return newActivity;
 }
+
+// ---------------- USERS & AUTH ----------------
+
+export function getAllUsers() {
+  return getStoreData().users || [];
+}
+
+export function getUserByEmail(email: string) {
+  const norm = (email || '').trim().toLowerCase();
+  return (getStoreData().users || []).find((u: any) => u.email?.toLowerCase().trim() === norm) || null;
+}
+
+export function createUserInStore(userInput: any) {
+  const data = getStoreData();
+  const id = crypto.randomUUID();
+  const email = (userInput.email || '').trim().toLowerCase();
+
+  const existing = (data.users || []).find((u: any) => u.email?.toLowerCase().trim() === email);
+  if (existing) {
+    throw new Error('User with this email already exists');
+  }
+
+  const newUser = {
+    id,
+    name: userInput.name || email.split('@')[0],
+    email,
+    password: userInput.password,
+    phone: userInput.phone || null,
+    role: userInput.role || (email === 'admin@reotihandloom.com' ? 'admin' : 'customer'),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedUsers = [...(data.users || []), newUser];
+  saveStoreData({ users: updatedUsers });
+  return newUser;
+}
+
+export function updateUserPasswordInStore(email: string, newPassword: string) {
+  const data = getStoreData();
+  const norm = (email || '').trim().toLowerCase();
+  const index = (data.users || []).findIndex((u: any) => u.email?.toLowerCase().trim() === norm);
+  if (index === -1) {
+    throw new Error('User not found');
+  }
+
+  const users = [...(data.users || [])];
+  users[index] = {
+    ...users[index],
+    password: newPassword,
+    updatedAt: new Date().toISOString(),
+  };
+
+  saveStoreData({ users });
+  return users[index];
+}
+
+// ---------------- REVIEWS ----------------
+
+export function addReviewToStore(reviewInput: any) {
+  const data = getStoreData();
+  const id = crypto.randomUUID();
+  const newReview = {
+    id,
+    productId: reviewInput.productId || null,
+    userName: reviewInput.userName || reviewInput.author || 'Verified Buyer',
+    author: reviewInput.author || reviewInput.userName || 'Verified Buyer',
+    userEmail: reviewInput.userEmail || null,
+    rating: Number(reviewInput.rating) || 5,
+    comment: reviewInput.comment || reviewInput.text || '',
+    city: reviewInput.city || null,
+    image: reviewInput.image || null,
+    createdAt: new Date().toISOString(),
+  };
+
+  const updatedReviews = [newReview, ...(data.reviews || [])];
+  
+  // If review is for a specific product, update product's rating and review count
+  let updatedProducts = data.products;
+  if (reviewInput.productId) {
+    const pIndex = data.products.findIndex((p) => p.id === reviewInput.productId);
+    if (pIndex !== -1) {
+      const prod = data.products[pIndex];
+      const prodReviews = updatedReviews.filter((r) => r.productId === reviewInput.productId);
+      const totalCount = prodReviews.length;
+      const avgRating = prodReviews.reduce((sum, r) => sum + (Number(r.rating) || 5), 0) / (totalCount || 1);
+      const roundedRating = Math.round(avgRating * 10) / 10;
+      
+      const newProd = {
+        ...prod,
+        rating: roundedRating,
+        reviewCount: totalCount,
+        reviews: prodReviews,
+      };
+      updatedProducts = [...data.products];
+      updatedProducts[pIndex] = newProd;
+    }
+  }
+
+  saveStoreData({ reviews: updatedReviews, products: updatedProducts });
+  return newReview;
+}
+
+

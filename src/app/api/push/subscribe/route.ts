@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { webpush } from '@/lib/push';
+import { logActivityInStore } from '@/lib/storeManager';
 
 export async function POST(req: Request) {
   try {
@@ -14,31 +15,47 @@ export async function POST(req: Request) {
     const { endpoint, keys } = subscription;
     const { p256dh, auth } = keys;
 
+    let savedSub: any = { endpoint, p256dh, auth, userEmail };
+
     // Upsert subscription into SQLite DB
-    const savedSub = await prisma.pushSubscription.upsert({
-      where: { endpoint },
-      update: {
-        p256dh,
-        auth,
-        userEmail: userEmail || null,
-      },
-      create: {
-        endpoint,
-        p256dh,
-        auth,
-        userEmail: userEmail || null,
-      },
-    });
+    try {
+      savedSub = await prisma.pushSubscription.upsert({
+        where: { endpoint },
+        update: {
+          p256dh,
+          auth,
+          userEmail: userEmail || null,
+        },
+        create: {
+          endpoint,
+          p256dh,
+          auth,
+          userEmail: userEmail || null,
+        },
+      });
+    } catch (e) {}
 
     // Log Activity for Store Owner / Admin Dashboard
-    await prisma.activityLog.create({
-      data: {
-        type: 'VISIT',
-        title: '🔔 New Visitor Subscribed to Push Notifications',
-        details: userEmail ? `Customer (${userEmail}) enabled notifications` : 'Anonymous website visitor enabled notifications',
-        userEmail: userEmail || null,
-      },
-    }).catch(() => {});
+    const title = '🔔 New Visitor Subscribed to Push Notifications';
+    const details = userEmail ? `Customer (${userEmail}) enabled notifications` : 'Anonymous website visitor enabled notifications';
+
+    logActivityInStore({
+      type: 'VISIT',
+      title,
+      details,
+      userEmail: userEmail || null,
+    });
+
+    try {
+      await prisma.activityLog.create({
+        data: {
+          type: 'VISIT',
+          title,
+          details,
+          userEmail: userEmail || null,
+        },
+      });
+    } catch (e) {}
 
     // Send Instant Myntra/Nykaa-style Welcome Push Notification to Customer
     const welcomePayload = JSON.stringify({
@@ -67,3 +84,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

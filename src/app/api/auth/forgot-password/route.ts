@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendOtpEmail, sendPasswordResetSuccessEmail } from '@/lib/mailService';
+import { getUserByEmail, updateUserPasswordInStore, logActivityInStore } from '@/lib/storeManager';
 
 // In-memory OTP cache: email -> { otp: string, expiresAt: number }
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
@@ -23,10 +24,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user exists
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
+    // Check if user exists in storeManager
+    let user = getUserByEmail(email);
+
+    if (!user) {
+      try {
+        const dbUser = await prisma.user.findUnique({ where: { email } });
+        if (dbUser) user = dbUser;
+      } catch (e) {}
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -45,14 +51,23 @@ export async function POST(req: NextRequest) {
       // Send OTP to customer's registered email via mailService
       sendOtpEmail(email, user.name, otp).catch(() => {});
 
-      await prisma.activityLog.create({
-        data: {
-          type: 'INQUIRY',
-          title: `🔑 Password Reset OTP Sent: ${user.name}`,
-          details: `Email: ${email}`,
-          userEmail: email,
-        },
-      }).catch(() => {});
+      logActivityInStore({
+        type: 'INQUIRY',
+        title: `🔑 Password Reset OTP Sent: ${user.name}`,
+        details: `Email: ${email}`,
+        userEmail: email,
+      });
+
+      try {
+        await prisma.activityLog.create({
+          data: {
+            type: 'INQUIRY',
+            title: `🔑 Password Reset OTP Sent: ${user.name}`,
+            details: `Email: ${email}`,
+            userEmail: email,
+          },
+        });
+      } catch (e) {}
 
       // Secure Response: NEVER expose the OTP in JSON!
       return NextResponse.json({
@@ -103,24 +118,44 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const updatedUser = await prisma.user.update({
-        where: { email },
-        data: { password: newPassword },
-      });
+      // Update in storeManager
+      let updatedUser: any;
+      try {
+        updatedUser = updateUserPasswordInStore(email, newPassword);
+      } catch (err) {
+        updatedUser = { ...user, password: newPassword };
+      }
+
+      // Update in Prisma if possible
+      try {
+        await prisma.user.update({
+          where: { email },
+          data: { password: newPassword },
+        });
+      } catch (e) {}
 
       otpStore.delete(email);
 
       // Send Security Confirmation Email
       sendPasswordResetSuccessEmail(email, updatedUser.name).catch(() => {});
 
-      await prisma.activityLog.create({
-        data: {
-          type: 'LOGIN',
-          title: `🔑 Password Reset Completed: ${updatedUser.name}`,
-          details: `Email: ${email}`,
-          userEmail: email,
-        },
-      }).catch(() => {});
+      logActivityInStore({
+        type: 'LOGIN',
+        title: `🔑 Password Reset Completed: ${updatedUser.name}`,
+        details: `Email: ${email}`,
+        userEmail: email,
+      });
+
+      try {
+        await prisma.activityLog.create({
+          data: {
+            type: 'LOGIN',
+            title: `🔑 Password Reset Completed: ${updatedUser.name}`,
+            details: `Email: ${email}`,
+            userEmail: email,
+          },
+        });
+      } catch (e) {}
 
       return NextResponse.json({
         success: true,
@@ -141,3 +176,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message || 'Failed to process request' }, { status: 500 });
   }
 }
+

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getStoreData, addReviewToStore } from '@/lib/storeManager';
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,10 +11,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Product ID required' }, { status: 400 });
     }
 
-    const reviews = await prisma.review.findMany({
-      where: { productId },
-      orderBy: { createdAt: 'desc' },
-    });
+    const storeData = getStoreData();
+    const product = storeData.products.find((p) => p.id === productId);
+    let reviews = (storeData.reviews || []).filter((r: any) => r.productId === productId);
+    if (product && Array.isArray(product.reviews) && product.reviews.length > 0) {
+      reviews = [...product.reviews, ...reviews.filter((r: any) => !product.reviews.some((pr: any) => pr.id === r.id))];
+    }
+
+    // Try Prisma DB fallback
+    try {
+      const dbReviews = await prisma.review.findMany({
+        where: { productId },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (dbReviews && dbReviews.length > 0) {
+        reviews = dbReviews;
+      }
+    } catch (e) {}
 
     return NextResponse.json({ success: true, reviews: reviews || [] });
   } catch (error: any) {
@@ -33,37 +47,47 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Create the new review
-    const review = await prisma.review.create({
-      data: {
-        productId,
-        userName,
-        userEmail: userEmail || null,
-        rating: parseInt(rating),
-        comment,
-        image: image || null,
-        verified: true,
-      },
+    // 1. Save in storeManager
+    const review = addReviewToStore({
+      productId,
+      userName,
+      author: userName,
+      userEmail: userEmail || null,
+      rating: parseInt(rating),
+      comment,
+      image: image || null,
     });
 
-    // 2. Fetch all reviews for this product to recalculate rating stats
-    const allReviews = await prisma.review.findMany({
-      where: { productId },
-    });
+    const storeData = getStoreData();
+    const updatedProd = storeData.products.find((p) => p.id === productId);
+    const roundedRating = updatedProd?.rating || parseInt(rating);
+    const totalCount = updatedProd?.reviewCount || 1;
 
-    const totalCount = allReviews.length;
-    const avgRating =
-      allReviews.reduce((sum: number, r: any) => sum + r.rating, 0) / totalCount;
-    const roundedRating = Math.round(avgRating * 10) / 10;
+    // 2. Try saving to Prisma DB in background
+    try {
+      await prisma.review.create({
+        data: {
+          id: review.id,
+          productId,
+          userName,
+          userEmail: userEmail || null,
+          rating: parseInt(rating),
+          comment,
+          image: image || null,
+          verified: true,
+        },
+      });
 
-    // 3. Update the Product model with new rating & review count
-    await prisma.product.update({
-      where: { id: productId },
-      data: {
-        rating: roundedRating,
-        reviewCount: totalCount,
-      },
-    });
+      await prisma.product.update({
+        where: { id: productId },
+        data: {
+          rating: roundedRating,
+          reviewCount: totalCount,
+        },
+      }).catch(() => {});
+    } catch (prismaErr: any) {
+      console.warn('[Reviews POST] Prisma notice:', prismaErr.message);
+    }
 
     return NextResponse.json({
       success: true,
@@ -75,3 +99,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+

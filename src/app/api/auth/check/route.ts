@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getUserByEmail } from '@/lib/storeManager';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,10 +14,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, exists: true, name: 'Reoti Admin', isAdmin: true });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: cleanEmail },
-      select: { id: true, name: true, email: true, phone: true },
-    });
+    // Check storeManager
+    let user = getUserByEmail(cleanEmail);
+
+    // Fallback to prisma
+    if (!user) {
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: cleanEmail },
+          select: { id: true, name: true, email: true, phone: true },
+        });
+        if (dbUser) user = dbUser as any;
+      } catch (e) {}
+    }
 
     return NextResponse.json({
       success: true,
@@ -28,3 +38,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
