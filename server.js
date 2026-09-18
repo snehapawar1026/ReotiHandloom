@@ -1,4 +1,4 @@
-﻿const { createServer } = require('http');
+const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 
@@ -14,7 +14,7 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   }).listen(port, (err) => {
     if (err) throw err;
-    console.log(> Server listening on port );
+    console.log(`> Server listening on port ${port}`);
   });
 }).catch((ex) => {
   console.error(ex.stack);
