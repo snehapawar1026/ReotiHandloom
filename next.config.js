@@ -1,8 +1,6 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
   devIndicators: false,
-  serverExternalPackages: ['@prisma/client', 'better-sqlite3', '@prisma/adapter-better-sqlite3'],
   async headers() {
     return [
       {
