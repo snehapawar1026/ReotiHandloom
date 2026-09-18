@@ -35,15 +35,35 @@ function getDbPath(): string {
   return candidatePaths[0] || path.resolve(process.cwd(), 'prisma/dev.db');
 }
 
-const dbPath = getDbPath();
-const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
+let prismaInstance: any = null;
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+try {
+  const dbPath = getDbPath();
+  const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
+  prismaInstance = globalForPrisma.prisma ?? new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
+} catch (e: any) {
+  console.warn('[Prisma Init Warning] Native adapter unavailable, falling back to storeManager:', e?.message || e);
+}
+
+// Create a safe proxy that gracefully handles prisma being unavailable
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+  get(target, prop: string) {
+    if (prismaInstance && (prismaInstance as any)[prop]) {
+      return (prismaInstance as any)[prop];
+    }
+    // Return a dummy object whose methods reject with a clear warning so caller try/catch catches it
+    return new Proxy({}, {
+      get(_, method: string) {
+        return async () => {
+          throw new Error(`Prisma unavailable: ${prop}.${method}`);
+        };
+      },
+    });
+  },
+});
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
