@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllProducts, getProductBySlugOrId } from '@/lib/storeManager';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -40,13 +43,23 @@ export async function GET(
     relatedProducts = allProds.filter((p) => p.id !== fallbackProduct.id).slice(0, 4);
   }
 
-  return NextResponse.json({
-    success: true,
-    product: {
-      ...fallbackProduct,
-      reviews: fallbackProduct.reviews || [],
+  return NextResponse.json(
+    {
+      success: true,
+      product: {
+        ...fallbackProduct,
+        reviews: fallbackProduct.reviews || [],
+      },
+      colorVariants,
+      relatedProducts,
     },
-    colorVariants,
-    relatedProducts,
-  });
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    }
+  );
 }
+

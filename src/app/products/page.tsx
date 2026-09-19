@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 import { ProductCard } from '@/components/ProductCard';
 import { HandloomMotifDivider } from '@/components/HandloomMotifDivider';
+import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 import { ProductItem } from '@/context/ShopContext';
 import {
   SlidersHorizontal,
@@ -87,9 +88,44 @@ const CATEGORY_HERO_MAP: Record<string, { title: string; description: string; im
     title: 'Semi Maheshwari Sarees',
     description:
       'Lightweight Semi Maheshwari Sarees featuring elegant zari borders and beautiful traditional patterns. These sarees are not handcrafted or handloom, and are made using modern manufacturing techniques while maintaining the classic Maheshwari-inspired look. Perfect for festive occasions, celebrations, and everyday elegance.',
-    image: '/uploads/saree_1789233209397_zszzb.jpeg',
+    image: '/uploads/semi_maheshwari_banner.jpg',
   },
 };
+
+const KANGURA_TRIANGLES = [
+  { outer: '180.0,100.0 194.54,109.31 178.46,115.61', inner: '182.21,102.42 191.06,108.97 181.11,113.66', dot: [187.83, 108.65] },
+  { outer: '178.46,115.61 190.91,127.58 173.91,130.61', inner: '180.16,118.41 187.56,126.56 176.88,129.22', dot: [184.45, 125.62] },
+  { outer: '173.91,130.61 183.78,144.78 166.52,144.45', inner: '175.03,133.7 180.7,143.13 169.7,143.66', dot: [177.83, 141.6] },
+  { outer: '166.52,144.45 173.44,160.27 156.57,156.57', inner: '167.01,147.69 170.73,158.05 159.85,156.42', dot: [168.22, 155.99] },
+  { outer: '156.57,156.57 160.27,173.44 144.45,166.52', inner: '156.42,159.85 158.05,170.73 147.69,167.01', dot: [155.99, 168.22] },
+  { outer: '144.45,166.52 144.78,183.78 130.61,173.91', inner: '143.66,169.7 143.13,180.7 133.7,175.03', dot: [141.6, 177.83] },
+  { outer: '130.61,173.91 127.58,190.91 115.61,178.46', inner: '129.22,176.88 126.56,187.56 118.41,180.16', dot: [125.62, 184.45] },
+  { outer: '115.61,178.46 109.31,194.54 100.0,180.0', inner: '113.66,181.11 108.97,191.06 102.42,182.21', dot: [108.65, 187.83] },
+  { outer: '100.0,180.0 90.69,194.54 84.39,178.46', inner: '97.58,182.21 91.03,191.06 86.34,181.11', dot: [91.35, 187.83] },
+  { outer: '84.39,178.46 72.42,190.91 69.39,173.91', inner: '81.59,180.16 73.44,187.56 70.78,176.88', dot: [74.38, 184.45] },
+  { outer: '69.39,173.91 55.22,183.78 55.55,166.52', inner: '66.3,175.03 56.87,180.7 56.34,169.7', dot: [58.4, 177.83] },
+  { outer: '55.55,166.52 39.73,173.44 43.43,156.57', inner: '52.31,167.01 41.95,170.73 43.58,159.85', dot: [44.01, 168.22] },
+  { outer: '43.43,156.57 26.56,160.27 33.48,144.45', inner: '40.15,156.42 29.27,158.05 32.99,147.69', dot: [31.78, 155.99] },
+  { outer: '33.48,144.45 16.22,144.78 26.09,130.61', inner: '30.3,143.66 19.3,143.13 24.97,133.7', dot: [22.17, 141.6] },
+  { outer: '26.09,130.61 9.09,127.58 21.54,115.61', inner: '23.12,129.22 12.44,126.56 19.84,118.41', dot: [15.55, 125.62] },
+  { outer: '21.54,115.61 5.46,109.31 20.0,100.0', inner: '18.89,113.66 8.94,108.97 17.79,102.42', dot: [12.17, 108.65] },
+  { outer: '20.0,100.0 5.46,90.69 21.54,84.39', inner: '17.79,97.58 8.94,91.03 18.89,86.34', dot: [12.17, 91.35] },
+  { outer: '21.54,84.39 9.09,72.42 26.09,69.39', inner: '19.84,81.59 12.44,73.44 23.12,70.78', dot: [15.55, 74.38] },
+  { outer: '26.09,69.39 16.22,55.22 33.48,55.55', inner: '24.97,66.3 19.3,56.87 30.3,56.34', dot: [22.17, 58.4] },
+  { outer: '33.48,55.55 26.56,39.73 43.43,43.43', inner: '32.99,52.31 29.27,41.95 40.15,43.58', dot: [31.78, 44.01] },
+  { outer: '43.43,43.43 39.73,26.56 55.55,33.48', inner: '43.58,40.15 41.95,29.27 52.31,32.99', dot: [44.01, 31.78] },
+  { outer: '55.55,33.48 55.22,16.22 69.39,26.09', inner: '56.34,30.3 56.87,19.3 66.3,24.97', dot: [58.4, 22.17] },
+  { outer: '69.39,26.09 72.42,9.09 84.39,21.54', inner: '70.78,23.12 73.44,12.44 81.59,19.84', dot: [74.38, 15.55] },
+  { outer: '84.39,21.54 90.69,5.46 100.0,20.0', inner: '86.34,18.89 91.03,8.94 97.58,17.79', dot: [91.35, 12.17] },
+  { outer: '100.0,20.0 109.31,5.46 115.61,21.54', inner: '102.42,17.79 108.97,8.94 113.66,18.89', dot: [108.65, 12.17] },
+  { outer: '115.61,21.54 127.58,9.09 130.61,26.09', inner: '118.41,19.84 126.56,12.44 129.22,23.12', dot: [125.62, 15.55] },
+  { outer: '130.61,26.09 144.78,16.22 144.45,33.48', inner: '133.7,24.97 143.13,19.3 143.66,30.3', dot: [141.6, 22.17] },
+  { outer: '144.45,33.48 160.27,26.56 156.57,43.43', inner: '147.69,32.99 158.05,29.27 156.42,40.15', dot: [155.99, 31.78] },
+  { outer: '156.57,43.43 173.44,39.73 166.52,55.55', inner: '159.85,43.58 170.73,41.95 167.01,52.31', dot: [168.22, 44.01] },
+  { outer: '166.52,55.55 183.78,55.22 173.91,69.39', inner: '169.7,56.34 180.7,56.87 175.03,66.3', dot: [177.83, 58.4] },
+  { outer: '173.91,69.39 190.91,72.42 178.46,84.39', inner: '176.88,70.78 187.56,73.44 180.16,81.59', dot: [184.45, 74.38] },
+  { outer: '178.46,84.39 194.54,90.69 180.0,100.0', inner: '181.11,86.34 191.06,91.03 182.21,97.58', dot: [187.83, 91.35] },
+];
 
 function getHeroContent(
   selectedCategory: string,
@@ -100,16 +136,14 @@ function getHeroContent(
   categories: any[]
 ) {
   if (selectedCategory) {
+    const staticHero = CATEGORY_HERO_MAP[selectedCategory];
     const cat = categories.find((c) => c.slug === selectedCategory);
-    if (cat) {
+    if (staticHero || cat) {
       return {
-        title: cat.name,
-        description: cat.description || CATEGORY_HERO_MAP[selectedCategory]?.description || `Handcrafted ${cat.name} online from authentic Maheshwari handloom weavers.`,
-        image: cat.bannerImage || CATEGORY_HERO_MAP[selectedCategory]?.image || cat.image || '/uploads/maheshwari_legacy_banner.png',
+        title: staticHero?.title || cat?.name || selectedCategory,
+        description: staticHero?.description || cat?.description || `Handcrafted ${cat?.name || ''} online from authentic Maheshwari handloom weavers.`,
+        image: staticHero?.image || cat?.bannerImage || cat?.image || '/uploads/maheshwari_legacy_banner.png',
       };
-    }
-    if (CATEGORY_HERO_MAP[selectedCategory]) {
-      return CATEGORY_HERO_MAP[selectedCategory];
     }
   }
 
@@ -202,6 +236,7 @@ function ProductsContent() {
   };
 
   const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const subCategoryScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollCategories = (direction: 'left' | 'right') => {
     if (categoryScrollRef.current) {
@@ -210,10 +245,18 @@ function ProductsContent() {
     }
   };
 
+  const scrollSubCategories = (direction: 'left' | 'right') => {
+    if (subCategoryScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -280 : 280;
+      subCategoryScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   useEffect(() => {
+    const t = Date.now();
     Promise.all([
-      fetch('/api/categories?parentOnly=true').then((res) => res.json()),
-      fetch('/api/categories').then((res) => res.json()),
+      fetch(`/api/categories?parentOnly=true&_t=${t}`, { cache: 'no-store' }).then((res) => res.json()),
+      fetch(`/api/categories?_t=${t}`, { cache: 'no-store' }).then((res) => res.json()),
     ])
       .then(([parentData, allCatData]) => {
         if (parentData.success) setParentCategories(parentData.categories || []);
@@ -236,8 +279,9 @@ function ProductsContent() {
     if (isTrending) params.set('trending', 'true');
     if (isBestSeller) params.set('bestSeller', 'true');
     if (isFeatured) params.set('featured', 'true');
+    params.set('_t', String(Date.now()));
 
-    fetch(`/api/products?${params.toString()}`)
+    fetch(`/api/products?${params.toString()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setProducts(data.products || []);
@@ -296,6 +340,54 @@ function ProductsContent() {
     isFeatured ? 'featured' : '',
   ].filter(Boolean).length;
 
+  const currentCategoryObj = categories.find(
+    (c) => c.slug === selectedCategory || c.id === selectedCategory
+  );
+  const effectiveParentCat = currentCategoryObj?.parentId
+    ? categories.find((c) => c.id === currentCategoryObj.parentId)
+    : currentCategoryObj;
+
+  const isSemiMaheshwariView = Boolean(
+    selectedCategory === 'semi-maheshwari-sarees' ||
+    selectedCategory === 'semi-maheshwari' ||
+    currentCategoryObj?.slug?.includes('semi-maheshwari') ||
+    currentCategoryObj?.name?.toLowerCase().includes('semi maheshwari') ||
+    effectiveParentCat?.slug?.includes('semi-maheshwari') ||
+    effectiveParentCat?.name?.toLowerCase().includes('semi maheshwari')
+  );
+
+  const semiParent = categories.find(
+    (c) =>
+      c.slug === 'semi-maheshwari-sarees' ||
+      c.slug === 'semi-maheshwari' ||
+      c.id === 'semi-maheshwari-sarees-id' ||
+      c.name?.toLowerCase().includes('semi maheshwari')
+  ) || {
+    id: 'semi-maheshwari-sarees-id',
+    slug: 'semi-maheshwari-sarees',
+    name: 'Semi Maheshwari',
+    image: '/uploads/semi_maheshwari_banner.jpg',
+  };
+
+  const semiSubcategories = categories.filter(
+    (c) =>
+      (c.parentId === semiParent.id ||
+        c.slug?.startsWith('semi-maheshwari-') ||
+        c.parentId === 'semi-maheshwari-sarees-id' ||
+        c.parentId === 'semi-maheshwari-sarees') &&
+      c.id !== semiParent.id &&
+      c.slug !== 'semi-maheshwari-sarees' &&
+      c.slug !== 'semi-maheshwari' &&
+      !c.isHidden
+  );
+
+  const handloomParentCategories = parentCategories.filter(
+    (c) =>
+      !c.slug?.includes('semi-maheshwari') &&
+      !c.name?.toLowerCase().includes('semi maheshwari') &&
+      c.id !== semiParent.id
+  );
+
   const hasCategoryOrFilterSelected = Boolean(
     selectedCategory || selectedFabric || isTrending || isBestSeller || isFeatured || selectedColor
   );
@@ -348,7 +440,7 @@ function ProductsContent() {
                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
                   {hero.title}{' '}
                   <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl lg:text-3xl block sm:inline mt-1 sm:mt-0">
-                    {selectedCategory === 'semi-maheshwari-sarees' || selectedCategory === 'semi-maheshwari'
+                    {isSemiMaheshwariView
                       ? 'सेमी माहेश्वरी साड़ियाँ'
                       : selectedCategory.includes('suit')
                       ? 'माहेश्वरी सूट सेट्स'
@@ -358,7 +450,7 @@ function ProductsContent() {
                   </span>
                 </h1>
                 <p className="text-xs sm:text-sm text-[#8B4513]/80 font-bold tracking-wider uppercase">
-                  {selectedCategory === 'semi-maheshwari-sarees' || selectedCategory === 'semi-maheshwari'
+                  {isSemiMaheshwariView
                     ? 'सेमी माहेश्वरी साड़ियाँ ~ সেমি মাহেশ্বরী শাড়ি ~ செமி மகேஸ்வரி புடவைகள் ~ સેમી મહેશ્વરી સાડીઓ'
                     : selectedCategory.includes('suit')
                     ? 'माहेश्वरी सूट ~ মাহেশ্বরী স্যুট ~ மகேஸ்வரி சூட்கள் ~ મહેશ્વરી સૂટ'
@@ -381,6 +473,9 @@ function ProductsContent() {
                   }`}
                 />
                 
+                {/* Reoti Handloom Watermark Overlay */}
+                <WatermarkOverlay variant="pdp" />
+
                 {/* Soft Bottom Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
 
@@ -477,7 +572,7 @@ function ProductsContent() {
             </div>
           )}
 
-          {/* Authentic Maheshwari Circular Scalloped Category Avatars Carousel with Left & Right Arrows (Matching Rewa Handloom media_1789235863819.png) */}
+          {/* Authentic Maheshwari / Semi Maheshwari Circular Scalloped Category Avatars Carousel with Left & Right Arrows */}
           <div className="relative group w-full bg-[#FAF7F2]/80 border-y border-[#E8DFC8] py-5 mb-3">
               
               {/* Left Carousel Arrow Button */}
@@ -505,59 +600,173 @@ function ProductsContent() {
               >
                 <div className="flex items-start gap-5 sm:gap-7 min-w-max">
                 
-                {/* ALL SAREES Circular Avatar */}
-                <button
-                  onClick={() => updateFilter('category', '')}
-                  className="flex flex-col items-center group cursor-pointer"
-                >
-                  <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
-                    {/* Authentic Scalloped Bead Ring SVG */}
-                    <svg
-                      className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
-                        !selectedCategory ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
-                      }`}
-                      viewBox="0 0 100 100"
-                      fill="none"
-                    >
-                      {Array.from({ length: 24 }).map((_, i) => {
-                        const angle = (i * 360) / 24;
-                        const rad = (angle * Math.PI) / 180;
-                        const cx = 50 + 44 * Math.cos(rad);
-                        const cy = 50 + 44 * Math.sin(rad);
-                        return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
-                      })}
-                      <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={!selectedCategory ? '3' : '2'} />
-                    </svg>
-                    <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
-                      <img
-                        src="/uploads/saree_1789221965397_lf0kg.jpeg"
-                        alt="All Sarees"
-                        className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                  </div>
-                  <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-tight max-w-[110px] sm:max-w-[130px] ${
-                    !selectedCategory ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
-                  }`}>
-                    All Sarees
-                  </span>
-                </button>
+                {isSemiMaheshwariView ? (
+                  <>
+                    {/* ALL SEMI MAHESHWARI Circular Avatar */}
+                    {(() => {
+                      const isAllSemiSelected =
+                        selectedCategory === 'semi-maheshwari-sarees' ||
+                        selectedCategory === 'semi-maheshwari' ||
+                        selectedCategory === semiParent.slug ||
+                        !selectedCategory;
+                      return (
+                        <button
+                          onClick={() => updateFilter('category', 'semi-maheshwari-sarees')}
+                          className="flex flex-col items-center group cursor-pointer"
+                        >
+                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
+                            {/* Thin Outline Kangura / Triangular Motif Ring SVG matching user image */}
+                            <svg
+                              className={`absolute inset-0 w-full h-full transition-all duration-300 ${
+                                isAllSemiSelected
+                                  ? 'text-[#581C1C] scale-105 drop-shadow-[0_2px_5px_rgba(88,28,28,0.25)]'
+                                  : 'text-[#8B4513]/70 group-hover:text-[#581C1C] group-hover:scale-105'
+                              }`}
+                              viewBox="0 0 200 200"
+                            >
+                              {/* Inner boundary circle */}
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="80"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={isAllSemiSelected ? "1.2" : "0.9"}
+                              />
+                              {/* Pointed Kangura Triangles */}
+                              {KANGURA_TRIANGLES.map((t, idx) => (
+                                <g key={idx}>
+                                  <polygon
+                                    points={t.outer}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={isAllSemiSelected ? "1.2" : "0.9"}
+                                    strokeLinejoin="round"
+                                  />
+                                  <polygon
+                                    points={t.inner}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={isAllSemiSelected ? "0.8" : "0.6"}
+                                    strokeLinejoin="round"
+                                    opacity="0.8"
+                                  />
+                                  <circle
+                                    cx={t.dot[0]}
+                                    cy={t.dot[1]}
+                                    r="1.1"
+                                    fill="currentColor"
+                                  />
+                                </g>
+                              ))}
+                            </svg>
+                            {/* Inner Circle Saree Image */}
+                            <div className={`w-[84px] h-[84px] sm:w-[96px] sm:h-[96px] md:w-[108px] md:h-[108px] rounded-full overflow-hidden p-1 bg-white border shadow-md flex items-center justify-center ${
+                              isAllSemiSelected ? 'border-2 border-[#581C1C] ring-2 ring-rose-300' : 'border-amber-950/20'
+                            }`}>
+                              <img
+                                src={semiParent.image || '/uploads/semi_maheshwari_banner.jpg'}
+                                alt="All Semi Maheshwari"
+                                className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                          </div>
+                          <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-tight max-w-[110px] sm:max-w-[130px] ${
+                            isAllSemiSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
+                          }`}>
+                            All Semi Maheshwari
+                          </span>
+                        </button>
+                      );
+                    })()}
 
-                {/* Dynamic Parent Category Circular Avatars Only */}
-                {parentCategories.map((cat) => {
-                  const isSelected = selectedCategory === cat.slug;
-                  const imgUrl = cat.image || CATEGORY_HERO_MAP[cat.slug]?.image || '/uploads/saree_1789221965397_lf0kg.jpeg';
-                  return (
+                    {/* Semi Maheshwari Sub-Categories */}
+                    {semiSubcategories.map((cat) => {
+                      const isSelected = selectedCategory === cat.slug;
+                      const imgUrl = cat.image || cat.bannerImage || semiParent.image || '/uploads/semi_maheshwari_banner.jpg';
+                      return (
+                        <button
+                          key={cat.id || cat.slug}
+                          onClick={() => updateFilter('category', isSelected ? 'semi-maheshwari-sarees' : cat.slug)}
+                          className="flex flex-col items-center group cursor-pointer"
+                        >
+                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
+                            {/* Thin Outline Kangura / Triangular Motif Ring SVG matching user image */}
+                            <svg
+                              className={`absolute inset-0 w-full h-full transition-all duration-300 ${
+                                isSelected
+                                  ? 'text-[#581C1C] scale-105 drop-shadow-[0_2px_5px_rgba(88,28,28,0.25)]'
+                                  : 'text-[#8B4513]/70 group-hover:text-[#581C1C] group-hover:scale-105'
+                              }`}
+                              viewBox="0 0 200 200"
+                            >
+                              {/* Inner boundary circle */}
+                              <circle
+                                cx="100"
+                                cy="100"
+                                r="80"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={isSelected ? "1.2" : "0.9"}
+                              />
+                              {/* Pointed Kangura Triangles */}
+                              {KANGURA_TRIANGLES.map((t, idx) => (
+                                <g key={idx}>
+                                  <polygon
+                                    points={t.outer}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={isSelected ? "1.2" : "0.9"}
+                                    strokeLinejoin="round"
+                                  />
+                                  <polygon
+                                    points={t.inner}
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={isSelected ? "0.8" : "0.6"}
+                                    strokeLinejoin="round"
+                                    opacity="0.8"
+                                  />
+                                  <circle
+                                    cx={t.dot[0]}
+                                    cy={t.dot[1]}
+                                    r="1.1"
+                                    fill="currentColor"
+                                  />
+                                </g>
+                              ))}
+                            </svg>
+                            {/* Inner Circle Saree Image */}
+                            <div className={`w-[84px] h-[84px] sm:w-[96px] sm:h-[96px] md:w-[108px] md:h-[108px] rounded-full overflow-hidden p-1 bg-white border shadow-md flex items-center justify-center ${
+                              isSelected ? 'border-2 border-[#581C1C] ring-2 ring-rose-300' : 'border-amber-950/20'
+                            }`}>
+                              <img
+                                src={imgUrl}
+                                alt={cat.name}
+                                className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                          </div>
+                          <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-snug max-w-[110px] sm:max-w-[135px] ${
+                            isSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
+                          }`}>
+                            {cat.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <>
+                    {/* ALL SAREES Circular Avatar */}
                     <button
-                      key={cat.id}
-                      onClick={() => updateFilter('category', isSelected ? '' : cat.slug)}
+                      onClick={() => updateFilter('category', '')}
                       className="flex flex-col items-center group cursor-pointer"
                     >
                       <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
-                        {/* Authentic Scalloped Bead Ring SVG */}
                         <svg
                           className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
-                            isSelected ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
+                            !selectedCategory ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
                           }`}
                           viewBox="0 0 100 100"
                           fill="none"
@@ -569,24 +778,68 @@ function ProductsContent() {
                             const cy = 50 + 44 * Math.sin(rad);
                             return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
                           })}
-                          <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={isSelected ? '3' : '2'} />
+                          <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={!selectedCategory ? '3' : '2'} />
                         </svg>
                         <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
                           <img
-                            src={imgUrl}
-                            alt={cat.name}
+                            src="/uploads/saree_1789221965397_lf0kg.jpeg"
+                            alt="All Sarees"
                             className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
                           />
                         </div>
                       </div>
-                      <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-snug max-w-[110px] sm:max-w-[135px] ${
-                        isSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
+                      <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-tight max-w-[110px] sm:max-w-[130px] ${
+                        !selectedCategory ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
                       }`}>
-                        {cat.name}
+                        All Sarees
                       </span>
                     </button>
-                  );
-                })}
+
+                    {/* Dynamic Parent Category Circular Avatars Only */}
+                    {handloomParentCategories.map((cat) => {
+                      const isSelected = selectedCategory === cat.slug;
+                      const imgUrl = cat.image || CATEGORY_HERO_MAP[cat.slug]?.image || '/uploads/saree_1789221965397_lf0kg.jpeg';
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => updateFilter('category', isSelected ? '' : cat.slug)}
+                          className="flex flex-col items-center group cursor-pointer"
+                        >
+                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
+                            <svg
+                              className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
+                                isSelected ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
+                              }`}
+                              viewBox="0 0 100 100"
+                              fill="none"
+                            >
+                              {Array.from({ length: 24 }).map((_, i) => {
+                                const angle = (i * 360) / 24;
+                                const rad = (angle * Math.PI) / 180;
+                                const cx = 50 + 44 * Math.cos(rad);
+                                const cy = 50 + 44 * Math.sin(rad);
+                                return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
+                              })}
+                              <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={isSelected ? '3' : '2'} />
+                            </svg>
+                            <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
+                              <img
+                                src={imgUrl}
+                                alt={cat.name}
+                                className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                          </div>
+                          <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-snug max-w-[110px] sm:max-w-[135px] ${
+                            isSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
+                          }`}>
+                            {cat.name}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
 
               </div>
             </div>
@@ -595,7 +848,7 @@ function ProductsContent() {
           {/* Rewa Handloom Style Horizontal Filter Bar (Matching media_1789234404852.png) */}
           <div className="w-full bg-[#FAF7F2]/90 border border-[#E8DFC8] rounded-xl p-3 shadow-2xs font-sans flex flex-col md:flex-row items-center justify-between gap-3">
             <div className="text-xs font-serif font-extrabold text-[#581C1C] tracking-wide">
-              <span>{products.length} Maheshwari {products.length === 1 ? 'Saree' : 'Sarees'}</span>
+              <span>{products.length} {isSemiMaheshwariView ? 'Semi Maheshwari' : 'Maheshwari'} {products.length === 1 ? 'Saree' : 'Sarees'}</span>
             </div>
 
             {/* Horizontal Filter Pill Dropdowns */}
@@ -616,21 +869,45 @@ function ProductsContent() {
 
                 {openDropdown === 'category' && (
                   <div className="absolute right-0 mt-1 w-56 bg-white border border-amber-200 rounded-xl shadow-xl z-40 p-2 space-y-1">
-                    <button
-                      onClick={() => { updateFilter('category', ''); setOpenDropdown(null); }}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedCategory ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
-                    >
-                      All Categories
-                    </button>
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.id}
-                        onClick={() => { updateFilter('category', cat.slug); setOpenDropdown(null); }}
-                        className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${selectedCategory === cat.slug ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
+                    {isSemiMaheshwariView ? (
+                      <>
+                        <button
+                          onClick={() => { updateFilter('category', 'semi-maheshwari-sarees'); setOpenDropdown(null); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${selectedCategory === 'semi-maheshwari-sarees' || selectedCategory === semiParent.slug ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                        >
+                          All Semi Maheshwari
+                        </button>
+                        {semiSubcategories.map((cat) => (
+                          <button
+                            key={cat.id || cat.slug}
+                            onClick={() => { updateFilter('category', cat.slug); setOpenDropdown(null); }}
+                            className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${selectedCategory === cat.slug ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                          >
+                            {cat.name}
+                          </button>
+                        ))}
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => { updateFilter('category', ''); setOpenDropdown(null); }}
+                          className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${!selectedCategory ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                        >
+                          All Categories
+                        </button>
+                        {categories
+                          .filter((c) => !c.slug?.includes('semi-maheshwari') && !c.name?.toLowerCase().includes('semi maheshwari') && c.parentId !== semiParent.id)
+                          .map((cat) => (
+                            <button
+                              key={cat.id}
+                              onClick={() => { updateFilter('category', cat.slug); setOpenDropdown(null); }}
+                              className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium ${selectedCategory === cat.slug ? 'bg-amber-50 font-extrabold text-[#581C1C]' : 'hover:bg-gray-50 text-gray-700'}`}
+                            >
+                              {cat.name}
+                            </button>
+                          ))}
+                      </>
+                    )}
                   </div>
                 )}
               </div>

@@ -1,10 +1,24 @@
 import { NextResponse } from 'next/server';
-import storeData from '@/data/storeData.json';
+import { getStoreData } from '@/lib/storeManager';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
-  return NextResponse.json({
-    success: true,
-    banners: storeData.banners || [],
-  });
+  const banners = getStoreData().banners || [];
+  return NextResponse.json(
+    {
+      success: true,
+      banners,
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    }
+  );
 }
+
 

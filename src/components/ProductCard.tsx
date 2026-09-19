@@ -115,13 +115,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <span className="font-sans font-extrabold text-sm sm:text-base text-[#581C1C] tracking-tight">
               ₹{product.price.toLocaleString()}
             </span>
-            <span className="font-sans text-[11px] text-gray-400 line-through">
-              ₹{product.originalPrice.toLocaleString()}
-            </span>
+            {product.originalPrice && product.originalPrice > product.price ? (
+              <span className="font-sans text-[11px] text-gray-400 line-through">
+                ₹{product.originalPrice.toLocaleString()}
+              </span>
+            ) : null}
           </div>
-          <span className="text-[9px] sm:text-[10px] font-sans font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
-            {product.discountPercent}% Off
-          </span>
+          {product.discountPercent && product.discountPercent > 0 && product.originalPrice && product.originalPrice > product.price ? (
+            <span className="text-[9px] sm:text-[10px] font-sans font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+              {product.discountPercent}% Off
+            </span>
+          ) : null}
         </div>
 
         {/* Add to Bag Button -> Opens Item Description Page */}

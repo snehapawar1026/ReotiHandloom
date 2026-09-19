@@ -409,9 +409,9 @@ export default function ProductDetailPage() {
         <div className="lg:col-span-6 relative z-30">
           <div className="lg:sticky lg:top-24 flex flex-col sm:flex-row gap-4 relative z-30">
             
-            {/* Vertical Thumbnail Strip */}
+            {/* Desktop Vertical Thumbnail Strip (Left Side) */}
             {parsedImages.length > 0 && (
-              <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto shrink-0 max-h-[580px] no-scrollbar">
+              <div className="hidden sm:flex sm:flex-col gap-3 overflow-y-auto shrink-0 max-h-[580px] no-scrollbar">
                 {parsedImages.map((imgUrl, idx) => (
                   <button
                     key={idx}
@@ -429,94 +429,117 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Main Large Image Area with Nykaa Hover Magnifying Lens & Click Zoom */}
-            <div
-              onMouseMove={handleMouseMove}
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={handleMouseLeave}
-              onClick={() => setIsLightboxOpen(true)}
-              className="flex-1 relative cursor-zoom-in select-none group"
-            >
-              {/* Inner Clipped Image Container */}
-              <div className="w-full h-[480px] sm:h-[560px] max-h-[580px] rounded-xl overflow-hidden bg-slate-100/80 relative border border-slate-200 shadow-sm flex items-center justify-center">
-                <img
-                  src={selectedImage || parsedImages[0]}
-                  alt={product.title}
-                  className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-300"
-                />
-
-                {/* Automatic Diagonal Heritage Watermark Overlay */}
-                <WatermarkOverlay variant="pdp" />
-
-                {/* Nykaa-style Translucent Hover Lens Box over Image */}
-                {isHoverZooming && (
-                  <div
-                    className="absolute w-44 h-44 border-2 border-white/90 bg-white/30 backdrop-blur-[1px] pointer-events-none rounded shadow-md z-20 hidden lg:block"
-                    style={{
-                      left: `calc(${zoomPos.percentX}% - 88px)`,
-                      top: `calc(${zoomPos.percentY}% - 88px)`,
-                    }}
+            {/* Main Large Image Container */}
+            <div className="flex-1 flex flex-col gap-3">
+              {/* Main Large Image Area with Nykaa Hover Magnifying Lens & Click Zoom */}
+              <div
+                onMouseMove={handleMouseMove}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onClick={() => setIsLightboxOpen(true)}
+                className="w-full relative cursor-zoom-in select-none group"
+              >
+                {/* Inner Clipped Image Container */}
+                <div className="w-full h-[460px] sm:h-[560px] max-h-[580px] rounded-xl overflow-hidden bg-slate-100/80 relative border border-slate-200 shadow-sm flex items-center justify-center">
+                  <img
+                    src={selectedImage || parsedImages[0]}
+                    alt={product.title}
+                    className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-300"
                   />
-                )}
 
-                {/* Top Right Zoom Plus Button (Matching Reference Design) */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsLightboxOpen(true);
-                  }}
-                  className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-lg shadow-md border border-gray-300 transition-transform active:scale-95 cursor-pointer z-10 flex items-center justify-center"
-                  title="Zoom Full Screen"
-                >
-                  <ZoomIn className="w-5 h-5 text-gray-800" />
-                </button>
+                  {/* Automatic Diagonal Heritage Watermark Overlay */}
+                  <WatermarkOverlay variant="pdp" />
 
-                {/* Bottom Navigation Arrow Buttons on Image */}
-                {parsedImages.length > 1 && (
-                  <>
-                    <button
-                      onClick={handlePrevImage}
-                      className="absolute bottom-3 left-3 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-lg shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-10"
-                      title="Previous Photo"
-                    >
-                      <ArrowLeft className="w-4 h-4 text-gray-900" />
-                    </button>
-                    <button
-                      onClick={handleNextImage}
-                      className="absolute bottom-3 right-3 sm:right-36 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-lg shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-10"
-                      title="Next Photo"
-                    >
-                      <ArrowRight className="w-4 h-4 text-gray-900" />
-                    </button>
-                  </>
-                )}
+                  {/* Nykaa-style Translucent Hover Lens Box over Image */}
+                  {isHoverZooming && (
+                    <div
+                      className="absolute w-44 h-44 border-2 border-white/90 bg-white/30 backdrop-blur-[1px] pointer-events-none rounded shadow-md z-20 hidden lg:block"
+                      style={{
+                        left: `calc(${zoomPos.percentX}% - 88px)`,
+                        top: `calc(${zoomPos.percentY}% - 88px)`,
+                      }}
+                    />
+                  )}
 
-                {/* Reoti Handloom Premium Glass Watermark Seal Overlay */}
-                <div className="absolute bottom-3 right-3 sm:right-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-10">
-                  <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-500 shrink-0">
-                    <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                  {/* Top Right Zoom Plus Button (Matching Reference Design) */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsLightboxOpen(true);
+                    }}
+                    className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-lg shadow-md border border-gray-300 transition-transform active:scale-95 cursor-pointer z-10 flex items-center justify-center"
+                    title="Zoom Full Screen"
+                  >
+                    <ZoomIn className="w-5 h-5 text-gray-800" />
+                  </button>
+
+                  {/* Bottom Navigation Arrow Buttons on Image */}
+                  {parsedImages.length > 1 && (
+                    <>
+                      <button
+                        onClick={handlePrevImage}
+                        className="absolute bottom-3 left-3 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-lg shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-10"
+                        title="Previous Photo"
+                      >
+                        <ArrowLeft className="w-4 h-4 text-gray-900" />
+                      </button>
+                      <button
+                        onClick={handleNextImage}
+                        className="absolute bottom-3 right-3 sm:right-36 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-lg shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-10"
+                        title="Next Photo"
+                      >
+                        <ArrowRight className="w-4 h-4 text-gray-900" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Reoti Handloom Premium Glass Watermark Seal Overlay */}
+                  <div className="absolute bottom-3 right-3 sm:right-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-10">
+                    <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-500 shrink-0">
+                      <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                    </div>
+                    <span className="font-serif font-extrabold text-amber-950 text-[11px] tracking-wide">
+                      Reoti Handloom
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-amber-500 opacity-60" />
+                    <span className="text-[9px] text-amber-800 font-semibold tracking-normal lowercase">
+                      authentic
+                    </span>
                   </div>
-                  <span className="font-serif font-extrabold text-amber-950 text-[11px] tracking-wide">
-                    Reoti Handloom
-                  </span>
-                  <span className="w-1 h-1 rounded-full bg-amber-500 opacity-60" />
-                  <span className="text-[9px] text-amber-800 font-semibold tracking-normal lowercase">
-                    authentic
-                  </span>
                 </div>
+
+                {/* Nykaa-style Floating Magnified Zoom Preview Box (Unclipped on Right Side over Details Column) */}
+                {isHoverZooming && (
+                  <div className="absolute top-0 left-[calc(100%+1.25rem)] z-50 w-[540px] h-[560px] rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xl bg-white hidden lg:block pointer-events-none transition-opacity duration-200">
+                    <div
+                      className="w-full h-full bg-no-repeat"
+                      style={{
+                        backgroundImage: `url(${selectedImage || parsedImages[0]})`,
+                        backgroundSize: '280%',
+                        backgroundPosition: `${zoomPos.percentX}% ${zoomPos.percentY}%`,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
-              {/* Nykaa-style Floating Magnified Zoom Preview Box (Unclipped on Right Side over Details Column) */}
-              {isHoverZooming && (
-                <div className="absolute top-0 left-[calc(100%+1.25rem)] z-50 w-[540px] h-[560px] rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xl bg-white hidden lg:block pointer-events-none transition-opacity duration-200">
-                  <div
-                    className="w-full h-full bg-no-repeat"
-                    style={{
-                      backgroundImage: `url(${selectedImage || parsedImages[0]})`,
-                      backgroundSize: '280%',
-                      backgroundPosition: `${zoomPos.percentX}% ${zoomPos.percentY}%`,
-                    }}
-                  />
+              {/* Mobile Horizontal Thumbnail Strip (Below Main Image) */}
+              {parsedImages.length > 1 && (
+                <div className="flex sm:hidden gap-2.5 overflow-x-auto pb-1 pt-1 no-scrollbar">
+                  {parsedImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedImage(imgUrl);
+                        setCurrentImageIdx(idx);
+                      }}
+                      className={`w-14 h-18 rounded-lg border-2 overflow-hidden bg-slate-100 transition-all shrink-0 cursor-pointer ${
+                        selectedImage === imgUrl ? 'border-rose-600 shadow-md ring-2 ring-rose-200' : 'border-gray-200 opacity-80 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={imgUrl} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -593,22 +616,30 @@ export default function ProductDetailPage() {
 
           {/* Pricing Section */}
           <div className="py-3.5 border-y border-gray-200 space-y-1 bg-white">
-            <div className="flex items-baseline gap-3">
-              <span className="text-2xl font-extrabold text-gray-900">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <span className="text-2xl font-extrabold text-gray-900 font-sans">
                 ₹{(product.price + (hasFallPico ? 200 : 0)).toLocaleString()}
               </span>
-              <span className="text-sm font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                {product.discountPercent}% Off
-              </span>
+              {product.discountPercent && product.discountPercent > 0 && product.originalPrice && product.originalPrice > product.price ? (
+                <span className="text-sm font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                  {product.discountPercent}% Off
+                </span>
+              ) : null}
               {hasFallPico && (
                 <span className="text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
                   + ₹200 Fall & Pico
                 </span>
               )}
             </div>
-            <div className="text-xs text-gray-500 font-medium">
-              MRP <span className="line-through">₹{(product.originalPrice + (hasFallPico ? 200 : 0)).toLocaleString()}</span> <span className="text-[11px] text-gray-400">Inclusive of all taxes</span>
-            </div>
+            {product.originalPrice && product.originalPrice > product.price ? (
+              <div className="text-xs text-gray-500 font-medium">
+                MRP <span className="line-through font-sans">₹{(product.originalPrice + (hasFallPico ? 200 : 0)).toLocaleString()}</span> <span className="text-[11px] text-gray-400">Inclusive of all taxes</span>
+              </div>
+            ) : (
+              <div className="text-xs text-gray-400 font-medium">
+                <span>Inclusive of all taxes</span>
+              </div>
+            )}
           </div>
 
           {/* Stock Scarcity Indicator Bar (Matching Reference - Visible ONLY when stock is specified and > 0) */}
@@ -817,41 +848,41 @@ export default function ProductDetailPage() {
           {/* Trust Badges & Accordion Product Details Section (Matching Reference Design) */}
           <div className="pt-6 border-t border-amber-200/80 space-y-5 text-xs font-sans">
             
-            {/* Top 4 Circular Trust Badges (Matching Reference Screenshot Typography) */}
-            <div className="bg-[#FAF7F2] py-6 px-3 rounded-2xl border-0 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            {/* Top 4 Circular Trust Badges (Matching Reference Screenshot - In Single Line) */}
+            <div className="bg-[#FAF7F2] py-4 sm:py-6 px-1.5 sm:px-3 rounded-2xl border-0 grid grid-cols-4 gap-1.5 sm:gap-4 text-center items-start">
               <div className="flex flex-col items-center space-y-1">
-                <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                   <OriginalHandwovenIcon />
                 </div>
-                <span className="text-xs sm:text-sm font-sans font-black text-[#0a0a0a] tracking-tight leading-snug max-w-[130px] mt-1.5">
+                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
                   100% Original<br />Handwoven
                 </span>
               </div>
 
               <div className="flex flex-col items-center space-y-1">
-                <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                   <HandloomLoomIcon />
                 </div>
-                <span className="text-xs sm:text-sm font-sans font-black text-[#0a0a0a] tracking-tight leading-snug max-w-[130px] mt-1.5">
-                  Handloom Made
+                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
+                  Handloom<br />Made
                 </span>
               </div>
 
               <div className="flex flex-col items-center space-y-1">
-                <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                   <SustainableLeavesIcon />
                 </div>
-                <span className="text-xs sm:text-sm font-sans font-black text-[#0a0a0a] tracking-tight leading-snug max-w-[130px] mt-1.5">
-                  Highly Sustainable
+                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
+                  Highly<br />Sustainable
                 </span>
               </div>
 
               <div className="flex flex-col items-center space-y-1">
-                <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                   <NaturalThreadsIcon />
                 </div>
-                <span className="text-xs sm:text-sm font-sans font-black text-[#0a0a0a] tracking-tight leading-snug max-w-[130px] mt-1.5">
-                  Made from Natural<br />Threads
+                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
+                  Made from<br />Natural Threads
                 </span>
               </div>
             </div>
@@ -1385,9 +1416,11 @@ export default function ProductDetailPage() {
               <span className="font-extrabold text-sm sm:text-base text-rose-700 font-sans leading-none">
                 ₹{product.price.toLocaleString()}
               </span>
-              <span className="text-[10px] sm:text-xs text-gray-400 line-through font-semibold">
-                ₹{product.originalPrice.toLocaleString()}
-              </span>
+              {product.originalPrice && product.originalPrice > product.price ? (
+                <span className="text-[10px] sm:text-xs text-gray-400 line-through font-semibold font-sans">
+                  ₹{product.originalPrice.toLocaleString()}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>

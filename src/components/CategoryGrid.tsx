@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 
 interface CategoryItem {
   id: string;
@@ -61,6 +62,7 @@ export const CategoryGrid = () => {
                 alt={cat.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
+              <WatermarkOverlay variant="card" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
               <span className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 text-[9px] sm:text-[10px] font-bold bg-white/90 text-amber-950 px-1.5 sm:px-2 py-0.5 rounded-full shadow">
                 {cat._count?.products || 0} Designs

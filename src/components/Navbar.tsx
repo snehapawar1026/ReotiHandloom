@@ -36,6 +36,25 @@ const NavbarContent = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWholesaleModalOpen, setIsWholesaleModalOpen] = useState(false);
   const [isTrackOrderModalOpen, setIsTrackOrderModalOpen] = useState(false);
+  const [userLocText, setUserLocText] = useState<string>('');
+
+  React.useEffect(() => {
+    const updateFromCache = () => {
+      try {
+        const cached = localStorage.getItem('rh_exact_loc') || sessionStorage.getItem('rh_exact_loc');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.city) {
+            setUserLocText(parsed.postal ? `${parsed.city} ${parsed.postal}` : parsed.city);
+          }
+        }
+      } catch (e) {}
+    };
+
+    updateFromCache();
+    window.addEventListener('rh_location_updated', updateFromCache);
+    return () => window.removeEventListener('rh_location_updated', updateFromCache);
+  }, []);
 
   // Active dropdown state for mobile accordions & desktop hover
   const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null);
@@ -95,10 +114,14 @@ const NavbarContent = () => {
               <span>@reoti_handloom</span>
             </a>
 
-            <span className="hidden min-[480px]:flex items-center gap-1 hover:text-amber-100 cursor-pointer transition-colors shrink-0">
-              <Smartphone className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
-              <span>App Download</span>
-            </span>
+            {/* Auto Detected Delivery Location Pill (Without Permission Popup) */}
+            <div
+              className="flex items-center gap-1 text-amber-300 font-bold shrink-0 bg-amber-900/40 px-2.5 py-0.5 rounded border border-amber-500/30 select-none"
+              title="Delivery Location"
+            >
+              <MapPin className="w-3 h-3 text-rose-400" />
+              <span>{userLocText ? `Deliver to: ${userLocText}` : 'Deliver to: India'}</span>
+            </div>
 
             <Link
               href="/contact"

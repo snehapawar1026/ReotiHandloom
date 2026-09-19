@@ -12,6 +12,7 @@ export interface StoreData {
   orders?: any[];
   activities?: any[];
   users?: any[];
+  leads?: any[];
 }
 
 let inMemoryStore: StoreData = {
@@ -19,17 +20,32 @@ let inMemoryStore: StoreData = {
   orders: (initialStoreData as any).orders || [],
   activities: (initialStoreData as any).activities || [],
   users: (initialStoreData as any).users || [],
+  leads: (initialStoreData as any).leads || [],
 };
 
+function getStorageFilePaths(): string[] {
+  return [
+    path.join(process.cwd(), 'src', 'data', 'storeData.json'),
+    path.join(process.cwd(), 'data', 'storeData.json'),
+    path.join(process.cwd(), 'storeData.json'),
+  ];
+}
+
 function getStorageFilePath(): string {
-  const filePath = path.join(process.cwd(), 'src', 'data', 'storeData.json');
-  const dir = path.dirname(filePath);
+  const paths = getStorageFilePaths();
+  for (const p of paths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  const defaultPath = paths[0];
+  const dir = path.dirname(defaultPath);
   if (!fs.existsSync(dir)) {
     try {
       fs.mkdirSync(dir, { recursive: true });
     } catch (e) {}
   }
-  return filePath;
+  return defaultPath;
 }
 
 export function getStoreData(): StoreData {
@@ -39,16 +55,15 @@ export function getStoreData(): StoreData {
       const content = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(content);
       inMemoryStore = {
-        ...inMemoryStore,
-        ...parsed,
-        categories: parsed.categories || inMemoryStore.categories || [],
-        products: parsed.products || inMemoryStore.products || [],
-        banners: parsed.banners || inMemoryStore.banners || [],
-        instaPosts: parsed.instaPosts || inMemoryStore.instaPosts || [],
-        reviews: parsed.reviews || inMemoryStore.reviews || [],
-        orders: parsed.orders || inMemoryStore.orders || [],
-        activities: parsed.activities || inMemoryStore.activities || [],
-        users: parsed.users || inMemoryStore.users || [],
+        categories: Array.isArray(parsed.categories) ? parsed.categories : inMemoryStore.categories || [],
+        products: Array.isArray(parsed.products) ? parsed.products : inMemoryStore.products || [],
+        banners: Array.isArray(parsed.banners) ? parsed.banners : inMemoryStore.banners || [],
+        instaPosts: Array.isArray(parsed.instaPosts) ? parsed.instaPosts : inMemoryStore.instaPosts || [],
+        reviews: Array.isArray(parsed.reviews) ? parsed.reviews : inMemoryStore.reviews || [],
+        orders: Array.isArray(parsed.orders) ? parsed.orders : inMemoryStore.orders || [],
+        activities: Array.isArray(parsed.activities) ? parsed.activities : inMemoryStore.activities || [],
+        users: Array.isArray(parsed.users) ? parsed.users : inMemoryStore.users || [],
+        leads: Array.isArray(parsed.leads) ? parsed.leads : inMemoryStore.leads || [],
       };
     }
   } catch (err) {
@@ -63,21 +78,33 @@ export function saveStoreData(data: Partial<StoreData>): StoreData {
     ...data,
   };
 
-  const filePath = getStorageFilePath();
+  const payload = JSON.stringify(inMemoryStore, null, 2);
+  const paths = getStorageFilePaths();
+
+  // Ensure default dir exists
+  const primaryPath = getStorageFilePath();
   try {
-    const dir = path.dirname(filePath);
+    const dir = path.dirname(primaryPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    const tempPath = `${filePath}.tmp.${Date.now()}`;
-    fs.writeFileSync(tempPath, JSON.stringify(inMemoryStore, null, 2), 'utf-8');
-    fs.renameSync(tempPath, filePath);
+    fs.writeFileSync(primaryPath, payload, 'utf-8');
   } catch (err) {
-    console.warn('[StoreManager] Write file warning:', err);
+    console.warn('[StoreManager] Write primary file warning:', err);
+  }
+
+  // Also write to any other existing paths to keep everything 100% in sync
+  for (const p of paths) {
+    if (p !== primaryPath && fs.existsSync(p)) {
+      try {
+        fs.writeFileSync(p, payload, 'utf-8');
+      } catch (e) {}
+    }
   }
 
   return inMemoryStore;
 }
+
 
 // ---------------- PRODUCTS ----------------
 
@@ -125,12 +152,15 @@ export function createProductInStore(productInput: any) {
     slug = `${rawSlug}-${counter++}`;
   }
 
-  const originalPrice = parseFloat(productInput.originalPrice) || parseFloat(productInput.price) || 0;
   const price = parseFloat(productInput.price) || 0;
+  const originalPrice =
+    productInput.originalPrice !== undefined && productInput.originalPrice !== null && productInput.originalPrice !== ''
+      ? parseFloat(productInput.originalPrice)
+      : price;
   const discountPercent =
     originalPrice > price
       ? Math.round(((originalPrice - price) / originalPrice) * 100)
-      : parseInt(productInput.discountPercent) || 0;
+      : 0;
 
   const category = data.categories.find((c) => c.id === productInput.categoryId);
 
@@ -173,7 +203,9 @@ export function createProductInStore(productInput: any) {
     isOutOfStock,
     images,
     categoryId: productInput.categoryId || (data.categories[0]?.id ?? ''),
-    category: category ? { id: category.id, name: category.name, slug: category.slug } : undefined,
+    category: category
+      ? { id: category.id, name: category.name, slug: category.slug, parentId: category.parentId }
+      : undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     reviews: [],
@@ -191,12 +223,20 @@ export function updateProductInStore(id: string, updateInput: any) {
 
   const existing = data.products[index];
   const price = updateInput.price !== undefined ? parseFloat(updateInput.price) : existing.price;
-  const originalPrice =
-    updateInput.originalPrice !== undefined ? parseFloat(updateInput.originalPrice) : existing.originalPrice;
+  let originalPrice = existing.originalPrice;
+  if (updateInput.originalPrice !== undefined) {
+    if (updateInput.originalPrice === '' || updateInput.originalPrice === null) {
+      originalPrice = price;
+    } else {
+      originalPrice = parseFloat(updateInput.originalPrice);
+    }
+  }
 
-  let discountPercent = existing.discountPercent;
+  let discountPercent = 0;
   if (originalPrice && price && originalPrice > price) {
     discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
+  } else {
+    discountPercent = 0;
   }
 
   let images = updateInput.images !== undefined ? updateInput.images : existing.images;
@@ -227,7 +267,9 @@ export function updateProductInStore(id: string, updateInput: any) {
     discountPercent,
     images,
     categoryId,
-    category: category ? { id: category.id, name: category.name, slug: category.slug } : existing.category,
+    category: category
+      ? { id: category.id, name: category.name, slug: category.slug, parentId: category.parentId }
+      : existing.category,
     isOutOfStock,
     stock,
     updatedAt: new Date().toISOString(),
@@ -350,14 +392,82 @@ export function logActivityInStore(activityInput: any) {
     title: activityInput.title || 'Store Activity',
     details: activityInput.details || null,
     userEmail: activityInput.userEmail || null,
+    userPhone: activityInput.userPhone || null,
     userIp: activityInput.userIp || '127.0.0.1',
+    location: activityInput.location || activityInput.city || null,
+    city: activityInput.city || null,
+    region: activityInput.region || null,
+    country: activityInput.country || 'India',
+    device: activityInput.device || null,
+    browser: activityInput.browser || null,
     pageUrl: activityInput.pageUrl || '/',
+    pageTitle: activityInput.pageTitle || null,
+    referrer: activityInput.referrer || null,
     createdAt: new Date().toISOString(),
   };
 
-  const activities = [newActivity, ...(data.activities || [])].slice(0, 200);
+  const activities = [newActivity, ...(data.activities || [])].slice(0, 300);
   saveStoreData({ activities });
   return newActivity;
+}
+
+// ---------------- LEADS & ENQUIRIES ----------------
+
+export function getAllLeads() {
+  return getStoreData().leads || [];
+}
+
+export function createLeadInStore(leadInput: any) {
+  const data = getStoreData();
+  const id = crypto.randomUUID();
+
+  const newLead = {
+    id,
+    phone: (leadInput.phone || '').trim(),
+    name: (leadInput.name || 'Interested Buyer').trim(),
+    email: (leadInput.email || '').trim() || null,
+    city: leadInput.city || null,
+    region: leadInput.region || null,
+    location: leadInput.location || leadInput.city || null,
+    source: leadInput.source || 'POPUP_OFFER', // POPUP_OFFER, WHATSAPP_ENQUIRY, ABANDONED_CHECKOUT, PRODUCT_PAGE
+    productInterest: leadInput.productInterest || leadInput.productTitle || null,
+    productUrl: leadInput.productUrl || null,
+    couponCode: leadInput.couponCode || 'ROYAL10',
+    status: 'NEW', // NEW, CONTACTED, CONVERTED, LOST
+    notes: leadInput.notes || '',
+    device: leadInput.device || null,
+    userIp: leadInput.userIp || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const leads = [newLead, ...(data.leads || [])];
+  saveStoreData({ leads });
+  return newLead;
+}
+
+export function updateLeadStatusInStore(id: string, status: string, notes?: string) {
+  const data = getStoreData();
+  const index = (data.leads || []).findIndex((l: any) => l.id === id);
+  if (index === -1) return null;
+
+  const leads = [...(data.leads || [])];
+  leads[index] = {
+    ...leads[index],
+    status,
+    notes: notes !== undefined ? notes : leads[index].notes,
+    updatedAt: new Date().toISOString(),
+  };
+
+  saveStoreData({ leads });
+  return leads[index];
+}
+
+export function deleteLeadInStore(id: string) {
+  const data = getStoreData();
+  const leads = (data.leads || []).filter((l: any) => l.id !== id);
+  saveStoreData({ leads });
+  return true;
 }
 
 // ---------------- USERS & AUTH ----------------

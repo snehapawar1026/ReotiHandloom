@@ -1,4 +1,4 @@
-﻿import fs from 'fs';
+import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
@@ -15,7 +15,6 @@ if (fs.existsSync(tempDir)) {
 
 fs.mkdirSync(path.join(tempDir, '.next'), { recursive: true });
 fs.mkdirSync(path.join(tempDir, 'public', '_next'), { recursive: true });
-fs.mkdirSync(path.join(tempDir, 'src', 'data'), { recursive: true });
 
 // 1. Copy server.js
 fs.copyFileSync(
@@ -38,11 +37,13 @@ fs.cpSync(path.join(nextDir, 'static'), path.join(tempDir, '.next', 'static'), {
 // 4. Map static into public/_next/static for LiteSpeed/cPanel Web Server
 fs.cpSync(path.join(nextDir, 'static'), path.join(tempDir, 'public', '_next', 'static'), { recursive: true });
 
-// 5. Copy storeData.json and package.json
-fs.copyFileSync(
-  path.join(rootDir, 'src', 'data', 'storeData.json'),
-  path.join(tempDir, 'src', 'data', 'storeData.json')
-);
+// 5. Copy all public assets (uploads, images, heritage, studio, logos, favicons, etc.)
+const publicDir = path.join(rootDir, 'public');
+if (fs.existsSync(publicDir)) {
+  fs.cpSync(publicDir, path.join(tempDir, 'public'), { recursive: true });
+}
+
+// 6. Copy package.json (NOTE: We deliberately DO NOT copy storeData.json to ensure live products, orders & user data are never overwritten on cPanel)
 fs.copyFileSync(
   path.join(rootDir, 'package.json'),
   path.join(tempDir, 'package.json')

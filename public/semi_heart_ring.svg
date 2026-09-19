@@ -1,0 +1,46 @@
+<svg viewBox="0 0 200 200" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+<defs>
+<path id="heart-glyph" d="M 0,6 C -0.8,4.5 -5,1.5 -6.5,-1.5 C -8,-4.5 -6.5,-7.5 -3.5,-7.5 C -1.5,-7.5 0,-5.5 0,-4 C 0,-5.5 1.5,-7.5 3.5,-7.5 C 6.5,-7.5 8,-4.5 6.5,-1.5 C 5,1.5 0.8,4.5 0,6 Z" />
+</defs>
+<circle cx="100" cy="100" r="71" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2,3" opacity="0.4"/>
+<use href="#heart-glyph" transform="translate(192.50, 100.00) rotate(90.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(185.04, 113.47) rotate(99.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(173.71, 123.95) rotate(108.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(176.72, 139.09) rotate(117.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(174.83, 154.37) rotate(126.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(160.88, 160.88) rotate(135.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(145.55, 162.70) rotate(144.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(139.09, 176.72) rotate(153.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(128.58, 187.97) rotate(162.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(113.47, 185.04) rotate(171.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(100.00, 177.50) rotate(180.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(86.53, 185.04) rotate(189.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(71.42, 187.97) rotate(198.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(60.91, 176.72) rotate(207.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(54.45, 162.70) rotate(216.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(39.12, 160.88) rotate(225.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(25.17, 154.37) rotate(234.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(23.28, 139.09) rotate(243.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(26.29, 123.95) rotate(252.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(14.96, 113.47) rotate(261.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(7.50, 100.00) rotate(270.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(14.96, 86.53) rotate(279.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(26.29, 76.05) rotate(288.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(23.28, 60.91) rotate(297.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(25.17, 45.63) rotate(306.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(39.12, 39.12) rotate(315.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(54.45, 37.30) rotate(324.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(60.91, 23.28) rotate(333.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(71.42, 12.03) rotate(342.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(86.53, 14.96) rotate(351.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(100.00, 22.50) rotate(360.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(113.47, 14.96) rotate(369.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(128.58, 12.03) rotate(378.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(139.09, 23.28) rotate(387.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(145.55, 37.30) rotate(396.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(160.88, 39.12) rotate(405.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(174.83, 45.63) rotate(414.00) scale(1.35)" />
+<use href="#heart-glyph" transform="translate(176.72, 60.91) rotate(423.00) scale(0.95)" />
+<use href="#heart-glyph" transform="translate(173.71, 76.05) rotate(432.00) scale(0.85)" />
+<use href="#heart-glyph" transform="translate(185.04, 86.53) rotate(441.00) scale(0.95)" />
+</svg>

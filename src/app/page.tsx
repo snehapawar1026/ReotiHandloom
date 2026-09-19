@@ -9,6 +9,7 @@ import { GoogleReviewsSection } from '@/components/GoogleReviewsSection';
 import { InstagramFamousSection } from '@/components/InstagramFamousSection';
 import { BrandCommitmentSection } from '@/components/BrandCommitmentSection';
 import { ProductCard } from '@/components/ProductCard';
+import { MobileProductSlider } from '@/components/MobileProductSlider';
 import { ProductItem } from '@/context/ShopContext';
 import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Filter, Eye, EyeOff } from 'lucide-react';
 
@@ -98,6 +99,14 @@ export default function Home() {
 
   const homeCategoryScrollRef = useRef<HTMLDivElement>(null);
   const festiveScrollRef = useRef<HTMLDivElement>(null);
+  const browseCatScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollBrowseCategories = (direction: 'left' | 'right') => {
+    if (browseCatScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -280 : 280;
+      browseCatScrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   const scrollHomeCategories = (direction: 'left' | 'right') => {
     if (homeCategoryScrollRef.current) {
@@ -107,13 +116,27 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const t = Date.now();
     Promise.all([
-      fetch('/api/categories?parentOnly=true').then((r) => r.json()),
-      fetch('/api/products').then((r) => r.json()),
+      fetch(`/api/categories?parentOnly=true&_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/products?_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
     ])
       .then(([catData, prodData]) => {
         if (catData.success) setCategories(catData.categories || []);
-        if (prodData.success) setAllProducts(prodData.products || []);
+        if (prodData.success) {
+          const handloomOnly = (prodData.products || []).filter((p: ProductItem) => {
+            const catSlug = (p.category?.slug || '').toLowerCase();
+            const title = (p.title || '').toLowerCase();
+            const fabric = (p.fabric || '').toLowerCase();
+            const isSemi =
+              catSlug.includes('semi-maheshwari') ||
+              fabric.includes('semi') ||
+              title.includes('semi maheshwari') ||
+              title.includes('semi-maheshwari');
+            return !isSemi;
+          });
+          setAllProducts(handloomOnly);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -333,14 +356,13 @@ export default function Home() {
         {loading ? (
           <div className="py-12 text-center text-xs font-bold text-gray-400">Loading Featured Sarees...</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-            {(allProducts.filter((p) => p.isFeatured).length > 0
+          <MobileProductSlider
+            products={(allProducts.filter((p) => p.isFeatured).length > 0
               ? allProducts.filter((p) => p.isFeatured)
               : allProducts
-            ).slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+            ).slice(0, 4)}
+            emptyMessage="Loading Featured Sarees..."
+          />
         )}
       </section>
 
@@ -357,7 +379,7 @@ export default function Home() {
 
         {/* Filter Pill Tabs Bar */}
         <div className="w-full overflow-x-auto scrollbar-none mb-8 sm:mb-10">
-          <div className="flex items-center justify-start sm:justify-center gap-2 min-w-max pb-2">
+          <div className="flex items-center justify-start sm:justify-center gap-2 min-w-max pb-2 px-2">
             {SAREE_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -374,15 +396,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Saree Grid (3/4 Columns) */}
+        {/* Saree Slider (Desktop Grid + Mobile Sliding Carousel) */}
         {loading ? (
           <div className="py-12 text-center text-xs font-bold text-gray-400">Loading Bestseller Sarees...</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-            {filteredSarees.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <MobileProductSlider
+            products={filteredSarees}
+            emptyMessage="No sarees found for this category."
+          />
         )}
 
         {/* Section View All Button */}
@@ -409,7 +430,7 @@ export default function Home() {
 
         {/* Suit Filter Pill Tabs Bar */}
         <div className="w-full overflow-x-auto scrollbar-none mb-8 sm:mb-10">
-          <div className="flex items-center justify-start sm:justify-center gap-2 min-w-max pb-2">
+          <div className="flex items-center justify-start sm:justify-center gap-2 min-w-max pb-2 px-2">
             {SUIT_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -426,12 +447,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Suit Grid (4 Columns) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
-          {filteredSuits.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {/* Suit Slider (Desktop Grid + Mobile Sliding Carousel) */}
+        <MobileProductSlider
+          products={filteredSuits}
+          emptyMessage="No suits found for this category."
+        />
 
         {/* Section View All Button */}
         <div className="flex justify-center mt-10">
@@ -455,7 +475,8 @@ export default function Home() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        {/* Desktop View (Unchanged 4-Column Grid) */}
+        <div className="hidden md:grid md:grid-cols-4 gap-6">
           {[
             { title: 'New Arrivals', link: '/products', image: '/uploads/saree_1789233209397_zszzb.jpeg' },
             { title: 'Maheshwari Suits', link: '/products?category=maheshwari-suits', image: '/uploads/saree_1789221965397_lf0kg.jpeg' },
@@ -465,7 +486,7 @@ export default function Home() {
             <Link
               key={i}
               href={cat.link}
-              className="group relative h-64 sm:h-80 rounded-2xl overflow-hidden shadow-md border border-amber-950/10 block"
+              className="group relative h-80 rounded-2xl overflow-hidden shadow-md border border-amber-950/10 block"
             >
               <img
                 src={cat.image}
@@ -473,7 +494,7 @@ export default function Home() {
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-5 text-white">
-                <h3 className="font-serif font-extrabold text-lg sm:text-xl text-amber-100 group-hover:text-white transition-colors">
+                <h3 className="font-serif font-extrabold text-xl text-amber-100 group-hover:text-white transition-colors">
                   {cat.title}
                 </h3>
                 <span className="text-xs font-medium text-amber-200 flex items-center gap-1 mt-1 group-hover:translate-x-1 transition-transform">
@@ -483,6 +504,66 @@ export default function Home() {
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* Mobile View (Smooth Sliding Carousel) */}
+        <div className="block md:hidden relative group/browse">
+          <div
+            ref={browseCatScrollRef}
+            className="flex gap-4 overflow-x-auto pb-4 pt-1 px-2 scrollbar-none snap-x snap-mandatory scroll-smooth overscroll-x-contain"
+          >
+            {[
+              { title: 'New Arrivals', link: '/products', image: '/uploads/saree_1789233209397_zszzb.jpeg' },
+              { title: 'Maheshwari Suits', link: '/products?category=maheshwari-suits', image: '/uploads/saree_1789221965397_lf0kg.jpeg' },
+              { title: 'Dupattas', link: '/products?category=dupattas', image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80' },
+              { title: 'Pure Silk Sarees', link: '/products?category=pure-silk-maheshwari', image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80' },
+            ].map((cat, i) => (
+              <Link
+                key={i}
+                href={cat.link}
+                className="snap-start shrink-0 w-[74vw] max-w-[280px] h-72 rounded-2xl overflow-hidden shadow-md border border-amber-950/10 block relative group"
+              >
+                <img
+                  src={cat.image}
+                  alt={cat.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent flex flex-col justify-end p-5 text-white">
+                  <h3 className="font-serif font-extrabold text-lg text-amber-100 group-hover:text-white transition-colors">
+                    {cat.title}
+                  </h3>
+                  <span className="text-xs font-medium text-amber-200 flex items-center gap-1.5 mt-1.5 group-hover:translate-x-1 transition-transform">
+                    <span>Explore Collection</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile Sliding Controls & Indicator */}
+          <div className="flex items-center justify-between px-2 mt-2">
+            <div className="flex items-center gap-1 text-[11px] font-bold text-gray-500">
+              <span>Swipe to explore</span>
+              <ArrowRight className="w-3 h-3 text-[#E52E4E]" />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => scrollBrowseCategories('left')}
+                className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-800 active:scale-95 cursor-pointer"
+                aria-label="Previous"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => scrollBrowseCategories('right')}
+                className="w-8 h-8 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-800 active:scale-95 cursor-pointer"
+                aria-label="Next"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 

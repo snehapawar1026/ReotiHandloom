@@ -148,29 +148,69 @@ export default function CheckoutPage() {
   const shippingCharge = 0; // Free Insured Loom Shipping
   const finalTotal = Math.max(0, subtotal - appliedDiscount + calculatedTip + shippingCharge);
 
+  // Auto-capture Abandoned Checkout Lead if phone is entered
+  useEffect(() => {
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length === 10 && cart.length > 0) {
+      const timer = setTimeout(() => {
+        const itemNames = cart.map((item) => item.product?.title || 'Handloom Item').join(', ');
+        fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: cleanPhone,
+            name: `${firstName} ${lastName}`.trim() || 'Checkout Customer',
+            email: email || null,
+            city: city ? `${city}, ${state}` : state || 'India',
+            source: 'ABANDONED_CHECKOUT',
+            productInterest: itemNames,
+            notes: `Items in Cart: ${cart.length} | Amount: ₹${finalTotal}`,
+          }),
+        }).catch(() => {});
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [phone, firstName, lastName, email, city, state, cart, finalTotal]);
+
   // Coupon Handler
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponCode.trim()) return;
 
-    const normalizedCode = couponCode.trim().toUpperCase();
-    if (normalizedCode === 'MAHESHWARI10' || normalizedCode === 'REOTI10') {
-      const disc = Math.round(subtotal * 0.1);
-      setAppliedDiscount(disc);
-      setCouponApplied(true);
-      setCouponError('');
-    } else if (normalizedCode === 'ROYAL5') {
-      const disc = Math.round(subtotal * 0.05);
-      setAppliedDiscount(disc);
-      setCouponApplied(true);
-      setCouponError('');
-    } else if (normalizedCode === 'WEAVER100') {
-      const disc = Math.min(100, subtotal);
-      setAppliedDiscount(disc);
-      setCouponApplied(true);
-      setCouponError('');
-    } else {
-      setCouponError('Invalid coupon code. Try "MAHESHWARI10" for 10% Off');
+    setCouponError('');
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          phone: phone || '',
+          email: email || '',
+          subtotal,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedDiscount(data.discountAmount || 0);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponApplied(false);
+        setAppliedDiscount(0);
+        setCouponError(data.error || 'Invalid coupon code');
+      }
+    } catch (err: any) {
+      // Offline fallback
+      const normalizedCode = couponCode.trim().toUpperCase();
+      if (['WELCOME10', 'ROYAL10', 'FIRST10', 'MAHESHWARI10', 'REOTI10'].includes(normalizedCode)) {
+        const disc = Math.round(subtotal * 0.1);
+        setAppliedDiscount(disc);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponError('Invalid coupon code.');
+      }
     }
   };
 

@@ -8,6 +8,8 @@ import { Footer } from '@/components/Footer';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
 import { PushNotificationPrompt } from '@/components/PushNotificationPrompt';
 import { TrustQualityWidget } from '@/components/TrustQualityWidget';
+import { VisitorTracker } from '@/components/VisitorTracker';
+import { SmartLeadCaptureModal } from '@/components/SmartLeadCaptureModal';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -26,6 +28,19 @@ export const metadata: Metadata = {
   title: 'Reoti Handloom | Authentic Maheshwari Sarees Online Store',
   description: 'Shop authentic handcrafted Maheshwari sarees directly from Maheshwar fort artisans. Silk-Cotton, Pure Silk, Tissue Zari, and Garbha Reshami Sarees.',
   keywords: ['Reoti Handloom', 'Maheshwari Sarees', 'Pure Silk Sarees', 'Silk Cotton Sarees', 'Maheshwar Handloom', 'Tissue Zari Saree'],
+  icons: {
+    icon: [
+      { url: '/favicon-48x48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/rh-logo.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon-48x48.png',
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   openGraph: {
     title: 'Reoti Handloom | Authentic Maheshwari Sarees',
     description: 'Something "more" in Maheshwari Handloom. Direct from Maheshwar weavers.',
@@ -51,8 +66,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <FloatingWhatsApp />
           <TrustQualityWidget />
           <PushNotificationPrompt />
+          <VisitorTracker />
+          <SmartLeadCaptureModal />
         </ShopProvider>
       </body>
     </html>
   );
 }
+

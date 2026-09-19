@@ -74,14 +74,40 @@ export const CartDrawer = () => {
 
   if (!isCartOpen) return null;
 
-  const handleApplyCoupon = () => {
-    if (couponCode.trim().toUpperCase() === 'MAHESHWARI10') {
-      const discount = Math.round(totalCartPrice * 0.1);
-      setAppliedDiscount(discount);
-      setCouponApplied(true);
-      setCouponError('');
-    } else {
-      setCouponError('Invalid Coupon Code. Try "MAHESHWARI10"');
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError('');
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          phone: customerPhone || '',
+          email: customerEmail || '',
+          subtotal: totalCartPrice,
+        }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedDiscount(data.discountAmount || 0);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponApplied(false);
+        setAppliedDiscount(0);
+        setCouponError(data.error || 'Invalid Coupon Code');
+      }
+    } catch (e) {
+      const norm = couponCode.trim().toUpperCase();
+      if (['WELCOME10', 'ROYAL10', 'FIRST10', 'MAHESHWARI10', 'REOTI10'].includes(norm)) {
+        const discount = Math.round(totalCartPrice * 0.1);
+        setAppliedDiscount(discount);
+        setCouponApplied(true);
+        setCouponError('');
+      } else {
+        setCouponError('Invalid Coupon Code. Try "WELCOME10"');
+      }
     }
   };
 

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createProductInStore, updateProductInStore, deleteProductInStore } from '@/lib/storeManager';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -32,7 +35,9 @@ export async function POST(req: NextRequest) {
         isOutOfStock,
       } = body;
 
-      const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
+      const numPrice = parseFloat(price) || 0;
+      const numOriginalPrice = (originalPrice !== undefined && originalPrice !== null && originalPrice !== '') ? parseFloat(originalPrice) : numPrice;
+      const discountPercent = numOriginalPrice > numPrice ? Math.round(((numOriginalPrice - numPrice) / numOriginalPrice) * 100) : 0;
 
       await prisma.product.create({
         data: {
@@ -40,8 +45,8 @@ export async function POST(req: NextRequest) {
           title,
           slug: savedProduct.slug,
           description: description || title,
-          price: parseFloat(price),
-          originalPrice: parseFloat(originalPrice),
+          price: numPrice,
+          originalPrice: numOriginalPrice,
           discountPercent,
           fabric: fabric || 'Silk Cotton',
           weaveType: weaveType || 'Garbha Reshami Border',
@@ -105,7 +110,15 @@ export async function PUT(req: NextRequest) {
         isOutOfStock,
       } = body;
 
-      const discountPercent = Math.round(((originalPrice - price) / originalPrice) * 100);
+      const numPrice = price !== undefined ? parseFloat(price) : undefined;
+      let numOriginalPrice: number | undefined = undefined;
+      if (originalPrice !== undefined) {
+        numOriginalPrice = (originalPrice !== null && originalPrice !== '') ? parseFloat(originalPrice) : (numPrice || 0);
+      }
+      let discountPercent: number | undefined = undefined;
+      if (numOriginalPrice !== undefined && numPrice !== undefined) {
+        discountPercent = numOriginalPrice > numPrice ? Math.round(((numOriginalPrice - numPrice) / numOriginalPrice) * 100) : 0;
+      }
 
       let parsedStock: number | null | undefined = undefined;
       if (stock !== undefined) {
@@ -115,14 +128,14 @@ export async function PUT(req: NextRequest) {
       await prisma.product.update({
         where: { id },
         data: {
-          ...(title && {
+          ...(title !== undefined && {
             title,
             slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
           }),
           ...(description !== undefined && { description }),
-          ...(price !== undefined && { price: parseFloat(price) }),
-          ...(originalPrice !== undefined && { originalPrice: parseFloat(originalPrice) }),
-          ...(originalPrice && price && { discountPercent }),
+          ...(numPrice !== undefined && { price: numPrice }),
+          ...(numOriginalPrice !== undefined && { originalPrice: numOriginalPrice }),
+          ...(discountPercent !== undefined && { discountPercent }),
           ...(fabric && { fabric }),
           ...(weaveType && { weaveType }),
           ...(borderType && { borderType }),
