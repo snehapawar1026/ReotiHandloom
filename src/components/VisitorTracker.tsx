@@ -9,52 +9,51 @@ export function VisitorTracker() {
   const clientLocationRef = useRef<any>(null);
 
   useEffect(() => {
-    // Try to get cached client location from sessionStorage
+    // Try to get cached client location from sessionStorage or localStorage
     try {
-      const cached = sessionStorage.getItem('rh_exact_loc');
+      const cached = sessionStorage.getItem('rh_exact_loc') || localStorage.getItem('rh_exact_loc');
       if (cached) {
-        clientLocationRef.current = JSON.parse(cached);
+        const parsed = JSON.parse(cached);
+        if (
+          parsed.city?.toLowerCase().includes('ghansoli') ||
+          parsed.locationText?.toLowerCase().includes('ghansoli') ||
+          (parsed.city?.toLowerCase().includes('mumbai') && parsed.postal?.startsWith('45'))
+        ) {
+          sessionStorage.removeItem('rh_exact_loc');
+          localStorage.removeItem('rh_exact_loc');
+          clientLocationRef.current = null;
+        } else {
+          clientLocationRef.current = parsed;
+        }
       }
     } catch (e) {}
 
-    // Fetch high-accuracy client location (Multi-Source IP + GPS + Auto Pincode)
+    // Fetch high-accuracy client location (Single Source IP + GPS + Auto Pincode)
     if (!clientLocationRef.current) {
       const detectLocation = async () => {
-        // 1. Multi-source IP detection (combining multiple geo providers for highest accuracy)
         try {
-          const [resWhoIs, resFreeIp] = await Promise.allSettled([
-            fetch('https://ipwho.is/', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)),
-            fetch('https://freeipapi.com/api/json', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)),
-          ]);
+          // 1. High-accuracy IP Geolocation lookup
+          const res = await fetch('https://ipwho.is/', { cache: 'no-store' });
+          if (res.ok) {
+            const d = await res.json();
+            if (d && d.success && d.city) {
+              const city = d.city || '';
+              const region = d.region || d.region_code || '';
+              const postal = d.postal || '';
+              const country = d.country || 'India';
 
-          let city = '';
-          let region = '';
-          let postal = '';
-          let country = 'India';
+              const locationText = postal
+                ? `${city}, ${region} (Pin: ${postal})`
+                : region
+                ? `${city}, ${region}`
+                : `${city}, ${country}`;
 
-          if (resWhoIs.status === 'fulfilled' && resWhoIs.value?.success) {
-            const d = resWhoIs.value;
-            city = d.city || '';
-            region = d.region || d.region_code || '';
-            postal = d.postal || '';
-            country = d.country || 'India';
-          }
-
-          if ((!city || city.toLowerCase() === 'indore') && resFreeIp.status === 'fulfilled' && resFreeIp.value) {
-            const d2 = resFreeIp.value;
-            if (d2.cityName && d2.cityName.toLowerCase() !== 'unknown') {
-              city = d2.cityName;
-              region = d2.regionName || region;
-              postal = d2.zipCode || postal;
+              const loc = { city, region, country, postal, locationText };
+              clientLocationRef.current = loc;
+              sessionStorage.setItem('rh_exact_loc', JSON.stringify(loc));
+              localStorage.setItem('rh_exact_loc', JSON.stringify(loc));
+              window.dispatchEvent(new Event('rh_location_updated'));
             }
-          }
-
-          if (city && !clientLocationRef.current?.isGps && !clientLocationRef.current?.isExactPin) {
-            const locationText = postal ? `${city}, ${region} (Pin: ${postal})` : `${city}, ${region || country}`;
-            const loc = { city, region, country, postal, locationText };
-            clientLocationRef.current = loc;
-            sessionStorage.setItem('rh_exact_loc', JSON.stringify(loc));
-            localStorage.setItem('rh_exact_loc', JSON.stringify(loc));
           }
         } catch (e) {}
 
@@ -186,16 +185,50 @@ export function VisitorTracker() {
         const pageTitle = document.title || 'Reoti Handloom';
         const referrer = document.referrer || '';
 
+        let isAdmin = false;
+        let userEmail = '';
+        let userName = '';
+        try {
+          const storedUser =
+            localStorage.getItem('reoti_user') ||
+            sessionStorage.getItem('reoti_user') ||
+            localStorage.getItem('user') ||
+            sessionStorage.getItem('user');
+          if (storedUser) {
+            const u = JSON.parse(storedUser);
+            userEmail = u.email || '';
+            userName = u.name || '';
+            if (
+              u.role === 'admin' ||
+              u.email?.toLowerCase().includes('admin') ||
+              u.email === 'reotihandloom@gmail.com' ||
+              u.name?.toUpperCase() === 'REOTI'
+            ) {
+              isAdmin = true;
+            }
+          }
+          if (
+            localStorage.getItem('rh_admin_logged_in') === 'true' ||
+            sessionStorage.getItem('rh_admin_logged_in') === 'true'
+          ) {
+            isAdmin = true;
+          }
+        } catch (e) {}
+
         // Check if viewing a specific product
-        let type = 'VISIT';
+        let type = isAdmin ? 'ADMIN_VISIT' : 'VISIT';
         let productTitle = '';
         if (pathname.startsWith('/products/')) {
-          type = 'VIEW_PRODUCT';
+          type = isAdmin ? 'ADMIN_VISIT' : 'VIEW_PRODUCT';
           const h1 = document.querySelector('h1');
           if (h1 && h1.textContent) {
             productTitle = h1.textContent.trim();
           }
         }
+
+        const title = isAdmin
+          ? `🛡️ Admin Viewing: ${productTitle || pathname}`
+          : undefined;
 
         await fetch('/api/track', {
           method: 'POST',
@@ -205,7 +238,11 @@ export function VisitorTracker() {
             pageTitle,
             referrer,
             type,
+            title,
             productTitle,
+            isAdmin,
+            userEmail: userEmail || (isAdmin ? 'reotihandloom@gmail.com' : undefined),
+            userName: userName || (isAdmin ? 'REOTI' : undefined),
             clientLocation: clientLocationRef.current || null,
           }),
           keepalive: true,

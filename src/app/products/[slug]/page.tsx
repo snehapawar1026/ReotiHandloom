@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useShop, ProductItem } from '@/context/ShopContext';
 import { ProductCard } from '@/components/ProductCard';
+import { MobileProductSlider } from '@/components/MobileProductSlider';
 import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 import {
   Heart,
@@ -193,16 +194,39 @@ export default function ProductDetailPage() {
     if (user?.name && !reviewerName) {
       setReviewerName(user.name);
     }
-  }, [user]);
+  }, [user, reviewerName]);
 
   const [allStoreProducts, setAllStoreProducts] = useState<ProductItem[]>([]);
   const [isRecRotating, setIsRecRotating] = useState(false);
+
+  const isSemiProduct = (prod: any) => {
+    if (!prod) return false;
+    const catId = prod.categoryId || prod.category?.id;
+    const catSlug = (prod.category?.slug || '').toLowerCase();
+    const catName = (prod.category?.name || '').toLowerCase();
+    const title = (prod.title || '').toLowerCase();
+    const fabric = (prod.fabric || '').toLowerCase();
+    const design = (prod.designCode || '').toLowerCase();
+    const pSlug = (prod.slug || '').toLowerCase();
+
+    return (
+      catId === 'semi-maheshwari-sarees-id' ||
+      catSlug.includes('semi-maheshwari') ||
+      catName.includes('semi maheshwari') ||
+      title.includes('semi maheshwari') ||
+      title.includes('semi-maheshwari') ||
+      title.startsWith('semi ') ||
+      fabric.includes('semi') ||
+      design.includes('semi') ||
+      pSlug.includes('semi-maheshwari')
+    );
+  };
 
   const shufflePdpRecommended = (list: ProductItem[]) => {
     if (!list || list.length === 0) return;
     setIsRecRotating(true);
     setTimeout(() => {
-      const others = list.filter((p: any) => p.slug !== slug);
+      const others = list.filter((p: any) => p.slug !== slug && p.id !== product?.id);
       const shuffled = [...others].sort(() => 0.5 - Math.random());
       setRecommendedProducts(shuffled.slice(0, 4));
       setIsRecRotating(false);
@@ -216,29 +240,36 @@ export default function ProductDetailPage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.product) {
-          setProduct(data.product);
+          const currentProd = data.product;
+          setProduct(currentProd);
           setRelatedProducts(data.relatedProducts || []);
           setColorVariants(data.colorVariants || []);
-          setReviews(data.product.reviews || []);
-          const parsedImages = JSON.parse(data.product.images || '[]');
+          setReviews(currentProd.reviews || []);
+          const parsedImages = JSON.parse(currentProd.images || '[]');
           if (parsedImages.length > 0) setSelectedImage(parsedImages[0]);
+
+          const currentIsSemi = isSemiProduct(currentProd);
+
+          // Fetch recommended products matching exact craft category (Strictly never mixing Semi & Handloom)
+          fetch('/api/products?includeAll=true')
+            .then((res) => res.json())
+            .then((prodData) => {
+              if (prodData.success && prodData.products) {
+                const filtered = prodData.products.filter((p: any) => {
+                  if (p.slug === slug || p.id === currentProd.id) return false;
+                  const pIsSemi = isSemiProduct(p);
+                  return currentIsSemi ? pIsSemi : !pIsSemi;
+                });
+                setAllStoreProducts(filtered);
+                const shuffled = [...filtered].sort(() => 0.5 - Math.random());
+                setRecommendedProducts(shuffled.slice(0, 4));
+              }
+            })
+            .catch(console.error);
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-
-    // Fetch randomized recommended products for dynamic customer attraction
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && data.products) {
-          setAllStoreProducts(data.products);
-          const others = data.products.filter((p: any) => p.slug !== slug);
-          const shuffled = [...others].sort(() => 0.5 - Math.random());
-          setRecommendedProducts(shuffled.slice(0, 4));
-        }
-      })
-      .catch(console.error);
   }, [slug]);
 
   // Auto-rotate PDP recommended products every 8 seconds
@@ -473,19 +504,19 @@ export default function ProductDetailPage() {
                     <ZoomIn className="w-5 h-5 text-gray-800" />
                   </button>
 
-                  {/* Bottom Navigation Arrow Buttons on Image */}
+                  {/* Navigation Arrow Buttons on Image Sides */}
                   {parsedImages.length > 1 && (
                     <>
                       <button
                         onClick={handlePrevImage}
-                        className="absolute bottom-3 left-3 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-lg shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-10"
+                        className="absolute top-1/2 left-3 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-full shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-20 flex items-center justify-center"
                         title="Previous Photo"
                       >
                         <ArrowLeft className="w-4 h-4 text-gray-900" />
                       </button>
                       <button
                         onClick={handleNextImage}
-                        className="absolute bottom-3 right-3 sm:right-36 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-lg shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-10"
+                        className="absolute top-1/2 right-3 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-full shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-20 flex items-center justify-center"
                         title="Next Photo"
                       >
                         <ArrowRight className="w-4 h-4 text-gray-900" />
@@ -493,8 +524,8 @@ export default function ProductDetailPage() {
                     </>
                   )}
 
-                  {/* Reoti Handloom Premium Glass Watermark Seal Overlay */}
-                  <div className="absolute bottom-3 right-3 sm:right-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-10">
+                  {/* Reoti Handloom Premium Glass Watermark Seal Overlay (Bottom-Left) */}
+                  <div className="absolute bottom-3 left-3 sm:left-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-10">
                     <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-500 shrink-0">
                       <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
                     </div>
@@ -1363,11 +1394,7 @@ export default function ProductDetailPage() {
             </h2>
             <div className="w-20 h-0.5 bg-rose-600/40 mx-auto mt-2.5 rounded-full" />
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
-            {relatedProducts.map((rel) => (
-              <ProductCard key={rel.id} product={rel} />
-            ))}
-          </div>
+          <MobileProductSlider products={relatedProducts} />
         </section>
       )}
 
@@ -1394,10 +1421,8 @@ export default function ProductDetailPage() {
             <div className="w-20 h-0.5 bg-amber-700/40 mx-auto mt-2.5 rounded-full" />
           </div>
 
-          <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 transition-opacity duration-300 ${isRecRotating ? 'opacity-40' : 'opacity-100'}`}>
-            {recommendedProducts.map((rec) => (
-              <ProductCard key={rec.id} product={rec} />
-            ))}
+          <div className={`transition-opacity duration-300 ${isRecRotating ? 'opacity-40' : 'opacity-100'}`}>
+            <MobileProductSlider products={recommendedProducts} />
           </div>
         </section>
       )}

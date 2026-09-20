@@ -41,6 +41,11 @@ import {
   Laptop,
   Gift,
   Sparkles,
+  RotateCcw,
+  User,
+  ArrowLeft,
+  ChevronRight,
+  LayoutGrid,
 } from 'lucide-react';
 import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 
@@ -102,7 +107,7 @@ const SUIT_DUPATTA_OPTIONS = [
 export default function AdminDashboard() {
   const { user, setUser, logout } = useShop();
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'leads' | 'customers' | 'add' | 'products' | 'semi_products' | 'add_semi' | 'categories' | 'push' | 'insta'>('orders');
+  const [activeTab, setActiveTab] = useState<'hub' | 'orders' | 'leads' | 'customers' | 'add' | 'products' | 'semi_products' | 'add_semi' | 'categories' | 'push' | 'insta'>('hub');
 
   // Dashboard Stats
   const [orders, setOrders] = useState<any[]>([]);
@@ -123,6 +128,9 @@ export default function AdminDashboard() {
     activities: [],
   });
   const [activityFilter, setActivityFilter] = useState<'ALL' | 'LEAD' | 'VISIT' | 'LOGIN' | 'REGISTER' | 'ORDER'>('ALL');
+  const [activityRoleFilter, setActivityRoleFilter] = useState<'CUSTOMERS' | 'ADMIN' | 'ALL'>('CUSTOMERS');
+  const [handloomFilter, setHandloomFilter] = useState<'sarees' | 'suits' | 'all'>('sarees');
+  const [catFilter, setCatFilter] = useState<'all' | 'sarees' | 'suits' | 'semi'>('all');
 
   // Instagram Feed Manager state
   const [instaPosts, setInstaPosts] = useState<any[]>([]);
@@ -293,8 +301,8 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     try {
       const t = Date.now();
       const [resOrders, resProducts, resCategories, resActivity, resCustomers, resLeads] = await Promise.all([
@@ -319,7 +327,7 @@ export default function AdminDashboard() {
       }
       if (resCategories.success) {
         setCategories(resCategories.categories);
-        if (resCategories.categories.length > 0) {
+        if (resCategories.categories.length > 0 && !categoryId) {
           const silkCottonCat = resCategories.categories.find(
             (c: any) =>
               c.name.toLowerCase().includes('silk cotton') ||
@@ -334,9 +342,35 @@ export default function AdminDashboard() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
+
+  // Live Auto-Refresh Effect for Admin Dashboard (every 15 seconds + tab focus)
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+      fetchData(true);
+
+      const interval = setInterval(() => {
+        fetchData(false); // Silent background auto-refresh
+      }, 15000);
+
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          fetchData(false);
+        }
+      };
+
+      window.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('focus', handleVisibilityChange);
+
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('focus', handleVisibilityChange);
+      };
+    }
+  }, [user]);
 
   const handleUpdateLeadStatus = async (id: string, newStatus: string) => {
     try {
@@ -1055,8 +1089,58 @@ export default function AdminDashboard() {
     );
   };
 
+  // Helper to accurately partition Suit / Dress Material vs Saree products
+  const isSuitProduct = (p: any) => {
+    if (!p) return false;
+    const catId = p.categoryId || p.category?.id || '';
+    const catObj = categories.find((c) => c.id === catId || c.slug === catId);
+    const catSlug = (p.category?.slug || catObj?.slug || '').toLowerCase();
+    const catName = (p.category?.name || catObj?.name || '').toLowerCase();
+    const parentId = (catObj?.parentId || '').toLowerCase();
+    const title = (p.title || '').toLowerCase();
+    const lengthWithBlouse = (p.lengthWithBlouse || '').toLowerCase();
+    return (
+      catSlug.includes('suit') ||
+      catName.includes('suit') ||
+      parentId.includes('suit') ||
+      parentId === 'maheshwari-suits-id' ||
+      catId === 'maheshwari-suits-id' ||
+      title.includes('suit') ||
+      title.includes('dress material') ||
+      lengthWithBlouse.includes('top') ||
+      lengthWithBlouse.includes('dupatta')
+    );
+  };
+
   const maheshwariProducts = products.filter((p) => !isSemiMaheshwariProduct(p));
+  const maheshwariSarees = maheshwariProducts.filter((p) => !isSuitProduct(p));
+  const maheshwariSuits = maheshwariProducts.filter((p) => isSuitProduct(p));
   const semiMaheshwariProducts = products.filter((p) => isSemiMaheshwariProduct(p));
+
+  // Category partitioning helpers
+  const isSuitCategory = (c: any) => {
+    if (!c) return false;
+    const name = (c.name || '').toLowerCase();
+    const slug = (c.slug || '').toLowerCase();
+    const parent = categories.find((p) => p.id === c.parentId);
+    const parentName = (parent?.name || '').toLowerCase();
+    const parentSlug = (parent?.slug || '').toLowerCase();
+    return name.includes('suit') || slug.includes('suit') || parentName.includes('suit') || parentSlug.includes('suit') || c.id === 'maheshwari-suits-id' || c.parentId === 'maheshwari-suits-id';
+  };
+
+  const isSemiCategory = (c: any) => {
+    if (!c) return false;
+    const name = (c.name || '').toLowerCase();
+    const slug = (c.slug || '').toLowerCase();
+    const parent = categories.find((p) => p.id === c.parentId);
+    const parentName = (parent?.name || '').toLowerCase();
+    const parentSlug = (parent?.slug || '').toLowerCase();
+    return name.includes('semi') || slug.includes('semi') || parentName.includes('semi') || parentSlug.includes('semi') || c.id === 'semi-maheshwari-sarees-id' || c.parentId === 'semi-maheshwari-sarees-id';
+  };
+
+  const isSareeCategory = (c: any) => {
+    return !isSuitCategory(c) && !isSemiCategory(c);
+  };
 
   // Dynamically extract all unique Border Types
   const defaultBorderTypes = ['Gold Zari', 'Silver Zari', 'Resham Border With Silver Zari', 'Tissue Zari', 'Garbha Reshami Border'];
@@ -1072,6 +1156,61 @@ export default function AdminDashboard() {
   const extractedSemiDesignCodes = semiMaheshwariProducts.map((p) => p.designCode).filter(Boolean);
   const existingSemiDesignCodes = Array.from(new Set([...extractedSemiDesignCodes]));
 
+  const getTabName = (tab: string) => {
+    switch (tab) {
+      case 'orders': return 'Orders';
+      case 'leads': return 'Leads';
+      case 'customers': return 'Live Visitors';
+      case 'products': return 'Pure Maheshwari Catalog';
+      case 'add': return 'Add Pure Maheshwari';
+      case 'semi_products': return 'Semi Maheshwari Catalog';
+      case 'add_semi': return 'Add Semi Saree';
+      case 'categories': return 'Categories';
+      case 'push': return 'Push Alerts';
+      case 'insta': return 'Instagram Feed';
+      default: return 'Dashboard';
+    }
+  };
+
+  const getTabTitle = (tab: string) => {
+    switch (tab) {
+      case 'orders': return 'Customer Orders Management';
+      case 'leads': return 'High-Intent Customer Leads';
+      case 'customers': return 'Live Visitors & Device Activity Logs';
+      case 'products': return 'Pure Maheshwari Handloom Catalog';
+      case 'add': return 'Add Pure Maheshwari Saree / Suit';
+      case 'semi_products': return 'Semi Maheshwari Sarees Catalog';
+      case 'add_semi': return 'Add Semi Maheshwari Saree';
+      case 'categories': return 'Category & Subcategory Hierarchy Manager';
+      case 'push': return 'Push Notifications Broadcaster';
+      case 'insta': return 'Instagram Feed Showcase Manager';
+      default: return 'Admin Control Center';
+    }
+  };
+
+  const getTabIcon = (tab: string) => {
+    switch (tab) {
+      case 'orders': return <Package className="w-5 h-5 text-amber-700" />;
+      case 'leads': return <Flame className="w-5 h-5 text-rose-600 animate-pulse" />;
+      case 'customers': return <Users className="w-5 h-5 text-amber-700" />;
+      case 'products': return <Layers className="w-5 h-5 text-amber-700" />;
+      case 'add': return <PlusCircle className="w-5 h-5 text-amber-700" />;
+      case 'semi_products': return <Sparkles className="w-5 h-5 text-rose-600" />;
+      case 'add_semi': return <Sparkles className="w-5 h-5 text-rose-600" />;
+      case 'categories': return <FolderPlus className="w-5 h-5 text-amber-700" />;
+      case 'push': return <Bell className="w-5 h-5 text-amber-700" />;
+      case 'insta': return <Camera className="w-5 h-5 text-rose-600" />;
+      default: return <LayoutGrid className="w-5 h-5 text-amber-700" />;
+    }
+  };
+
+  const navigateTo = (tab: any) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-sans">
       <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 border-b border-gray-200 gap-4">
@@ -1086,25 +1225,33 @@ export default function AdminDashboard() {
         </div>
 
         {/* Overview Stats Badges & Logout */}
-        <div className="flex items-center gap-4 text-xs">
-          <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-amber-950 font-bold flex items-center gap-2">
-            <IndianRupee className="w-4 h-4 text-amber-700" />
+        <div className="flex items-center gap-3 text-xs flex-wrap sm:flex-nowrap">
+          <button
+            type="button"
+            onClick={() => navigateTo('orders')}
+            className="p-2.5 sm:p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-950 font-bold flex items-center gap-2 hover:bg-amber-100/70 transition-colors cursor-pointer text-left"
+          >
+            <IndianRupee className="w-4 h-4 text-amber-700 shrink-0" />
             <div>
               <p className="text-[10px] text-gray-500 uppercase font-semibold">Total Sales</p>
-              <p className="text-sm">₹{totalRevenue.toLocaleString()}</p>
+              <p className="text-sm font-extrabold">₹{totalRevenue.toLocaleString()}</p>
             </div>
-          </div>
-          <div className="p-3 bg-rose-50 rounded-lg border border-rose-200 text-rose-950 font-bold flex items-center gap-2">
-            <ShoppingBag className="w-4 h-4 text-rose-700" />
+          </button>
+          <button
+            type="button"
+            onClick={() => navigateTo('orders')}
+            className="p-2.5 sm:p-3 bg-rose-50 rounded-xl border border-rose-200 text-rose-950 font-bold flex items-center gap-2 hover:bg-rose-100/70 transition-colors cursor-pointer text-left"
+          >
+            <ShoppingBag className="w-4 h-4 text-rose-700 shrink-0" />
             <div>
               <p className="text-[10px] text-gray-500 uppercase font-semibold">Total Orders</p>
-              <p className="text-sm">{orders.length}</p>
+              <p className="text-sm font-extrabold">{orders.length}</p>
             </div>
-          </div>
+          </button>
           
           <button
             onClick={logout}
-            className="p-3 bg-gray-900 text-white rounded-lg hover:bg-black font-bold flex items-center gap-1.5 cursor-pointer"
+            className="p-3 bg-gray-900 text-white rounded-xl hover:bg-black font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <LogOut className="w-4 h-4 text-rose-400" />
             <span>Logout</span>
@@ -1112,175 +1259,486 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Live Store Activity & Visitor Alerts Card */}
-      {activities.length > 0 && (
-        <div className="mt-6 p-4 bg-amber-50/80 border border-amber-200 rounded-2xl space-y-3 font-sans shadow-2xs">
-          <div className="flex items-center justify-between">
-            <h3 className="font-serif font-extrabold text-xs text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
-              <Bell className="w-4 h-4 text-amber-700 animate-bounce" />
-              <span>Live Seller Alerts & Real-time Customer Activity</span>
-            </h3>
-            <span className="text-[10px] bg-amber-200 text-amber-950 font-extrabold px-2.5 py-0.5 rounded-full">
-              {activities.length} Recent Events
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {activities.slice(0, 6).map((act) => (
-              <div key={act.id} className="p-3 bg-white border border-amber-200/90 rounded-xl text-xs space-y-1 shadow-2xs">
-                <p className="font-bold text-amber-950 flex items-center justify-between">
-                  <span>{act.title}</span>
-                </p>
-                {act.details && <p className="text-[11px] text-gray-600 leading-snug">{act.details}</p>}
-                <p className="text-[9px] text-gray-400 font-mono pt-0.5">
-                  {new Date(act.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(act.createdAt).toLocaleDateString()}
-                </p>
+      {/* VIEW 1: Control Hub (Main Dashboard View) */}
+      {activeTab === 'hub' && (
+        <div className="mt-6 space-y-8 animate-fadeIn">
+          {/* Header Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gradient-to-r from-amber-950 to-amber-900 text-white rounded-2xl shadow-sm gap-3">
+            <div>
+              <div className="flex items-center gap-2 text-amber-300 text-xs font-bold uppercase tracking-wider">
+                <LayoutGrid className="w-4 h-4" />
+                <span>Dashboard Control Modules</span>
               </div>
-            ))}
+              <p className="text-sm text-amber-100/90 font-medium mt-0.5">
+                Click any module below to open its dedicated workspace
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => fetchData(true)}
+              className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-auto"
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-300" />
+              <span>Sync Live Data</span>
+            </button>
+          </div>
+
+          {/* Modern Full-Width Control Center Hub Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            {/* Card 1: Orders */}
+            <div
+              onClick={() => navigateTo('orders')}
+              className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 group-hover:bg-amber-950 group-hover:text-white transition-colors">
+                  <Package className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-950 border border-amber-200">
+                  {orders.length} Orders
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-amber-900">Customer Orders</h4>
+                <p className="text-xs text-gray-500 mt-1">Track fulfillments, dispatch & receipts</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 group-hover:text-amber-950">
+                  <span>Open Orders Module</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Leads */}
+            <div
+              onClick={() => navigateTo('leads')}
+              className="p-5 rounded-2xl border border-rose-200/80 bg-white hover:border-rose-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-rose-100 text-rose-900 group-hover:bg-rose-900 group-hover:text-white transition-colors">
+                  <Flame className="w-5 h-5 text-rose-600 group-hover:text-rose-200 animate-pulse" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-900 border border-rose-200">
+                  {leads.length} Leads
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-rose-900">High-Intent Leads</h4>
+                <p className="text-xs text-gray-500 mt-1">Direct 1-click WhatsApp customer contact</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-800 group-hover:text-rose-950">
+                  <span>View Leads & Numbers</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Real-Time Visitors */}
+            <div
+              onClick={() => navigateTo('customers')}
+              className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 group-hover:bg-amber-950 group-hover:text-white transition-colors">
+                  <Users className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                  {customerData.activities.length} Visits
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-amber-900">Live Visitors</h4>
+                <p className="text-xs text-gray-500 mt-1">Real-time IP, device & city analytics</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 group-hover:text-amber-950">
+                  <span>View Real-Time Logs</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Pure Maheshwari Handloom Catalog */}
+            <div className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between group hover:-translate-y-0.5">
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-100 text-amber-950 border border-amber-300">
+                    🥻 {maheshwariSarees.length} Sarees
+                  </span>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-950 border border-rose-200">
+                    👗 {maheshwariSuits.length} Suits
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900">Pure Maheshwari</h4>
+                <p className="text-xs text-gray-500 mt-1">Silk cotton sarees & 3-pc suits</p>
+                <div className="grid grid-cols-2 gap-2 mt-3.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHandloomFilter('sarees');
+                      navigateTo('products');
+                    }}
+                    className="py-2 px-2 rounded-xl text-xs font-bold bg-amber-950 text-white hover:bg-black text-center transition-all cursor-pointer shadow-xs"
+                  >
+                    🥻 Saree Catalog
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHandloomFilter('suits');
+                      navigateTo('products');
+                    }}
+                    className="py-2 px-2 rounded-xl text-xs font-bold bg-rose-900 text-white hover:bg-black text-center transition-all cursor-pointer shadow-xs"
+                  >
+                    👗 Suit Catalog
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Semi Maheshwari Collection */}
+            <div className="p-5 rounded-2xl border border-rose-200/80 bg-white hover:border-rose-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between group hover:-translate-y-0.5">
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-rose-100 text-rose-900">
+                  <Sparkles className="w-5 h-5 text-rose-600" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-900 border border-rose-200">
+                  {semiMaheshwariProducts.length} Items
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900">Semi Maheshwari</h4>
+                <p className="text-xs text-gray-500 mt-1">Party-wear zari weave sarees</p>
+                <div className="flex items-center gap-2 mt-3.5">
+                  <button
+                    type="button"
+                    onClick={() => navigateTo('semi_products')}
+                    className="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold bg-rose-900 text-white hover:bg-black text-center transition-all cursor-pointer shadow-xs"
+                  >
+                    View Catalog
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFabric('Semi Maheshwari');
+                      setWeaveType('Modern Weave Zari Border');
+                      setProductType('saree');
+                      const semiCat = categories.find(
+                        (c) => c.slug === 'semi-maheshwari-sarees' || c.id === 'semi-maheshwari-sarees-id' || c.name?.toLowerCase().includes('semi maheshwari')
+                      );
+                      if (semiCat) setCategoryId(semiCat.id);
+                      setFormMsg('');
+                      navigateTo('add_semi');
+                    }}
+                    className="py-2 px-3 rounded-xl text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-950 border border-rose-300 text-center transition-all cursor-pointer"
+                    title="Add new semi saree"
+                  >
+                    ➕ Add
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 6: Category Manager */}
+            <div
+              onClick={() => navigateTo('categories')}
+              className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 group-hover:bg-amber-950 group-hover:text-white transition-colors">
+                  <FolderPlus className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                  {categories.length} Categories
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-amber-900">Category Manager</h4>
+                <p className="text-xs text-gray-500 mt-1">Organize parent & subcategories & banners</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 group-hover:text-amber-950">
+                  <span>Manage Categories</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 7: Push Alerts */}
+            <div
+              onClick={() => navigateTo('push')}
+              className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 group-hover:bg-amber-950 group-hover:text-white transition-colors">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                  Broadcast
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-amber-900">Push Notifications</h4>
+                <p className="text-xs text-gray-500 mt-1">Send discount alerts & sale notifications</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 group-hover:text-amber-950">
+                  <span>Send Broadcaster</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 8: Instagram Feed */}
+            <div
+              onClick={() => navigateTo('insta')}
+              className="p-5 rounded-2xl border border-rose-200/80 bg-white hover:border-rose-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-rose-100 text-rose-900 group-hover:bg-rose-900 group-hover:text-white transition-colors">
+                  <Camera className="w-5 h-5 text-rose-600 group-hover:text-white" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-900 border border-rose-200">
+                  Gallery
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-rose-900">Instagram Feed</h4>
+                <p className="text-xs text-gray-500 mt-1">Sync Instagram reels & posts showcase</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-rose-800 group-hover:text-rose-950">
+                  <span>Manage Social Feed</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Quick Snapshot Overview on Hub */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-gray-200">
+            {/* Recent Leads Preview */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-rose-600 animate-pulse" />
+                  <h3 className="font-serif font-extrabold text-base text-amber-950">Recent High-Intent Leads</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('leads')}
+                  className="text-xs font-bold text-rose-800 hover:text-rose-950 hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <span>View All ({leads.length})</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {leads.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 text-xs">
+                  No leads captured yet.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {leads.slice(0, 4).map((lead) => (
+                    <div key={lead.id} className="p-3 bg-rose-50/50 rounded-xl border border-rose-100 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900">{lead.name || 'Valued Buyer'}</span>
+                          <span className="font-mono text-gray-700 bg-white px-1.5 py-0.5 rounded border border-rose-200 font-bold text-[11px]">
+                            +91 {lead.phone}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{lead.productInterest || 'Collection'} • {lead.city || 'India'}</p>
+                      </div>
+                      <a
+                        href={`https://wa.me/91${lead.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Namaste ${lead.name || ''}! 🙏\nThank you for visiting Reoti Handloom.`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Chat</span>
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent Live Visitors Preview */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-amber-700" />
+                  <h3 className="font-serif font-extrabold text-base text-amber-950">Live Visitor Activity</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigateTo('customers')}
+                  className="text-xs font-bold text-amber-800 hover:text-amber-950 hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <span>View All Logs ({customerData.activities.length})</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {customerData.activities.length === 0 ? (
+                <div className="text-center py-6 text-gray-500 text-xs">
+                  No visitor activity recorded yet.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {customerData.activities.slice(0, 4).map((act, i) => (
+                    <div key={act.id || i} className="p-3 bg-amber-50/50 rounded-xl border border-amber-100 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900">{act.userName || act.userEmail || 'Guest Visitor'}</span>
+                          <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-amber-200/80 text-amber-950">
+                            {act.type}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{act.details || act.city || 'Browsing Store'}</p>
+                      </div>
+                      <span className="font-mono text-[10px] text-gray-400">
+                        {new Date(act.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Admin Navigation Tabs */}
-      <div className="flex border-b border-gray-200 mt-6 gap-3 sm:gap-5 text-sm font-bold overflow-x-auto pb-1">
-        <button
-          onClick={() => setActiveTab('orders')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'orders'
-              ? 'border-amber-900 text-amber-950 font-extrabold'
-              : 'border-transparent text-gray-400 hover:text-gray-700'
-          }`}
-        >
-          <Package className="w-4 h-4" />
-          <span>Orders ({orders.length})</span>
-        </button>
+      {/* VIEW 2: Sub-Module Dedicated Workspace (When activeTab is not 'hub') */}
+      {activeTab !== 'hub' && (
+        <div className="mt-4 mb-6 bg-white border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3 animate-fadeIn">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Left: Prominent Back Button & Title */}
+            <div className="flex items-start sm:items-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigateTo('hub')}
+                className="flex items-center gap-2 px-4 py-2.5 bg-amber-950 hover:bg-black text-white font-extrabold text-xs rounded-xl shadow-sm transition-all cursor-pointer group shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4 text-amber-300 group-hover:-translate-x-1 transition-transform" />
+                <span>← Back to Dashboard Hub</span>
+              </button>
 
-        <button
-          onClick={() => setActiveTab('leads')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'leads'
-              ? 'border-rose-900 text-rose-950 font-black'
-              : 'border-transparent text-gray-500 hover:text-rose-800'
-          }`}
-        >
-          <Flame className="w-4 h-4 text-rose-600 animate-pulse" />
-          <span>🔥 Leads ({leads.length})</span>
-        </button>
+              <div className="h-8 w-px bg-gray-200 hidden sm:block" />
 
-        <button
-          onClick={() => setActiveTab('customers')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'customers'
-              ? 'border-amber-900 text-amber-950 font-extrabold'
-              : 'border-transparent text-gray-400 hover:text-gray-700'
-          }`}
-        >
-          <Users className="w-4 h-4 text-amber-800" />
-          <span>Visitors ({customerData.activities.length})</span>
-        </button>
+              <div>
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-medium">
+                  <button
+                    onClick={() => navigateTo('hub')}
+                    className="hover:text-amber-900 cursor-pointer font-bold"
+                  >
+                    Control Hub
+                  </button>
+                  <ChevronRight className="w-3 h-3 text-gray-400" />
+                  <span className="text-amber-900 font-extrabold">{getTabName(activeTab)}</span>
+                </div>
+                <h2 className="text-base sm:text-xl font-serif font-extrabold text-amber-950 flex items-center gap-2 mt-0.5">
+                  {getTabIcon(activeTab)}
+                  <span>{getTabTitle(activeTab)}</span>
+                </h2>
+              </div>
+            </div>
 
-        {/* 1. Maheshwari Handloom Saree Catalog */}
-        <button
-          onClick={() => setActiveTab('products')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'products'
-              ? 'border-amber-900 text-amber-950 font-black'
-              : 'border-transparent text-gray-500 hover:text-gray-800'
-          }`}
-        >
-          <Layers className="w-4 h-4 text-amber-800" />
-          <span>🥻 Maheshwari Catalog ({maheshwariProducts.length})</span>
-        </button>
+            {/* Right: Contextual Shortcuts & Jump Selector */}
+            <div className="flex items-center gap-2 flex-wrap sm:justify-end">
+              {activeTab === 'products' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFabric('Silk Cotton');
+                    setProductType('saree');
+                    setFormMsg('');
+                    navigateTo('add');
+                  }}
+                  className="px-3.5 py-2 bg-amber-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-amber-300" />
+                  <span>➕ Add Pure Maheshwari</span>
+                </button>
+              )}
 
-        {/* 2. Add New Maheshwari Saree */}
-        <button
-          onClick={() => {
-            setActiveTab('add');
-            setFabric('Silk Cotton');
-            setProductType('saree');
-            setFormMsg('');
-          }}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'add'
-              ? 'border-amber-900 text-amber-950 font-black'
-              : 'border-transparent text-gray-500 hover:text-gray-800'
-          }`}
-        >
-          <PlusCircle className="w-4 h-4 text-amber-700" />
-          <span>➕ Add Maheshwari</span>
-        </button>
+              {activeTab === 'add' && (
+                <button
+                  type="button"
+                  onClick={() => navigateTo('products')}
+                  className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs rounded-xl border border-amber-300 shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <Layers className="w-3.5 h-3.5 text-amber-800" />
+                  <span>View Handloom Catalog</span>
+                </button>
+              )}
 
-        {/* 3. Semi Maheshwari Catalog */}
-        <button
-          onClick={() => setActiveTab('semi_products')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'semi_products'
-              ? 'border-rose-900 text-rose-950 font-black bg-rose-50/60 px-2 rounded-t-lg'
-              : 'border-transparent text-rose-700 hover:text-rose-900'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-rose-600" />
-          <span>✨ Semi Maheshwari ({semiMaheshwariProducts.length})</span>
-        </button>
+              {activeTab === 'semi_products' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFabric('Semi Maheshwari');
+                    setWeaveType('Modern Weave Zari Border');
+                    setProductType('saree');
+                    const semiCat = categories.find(
+                      (c) => c.slug === 'semi-maheshwari-sarees' || c.id === 'semi-maheshwari-sarees-id' || c.name?.toLowerCase().includes('semi maheshwari')
+                    );
+                    if (semiCat) setCategoryId(semiCat.id);
+                    setFormMsg('');
+                    navigateTo('add_semi');
+                  }}
+                  className="px-3.5 py-2 bg-rose-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-rose-300" />
+                  <span>➕ Add Semi Saree</span>
+                </button>
+              )}
 
-        {/* 4. Add New Semi Maheshwari Saree */}
-        <button
-          onClick={() => {
-            setActiveTab('add_semi');
-            setFabric('Semi Maheshwari');
-            setWeaveType('Modern Weave Zari Border');
-            setProductType('saree');
-            const semiCat = categories.find(
-              (c) => c.slug === 'semi-maheshwari-sarees' || c.id === 'semi-maheshwari-sarees-id' || c.name?.toLowerCase().includes('semi maheshwari')
-            );
-            if (semiCat) setCategoryId(semiCat.id);
-            setFormMsg('');
-          }}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'add_semi'
-              ? 'border-rose-900 text-rose-950 font-black bg-rose-50/60 px-2 rounded-t-lg'
-              : 'border-transparent text-rose-700 hover:text-rose-900'
-          }`}
-        >
-          <PlusCircle className="w-4 h-4 text-rose-600" />
-          <span>➕ Add Semi Saree</span>
-        </button>
+              {activeTab === 'add_semi' && (
+                <button
+                  type="button"
+                  onClick={() => navigateTo('semi_products')}
+                  className="px-3.5 py-2 bg-rose-100 hover:bg-rose-200 text-rose-950 font-bold text-xs rounded-xl border border-rose-300 shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-rose-800" />
+                  <span>View Semi Catalog</span>
+                </button>
+              )}
 
-        <button
-          onClick={() => setActiveTab('categories')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'categories'
-              ? 'border-amber-900 text-amber-950 font-extrabold'
-              : 'border-transparent text-gray-400 hover:text-gray-700'
-          }`}
-        >
-          <FolderPlus className="w-4 h-4 text-amber-800" />
-          <span>Categories ({categories.length})</span>
-        </button>
+              {/* Quick Jump Dropdown */}
+              <div className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-1.5 text-xs">
+                <span className="text-[10px] font-bold text-gray-500 uppercase">Jump:</span>
+                <select
+                  value={activeTab}
+                  onChange={(e) => navigateTo(e.target.value as any)}
+                  className="bg-transparent font-bold text-amber-950 outline-none cursor-pointer text-xs"
+                >
+                  <option value="orders">📦 Orders ({orders.length})</option>
+                  <option value="leads">🔥 Leads ({leads.length})</option>
+                  <option value="customers">👥 Live Visitors ({customerData.activities.length})</option>
+                  <option value="products">🥻 Pure Maheshwari ({maheshwariProducts.length})</option>
+                  <option value="add">➕ Add Pure Maheshwari</option>
+                  <option value="semi_products">✨ Semi Maheshwari ({semiMaheshwariProducts.length})</option>
+                  <option value="add_semi">➕ Add Semi Saree</option>
+                  <option value="categories">📁 Category Manager ({categories.length})</option>
+                  <option value="push">🔔 Push Alerts</option>
+                  <option value="insta">📷 Instagram Feed</option>
+                </select>
+              </div>
 
-        <button
-          onClick={() => setActiveTab('push')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'push'
-              ? 'border-amber-900 text-amber-950 font-extrabold'
-              : 'border-transparent text-gray-400 hover:text-gray-700'
-          }`}
-        >
-          <Bell className="w-4 h-4 text-amber-700" />
-          <span>Push Alerts</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('insta')}
-          className={`pb-3 flex items-center gap-1.5 border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-            activeTab === 'insta'
-              ? 'border-amber-900 text-amber-950 font-extrabold'
-              : 'border-transparent text-gray-400 hover:text-gray-700'
-          }`}
-        >
-          <Camera className="w-4 h-4 text-rose-600" />
-          <span>Instagram Feed</span>
-        </button>
-      </div>
+              <button
+                type="button"
+                onClick={() => fetchData(true)}
+                className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                title="Refresh real-time data"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
+                <span>Sync</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab: Leads & Enquiries */}
       {activeTab === 'leads' && (
@@ -1577,157 +2035,327 @@ export default function AdminDashboard() {
           </div>
 
           {/* Section 2: Real-time Visitor & Customer Activity Feed */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-2xs overflow-hidden space-y-4 p-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden space-y-4 p-4 sm:p-6">
+            {/* 1. Header & Live Indicator */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-200">
               <div>
-                <h3 className="font-serif font-bold text-base text-amber-950 flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-amber-700" />
+                <h3 className="font-serif font-bold text-lg text-amber-950 flex items-center gap-2">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
                   <span>Real-Time Visitor & User Activity Log</span>
                 </h3>
-                <p className="text-[11px] text-gray-500">
-                  Track website visits, logins, user registrations, and order activities.
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Real-time tracking of genuine customer traffic, product views, leads, and store operations.
                 </p>
               </div>
 
-              {/* Activity Filter Buttons */}
-              <div className="flex flex-wrap gap-1.5 text-xs font-semibold">
-                {(['ALL', 'LEAD', 'VISIT', 'LOGIN', 'REGISTER', 'ORDER'] as const).map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => setActivityFilter(filter)}
-                    className={`px-3 py-1 rounded-full border text-[11px] transition-colors ${
-                      activityFilter === filter
-                        ? 'bg-amber-950 text-white border-amber-950 font-bold'
-                        : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
-                    }`}
-                  >
-                    {filter === 'ALL'
-                      ? 'All Activity'
-                      : filter === 'LEAD'
-                      ? '🔥 Leads & Offers'
-                      : filter === 'VISIT'
-                      ? 'Visits 🌐'
-                      : filter === 'LOGIN'
-                      ? 'Logins 🔐'
-                      : filter === 'REGISTER'
-                      ? 'Signups 👤'
-                      : 'Orders 🛍️'}
-                  </button>
-                ))}
+              {/* Clear Old Logs Action Button */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (confirm('Clear test / old activity logs?')) {
+                      await fetch('/api/admin/activity?type=ALL', { method: 'DELETE' });
+                      fetchData();
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset / Clear Activity Feed</span>
+                </button>
               </div>
             </div>
 
-            {/* Filtered Activity Cards */}
+            {/* 2. Top-Level Role Segregation Tabs (Customers vs Admin vs All) */}
             {(() => {
-              const filteredList = customerData.activities.filter((act) =>
-                activityFilter === 'ALL' ? true : act.type === activityFilter
+              // Find known admin IP addresses from admin actions
+              const knownAdminIps = new Set(
+                customerData.activities
+                  .filter((a) => a.userEmail === 'reotihandloom@gmail.com' || a.pageUrl?.includes('manage') || a.isAdmin)
+                  .map((a) => a.userIp)
+                  .filter(Boolean)
               );
 
-              if (filteredList.length === 0) {
-                return (
-                  <div className="text-center py-10 text-gray-500 text-xs">
-                    No activity logs recorded for this category yet.
-                  </div>
+              const isActAdmin = (a: any) =>
+                Boolean(
+                  a.isAdmin === true ||
+                  a.userRole === 'ADMIN' ||
+                  a.type === 'ADMIN_VISIT' ||
+                  a.type === 'ADMIN_ACTION' ||
+                  a.userEmail === 'reotihandloom@gmail.com' ||
+                  a.userEmail?.toLowerCase().includes('admin') ||
+                  a.userName?.toUpperCase() === 'REOTI' ||
+                  a.pageUrl?.startsWith('/admin') ||
+                  a.pageUrl?.startsWith('/reoti-studio-manage') ||
+                  a.title?.toLowerCase().includes('admin') ||
+                  (a.userIp && knownAdminIps.has(a.userIp))
                 );
-              }
+
+              const customerActs = customerData.activities.filter((a) => !isActAdmin(a));
+              const adminActs = customerData.activities.filter((a) => isActAdmin(a));
+
+              const customerVisits = customerActs.filter((a) => a.type === 'VISIT' || a.type === 'VIEW_PRODUCT').length;
+              const customerLeads = customerActs.filter((a) => a.type === 'LEAD').length;
+              const customerOrders = customerActs.filter((a) => a.type === 'ORDER').length;
 
               return (
-                <div className="space-y-3">
-                  {filteredList.map((act) => {
-                    const waText = encodeURIComponent(
-                      `🚨 *Reoti Store Activity Alert*\n\n` +
-                      `📌 *Event:* ${act.title}\n` +
-                      `👤 *User:* ${act.userEmail || act.userPhone || 'Visitor'}\n` +
-                      `📍 *Location:* ${act.location || act.city || 'India'}\n` +
-                      `📱 *Device:* ${act.device || 'Web'}\n` +
-                      `📝 *Details:* ${act.details || 'N/A'}\n` +
-                      `🕒 *Time:* ${new Date(act.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
-                    );
-                    const adminWaUrl = `https://wa.me/919617444445?text=${waText}`;
+                <div className="space-y-4">
+                  {/* Summary Metric Counters */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                    <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3 text-center">
+                      <span className="text-[10px] uppercase font-extrabold text-emerald-800 tracking-wider block">
+                        👥 Real Customer Visits
+                      </span>
+                      <span className="text-xl sm:text-2xl font-serif font-black text-emerald-950">
+                        {customerVisits}
+                      </span>
+                    </div>
+
+                    <div className="bg-rose-50/80 border border-rose-200/80 rounded-xl p-3 text-center">
+                      <span className="text-[10px] uppercase font-extrabold text-rose-800 tracking-wider block">
+                        🔥 Customer Leads
+                      </span>
+                      <span className="text-xl sm:text-2xl font-serif font-black text-rose-950">
+                        {customerLeads}
+                      </span>
+                    </div>
+
+                    <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3 text-center">
+                      <span className="text-[10px] uppercase font-extrabold text-amber-800 tracking-wider block">
+                        🛍️ Customer Orders
+                      </span>
+                      <span className="text-xl sm:text-2xl font-serif font-black text-amber-950">
+                        {customerOrders}
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                      <span className="text-[10px] uppercase font-extrabold text-slate-700 tracking-wider block">
+                        🛡️ Admin Operations
+                      </span>
+                      <span className="text-xl sm:text-2xl font-serif font-black text-slate-900">
+                        {adminActs.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Big Primary Switcher Tabs: Customers / Admin / All */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-100/80 p-1.5 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setActivityRoleFilter('CUSTOMERS')}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                          activityRoleFilter === 'CUSTOMERS'
+                            ? 'bg-emerald-700 text-white shadow-sm'
+                            : 'text-gray-700 hover:bg-white/60'
+                        }`}
+                      >
+                        <User className="w-3.5 h-3.5" />
+                        <span>Real Customers & Visitors ({customerActs.length})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActivityRoleFilter('ADMIN')}
+                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                          activityRoleFilter === 'ADMIN'
+                            ? 'bg-amber-950 text-white shadow-sm'
+                            : 'text-gray-700 hover:bg-white/60'
+                        }`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Admin & Management ({adminActs.length})</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActivityRoleFilter('ALL')}
+                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          activityRoleFilter === 'ALL'
+                            ? 'bg-gray-900 text-white shadow-sm'
+                            : 'text-gray-700 hover:bg-white/60'
+                        }`}
+                      >
+                        <span>All ({customerData.activities.length})</span>
+                      </button>
+                    </div>
+
+                    {/* Secondary Filter Sub-Pills */}
+                    <div className="flex flex-wrap gap-1 text-[11px] font-semibold">
+                      {(['ALL', 'LEAD', 'VISIT', 'LOGIN', 'REGISTER', 'ORDER'] as const).map((filter) => (
+                        <button
+                          key={filter}
+                          onClick={() => setActivityFilter(filter)}
+                          className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
+                            activityFilter === filter
+                              ? 'bg-white text-gray-900 font-extrabold shadow-2xs border border-gray-300'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          {filter === 'ALL'
+                            ? 'All Types'
+                            : filter === 'LEAD'
+                            ? '🔥 Leads'
+                            : filter === 'VISIT'
+                            ? '🌐 Visits'
+                            : filter === 'LOGIN'
+                            ? '🔐 Logins'
+                            : filter === 'REGISTER'
+                            ? '👤 Signups'
+                            : '🛍️ Orders'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Render Log Feed */}
+                  {(() => {
+                    let baseList =
+                      activityRoleFilter === 'CUSTOMERS'
+                        ? customerActs
+                        : activityRoleFilter === 'ADMIN'
+                        ? adminActs
+                        : customerData.activities;
+
+                    if (activityFilter !== 'ALL') {
+                      baseList = baseList.filter((a) => a.type === activityFilter);
+                    }
+
+                    if (baseList.length === 0) {
+                      return (
+                        <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 space-y-2">
+                          <p className="text-sm font-semibold text-gray-600">
+                            No {activityRoleFilter === 'CUSTOMERS' ? 'Customer' : activityRoleFilter === 'ADMIN' ? 'Admin' : ''} activity records found for this filter.
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            New website visits, views, leads, and orders will appear here in real-time.
+                          </p>
+                        </div>
+                      );
+                    }
 
                     return (
-                      <div
-                        key={act.id}
-                        className="p-3.5 bg-amber-50/50 border border-amber-200/80 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-amber-100/50 transition-colors"
-                      >
-                        <div className="space-y-1.5 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                                act.type === 'LEAD'
-                                  ? 'bg-rose-600 text-white shadow-xs'
-                                  : act.type === 'ORDER'
-                                  ? 'bg-rose-100 text-rose-800'
-                                  : act.type === 'LOGIN'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : act.type === 'REGISTER'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-amber-100 text-amber-900'
+                      <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                        {baseList.map((act) => {
+                          const isAdmin = isActAdmin(act);
+                          const waText = encodeURIComponent(
+                            `🚨 *Reoti Store Activity Alert*\n\n` +
+                            `📌 *Event:* ${act.title}\n` +
+                            `👤 *User:* ${act.userEmail || act.userPhone || (isAdmin ? 'Admin' : 'Visitor')}\n` +
+                            `📍 *Location:* ${act.location || act.city || 'India'}\n` +
+                            `📱 *Device:* ${act.device || 'Web'}\n` +
+                            `📝 *Details:* ${act.details || 'N/A'}\n` +
+                            `🕒 *Time:* ${new Date(act.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+                          );
+                          const adminWaUrl = `https://wa.me/919617444445?text=${waText}`;
+
+                          return (
+                            <div
+                              key={act.id}
+                              className={`p-4 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 border transition-all ${
+                                isAdmin
+                                  ? 'bg-slate-50/80 border-slate-200 hover:bg-slate-100/70'
+                                  : 'bg-emerald-50/30 border-emerald-100 hover:bg-emerald-50/60'
                               }`}
                             >
-                              {act.type}
-                            </span>
-                            
-                            {(act.location || act.city) && (
-                              <span className="inline-flex items-center gap-1 bg-amber-200/70 text-amber-950 font-bold px-2 py-0.5 rounded text-[10px] border border-amber-300/50">
-                                <MapPin className="w-3 h-3 text-rose-600" />
-                                {act.location || act.city}
-                              </span>
-                            )}
+                              <div className="space-y-1.5 flex-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {/* Role Indicator Pill */}
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                                      isAdmin
+                                        ? 'bg-amber-950 text-amber-200 border border-amber-800'
+                                        : 'bg-emerald-700 text-white'
+                                    }`}
+                                  >
+                                    {isAdmin ? <ShieldCheck className="w-2.5 h-2.5" /> : <User className="w-2.5 h-2.5" />}
+                                    <span>{isAdmin ? 'Admin' : 'Customer'}</span>
+                                  </span>
 
-                            {act.device && (
-                              <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded text-[10px]">
-                                {act.device}
-                              </span>
-                            )}
+                                  {/* Event Type Badge */}
+                                  <span
+                                    className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                                      act.type === 'LEAD'
+                                        ? 'bg-rose-600 text-white shadow-xs'
+                                        : act.type === 'ORDER'
+                                        ? 'bg-rose-100 text-rose-800 font-bold border border-rose-200'
+                                        : act.type === 'LOGIN'
+                                        ? 'bg-blue-100 text-blue-800 font-bold'
+                                        : act.type === 'REGISTER'
+                                        ? 'bg-emerald-100 text-emerald-800 font-bold'
+                                        : 'bg-amber-100 text-amber-900 font-semibold'
+                                    }`}
+                                  >
+                                    {act.type}
+                                  </span>
 
-                            <h4 className="font-bold text-gray-900">{act.title}</h4>
-                          </div>
+                                  {/* Exact Location Pill */}
+                                  {(act.location || act.city) && (
+                                    <span className="inline-flex items-center gap-1 bg-white text-gray-900 font-bold px-2 py-0.5 rounded text-[10px] border border-gray-300 shadow-2xs">
+                                      <MapPin className="w-3 h-3 text-rose-600" />
+                                      {act.location || act.city}
+                                    </span>
+                                  )}
 
-                          {act.details && (
-                            <p className="text-[11px] text-gray-600 font-mono">{act.details}</p>
-                          )}
+                                  {/* Device Info */}
+                                  {act.device && (
+                                    <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 font-medium px-2 py-0.5 rounded text-[10px]">
+                                      {act.device}
+                                    </span>
+                                  )}
 
-                          <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-400 font-mono pt-0.5">
-                            {act.userPhone && (
-                              <span className="font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                📞 +91 {act.userPhone}
-                              </span>
-                            )}
-                            <span>User: {act.userEmail || (act.userPhone ? `Phone: ${act.userPhone}` : 'Anonymous Visitor')}</span>
-                            <span>•</span>
-                            <span>IP: {act.userIp || '127.0.0.1'}</span>
-                            <span>•</span>
-                            <span>{new Date(act.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
-                          </div>
-                        </div>
+                                  <h4 className="font-bold text-gray-900">{act.title}</h4>
+                                </div>
 
-                        {act.userPhone ? (
-                          <a
-                            href={`https://wa.me/91${act.userPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                              `Namaste! Thank you for visiting Reoti Handloom Maheshwar. How may we assist you today?`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3 py-2 rounded-lg shadow-sm transition-all"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            <span>WhatsApp Customer</span>
-                          </a>
-                        ) : (
-                          <a
-                            href={adminWaUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg shadow-2xs"
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span>Share to Admin</span>
-                          </a>
-                        )}
+                                {act.details && (
+                                  <p className="text-[11px] text-gray-600 font-mono pl-0.5">{act.details}</p>
+                                )}
+
+                                <div className="flex flex-wrap items-center gap-3 text-[10px] text-gray-500 font-mono pt-0.5">
+                                  {act.userPhone && (
+                                    <span className="font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                      📞 +91 {act.userPhone}
+                                    </span>
+                                  )}
+                                  <span>User: {act.userEmail || (act.userPhone ? `Phone: ${act.userPhone}` : (isAdmin ? 'Admin' : 'Anonymous Visitor'))}</span>
+                                  <span>•</span>
+                                  <span>IP: {act.userIp || '127.0.0.1'}</span>
+                                  <span>•</span>
+                                  <span>{new Date(act.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
+                                </div>
+                              </div>
+
+                              {/* WhatsApp / Action CTA */}
+                              {act.userPhone ? (
+                                <a
+                                  href={`https://wa.me/91${act.userPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                                    `Namaste! Thank you for visiting Reoti Handloom Maheshwar. How may we assist you today?`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3 py-2 rounded-lg shadow-sm transition-all cursor-pointer"
+                                >
+                                  <MessageSquare className="w-4 h-4" />
+                                  <span>WhatsApp Customer</span>
+                                </a>
+                              ) : (
+                                <a
+                                  href={adminWaUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0 inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg shadow-2xs cursor-pointer"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5" />
+                                  <span>Share Alert</span>
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     );
-                  })}
+                  })()}
                 </div>
               );
             })()}
@@ -1788,110 +2416,203 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Tab: Maheshwari Saree Catalog List */}
+      {/* Tab: Maheshwari Saree & Suit Handloom Catalog List */}
       {activeTab === 'products' && (
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mt-6 space-y-5">
+          {/* Header & Separate Sub-Tab Switcher */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-gray-200">
             <div>
-              <h3 className="font-serif font-bold text-amber-950 text-lg">
-                Maheshwari Handloom Inventory ({maheshwariProducts.length} Items)
+              <h3 className="font-serif font-bold text-amber-950 text-xl flex items-center gap-2">
+                <Layers className="w-5 h-5 text-amber-800" />
+                <span>
+                  {handloomFilter === 'sarees' && `Maheshwari Sarees Catalog (${maheshwariSarees.length})`}
+                  {handloomFilter === 'suits' && `Maheshwari Suits Catalog (${maheshwariSuits.length})`}
+                  {handloomFilter === 'all' && `All Handloom Inventory (${maheshwariProducts.length})`}
+                </span>
               </h3>
-              <p className="text-[11px] text-gray-500">
-                Authentic handcrafted Maheshwari sarees & suits woven from Maheshwar looms.
+              <p className="text-xs text-gray-500 mt-0.5">
+                {handloomFilter === 'sarees' && 'Authentic handcrafted pure Maheshwari sarees.'}
+                {handloomFilter === 'suits' && 'Handcrafted pure Maheshwari unstitched suit sets & dress materials.'}
+                {handloomFilter === 'all' && 'View all pure handloom sarees and suits.'}
               </p>
             </div>
-            <button
-              onClick={() => {
-                setActiveTab('add');
-                setProductType('saree');
-                setFabric('Silk Cotton');
-                setFormMsg('');
-              }}
-              className="px-3.5 py-2 bg-amber-950 text-amber-100 text-xs font-bold rounded-lg hover:bg-black flex items-center gap-1.5 shadow-sm cursor-pointer"
-            >
-              <PlusCircle className="w-4 h-4 text-amber-400" />
-              <span>Add Maheshwari Saree</span>
-            </button>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Filter Tabs: Sarees vs Suits vs All */}
+              <div className="flex items-center gap-1 bg-amber-50 p-1 rounded-xl border border-amber-200">
+                <button
+                  type="button"
+                  onClick={() => setHandloomFilter('sarees')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    handloomFilter === 'sarees'
+                      ? 'bg-amber-950 text-white shadow-xs'
+                      : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  <span>🥻 Sarees ({maheshwariSarees.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHandloomFilter('suits')}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    handloomFilter === 'suits'
+                      ? 'bg-rose-900 text-white shadow-xs'
+                      : 'text-amber-900 hover:bg-rose-50'
+                  }`}
+                >
+                  <span>👗 Suits ({maheshwariSuits.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHandloomFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    handloomFilter === 'all'
+                      ? 'bg-amber-800 text-white shadow-xs'
+                      : 'text-gray-600 hover:bg-gray-200/60'
+                  }`}
+                >
+                  <span>All ({maheshwariProducts.length})</span>
+                </button>
+              </div>
+
+              {/* Contextual Add Buttons */}
+              <button
+                onClick={() => {
+                  setActiveTab('add');
+                  setProductType(handloomFilter === 'suits' ? 'suit' : 'saree');
+                  setFabric('Silk Cotton');
+                  setFormMsg('');
+                }}
+                className={`px-3.5 py-2 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm cursor-pointer transition-colors ${
+                  handloomFilter === 'suits' ? 'bg-rose-900 hover:bg-black' : 'bg-amber-950 hover:bg-black'
+                }`}
+              >
+                <PlusCircle className="w-4 h-4 text-amber-300" />
+                <span>{handloomFilter === 'suits' ? '➕ Add New Suit' : '➕ Add New Saree'}</span>
+              </button>
+            </div>
           </div>
 
-          {maheshwariProducts.length === 0 ? (
-            <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl text-gray-500 text-xs font-semibold">
-              No Maheshwari Handloom items in inventory.
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {maheshwariProducts.map((p) => {
-                const imgs = JSON.parse(p.images || '[]');
+          {/* Filtered Product Listing Grid */}
+          {(() => {
+            const displayed = handloomFilter === 'sarees'
+              ? maheshwariSarees
+              : handloomFilter === 'suits'
+              ? maheshwariSuits
+              : maheshwariProducts;
+
+            if (displayed.length === 0) {
               return (
-                <div key={p.id} className="p-3.5 border border-slate-200 rounded-xl flex gap-3.5 bg-white shadow-xs hover:border-amber-300 transition-all relative group">
-                  <div className="relative w-20 h-28 shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-slate-100">
-                    <img
-                      src={imgs[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c'}
-                      alt={p.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <WatermarkOverlay variant="card" className="scale-75" />
-                  </div>
-                  <div className="flex-1 text-xs space-y-1.5 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <h4 className="font-bold text-gray-900 line-clamp-1 text-sm">{p.title}</h4>
-                        {p.isBestSeller && (
-                          <span className="bg-rose-100 text-rose-800 text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">
-                            BESTSELLER
-                          </span>
-                        )}
-                        {p.isTrending && (
-                          <span className="bg-orange-100 text-orange-900 text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase flex items-center gap-0.5">
-                            🔥 TRENDING
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-amber-800 font-medium">{p.fabric}</p>
-                      <p className="text-[10px] text-gray-500">Border: {p.borderType} • Color: {p.color}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="font-extrabold text-rose-700 text-sm">₹{p.price.toLocaleString()}</span>
-                        {p.originalPrice && p.originalPrice > p.price && (
-                          <span className="line-through text-gray-400 text-[11px]">₹{p.originalPrice.toLocaleString()}</span>
-                        )}
-                      </div>
-                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                        {p.isOutOfStock ? (
-                          <span className="text-[10px] text-rose-700 font-extrabold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
-                            OUT OF STOCK
-                          </span>
-                        ) : p.stock !== undefined && p.stock !== null && p.stock !== '' && Number(p.stock) > 0 ? (
-                          <span className="text-[10px] text-amber-900 font-extrabold bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                            📦 Stock: {p.stock} units
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                      <button
-                        onClick={() => openEditModal(p)}
-                        className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-amber-800" />
-                        <span>Edit Saree</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteProduct(p.id, p.title)}
-                        className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </div>
+                <div className="text-center py-16 bg-amber-50/40 border border-amber-200 rounded-2xl text-gray-500 text-xs font-semibold space-y-3">
+                  <p>
+                    No {handloomFilter === 'suits' ? 'Maheshwari Suits' : 'Maheshwari Sarees'} found in this catalog view.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('add');
+                      setProductType(handloomFilter === 'suits' ? 'suit' : 'saree');
+                      setFabric('Silk Cotton');
+                      setFormMsg('');
+                    }}
+                    className="px-4 py-2 bg-amber-950 hover:bg-black text-white text-xs font-bold rounded-xl shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <PlusCircle className="w-4 h-4 text-amber-300" />
+                    <span>Add {handloomFilter === 'suits' ? 'Suit' : 'Saree'} Now</span>
+                  </button>
                 </div>
               );
-            })}
-          </div>
-          )}
+            }
+
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {displayed.map((p) => {
+                  const imgs = JSON.parse(p.images || '[]');
+                  const isSuit = isSuitProduct(p);
+                  return (
+                    <div
+                      key={p.id}
+                      className="p-3.5 border border-slate-200 rounded-2xl flex gap-3.5 bg-white shadow-xs hover:border-amber-400 transition-all relative group"
+                    >
+                      <div className="relative w-24 h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-100">
+                        <img
+                          src={imgs[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c'}
+                          alt={p.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <WatermarkOverlay variant="card" className="scale-75" />
+                        {/* Type indicator pill */}
+                        <span
+                          className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                            isSuit ? 'bg-rose-900 text-white' : 'bg-amber-950 text-amber-100'
+                          }`}
+                        >
+                          {isSuit ? '👗 SUIT' : '🥻 SAREE'}
+                        </span>
+                      </div>
+                      <div className="flex-1 text-xs space-y-1.5 flex flex-col justify-between min-w-0">
+                        <div>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h4 className="font-bold text-gray-900 line-clamp-1 text-sm">{p.title}</h4>
+                            {p.isBestSeller && (
+                              <span className="bg-rose-100 text-rose-800 text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">
+                                BESTSELLER
+                              </span>
+                            )}
+                            {p.isTrending && (
+                              <span className="bg-orange-100 text-orange-900 text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase flex items-center gap-0.5">
+                                🔥 TRENDING
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-amber-800 font-medium">
+                            {p.fabric} • {isSuit ? 'Suit Set' : 'Handloom Saree'}
+                          </p>
+                          <p className="text-[10px] text-gray-500 truncate">Border: {p.borderType || 'Zari'} • Color: {p.color || 'Multi'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-extrabold text-rose-700 text-sm">₹{p.price.toLocaleString()}</span>
+                            {p.originalPrice && p.originalPrice > p.price && (
+                              <span className="line-through text-gray-400 text-[11px]">₹{p.originalPrice.toLocaleString()}</span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                            {p.isOutOfStock ? (
+                              <span className="text-[10px] text-rose-700 font-extrabold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+                                OUT OF STOCK
+                              </span>
+                            ) : p.stock !== undefined && p.stock !== null && p.stock !== '' && Number(p.stock) > 0 ? (
+                              <span className="text-[10px] text-amber-900 font-extrabold bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                📦 Stock: {p.stock} units
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                          <button
+                            onClick={() => openEditModal(p)}
+                            className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-amber-800" />
+                            <span>Edit {isSuit ? 'Suit' : 'Saree'}</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteProduct(p.id, p.title)}
+                            className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -2223,54 +2944,103 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">Category *</label>
+                  <label className="block text-gray-700 font-bold mb-1">
+                    {productType === 'suit' ? 'Suit Category *' : 'Saree Category *'}
+                  </label>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
                     className="w-full border border-gray-300 rounded p-2 text-xs bg-white font-medium"
                   >
-                    {categories
-                      .filter(
-                        (c) =>
-                          (c.isParent || !c.parentId) &&
-                          !c.slug?.includes('semi-maheshwari') &&
-                          !c.name?.toLowerCase().includes('semi maheshwari') &&
-                          c.id !== 'semi-maheshwari-sarees-id'
-                      )
-                      .map((parent) => {
-                        const children = categories.filter(
-                          (c) =>
-                            c.parentId === parent.id &&
-                            !c.slug?.includes('semi-maheshwari') &&
-                            !c.name?.toLowerCase().includes('semi maheshwari')
-                        );
-                        return (
-                          <optgroup key={parent.id} label={`📁 PARENT: ${parent.name}`}>
-                            <option value={parent.id}>
-                              📁 {parent.name} (Parent Category)
+                    {productType === 'suit' ? (
+                      // Suits Categories Only
+                      <>
+                        {categories
+                          .filter(
+                            (c) =>
+                              (c.isParent || !c.parentId) &&
+                              (c.slug?.includes('suit') || c.name?.toLowerCase().includes('suit') || c.slug?.includes('unstitched'))
+                          )
+                          .map((parent) => {
+                            const children = categories.filter((c) => c.parentId === parent.id);
+                            return (
+                              <optgroup key={parent.id} label={`📁 PARENT: ${parent.name}`}>
+                                <option value={parent.id}>
+                                  📁 {parent.name} (Parent Suit Category)
+                                </option>
+                                {children.map((child) => (
+                                  <option key={child.id} value={child.id}>
+                                    &nbsp;&nbsp;↳ {child.name} (Suit Sub-Category)
+                                  </option>
+                                ))}
+                              </optgroup>
+                            );
+                          })}
+                        {categories
+                          .filter(
+                            (c) =>
+                              (c.slug?.includes('suit') || c.name?.toLowerCase().includes('suit') || c.slug?.includes('unstitched')) &&
+                              !categories.some((p) => (p.isParent || !p.parentId) && (p.slug?.includes('suit') || p.name?.toLowerCase().includes('suit')))
+                          )
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              📁 {c.name}
                             </option>
-                            {children.map((child) => (
-                              <option key={child.id} value={child.id}>
-                                &nbsp;&nbsp;↳ {child.name} (Child Category)
-                              </option>
-                            ))}
-                          </optgroup>
-                        );
-                      })}
-                    {categories
-                      .filter(
-                        (c) =>
-                          !c.isParent &&
-                          c.parentId &&
-                          !c.slug?.includes('semi-maheshwari') &&
-                          !c.name?.toLowerCase().includes('semi maheshwari') &&
-                          !categories.some((p) => p.id === c.parentId)
-                      )
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          ↳ {c.name}
-                        </option>
-                      ))}
+                          ))}
+                      </>
+                    ) : (
+                      // Sarees Categories Only (Excludes Suits and Semi)
+                      <>
+                        {categories
+                          .filter(
+                            (c) =>
+                              (c.isParent || !c.parentId) &&
+                              !c.slug?.includes('suit') &&
+                              !c.name?.toLowerCase().includes('suit') &&
+                              !c.slug?.includes('semi-maheshwari') &&
+                              !c.name?.toLowerCase().includes('semi maheshwari') &&
+                              c.id !== 'semi-maheshwari-sarees-id'
+                          )
+                          .map((parent) => {
+                            const children = categories.filter(
+                              (c) =>
+                                c.parentId === parent.id &&
+                                !c.slug?.includes('suit') &&
+                                !c.name?.toLowerCase().includes('suit') &&
+                                !c.slug?.includes('semi-maheshwari') &&
+                                !c.name?.toLowerCase().includes('semi maheshwari')
+                            );
+                            return (
+                              <optgroup key={parent.id} label={`📁 PARENT: ${parent.name}`}>
+                                <option value={parent.id}>
+                                  📁 {parent.name} (Parent Category)
+                                </option>
+                                {children.map((child) => (
+                                  <option key={child.id} value={child.id}>
+                                    &nbsp;&nbsp;↳ {child.name} (Child Category)
+                                  </option>
+                                ))}
+                              </optgroup>
+                            );
+                          })}
+                        {categories
+                          .filter(
+                            (c) =>
+                              !c.isParent &&
+                              c.parentId &&
+                              !c.slug?.includes('suit') &&
+                              !c.name?.toLowerCase().includes('suit') &&
+                              !c.slug?.includes('semi-maheshwari') &&
+                              !c.name?.toLowerCase().includes('semi maheshwari') &&
+                              !categories.some((p) => p.id === c.parentId)
+                          )
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              ↳ {c.name}
+                            </option>
+                          ))}
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -3362,12 +4132,55 @@ export default function AdminDashboard() {
                             );
                           }
 
+                          const isSuitEdit = editProductType === 'suit' || currentEditCat?.slug?.includes('suit') || currentEditCat?.name?.toLowerCase().includes('suit') || editTitle?.toLowerCase().includes('suit');
+
+                          if (isSuitEdit) {
+                            return (
+                              <>
+                                {categories
+                                  .filter(
+                                    (c) =>
+                                      (c.isParent || !c.parentId) &&
+                                      (c.slug?.includes('suit') || c.name?.toLowerCase().includes('suit') || c.slug?.includes('unstitched'))
+                                  )
+                                  .map((parent) => {
+                                    const children = categories.filter((c) => c.parentId === parent.id);
+                                    return (
+                                      <optgroup key={parent.id} label={`📁 PARENT: ${parent.name}`}>
+                                        <option value={parent.id}>
+                                          📁 {parent.name} (Parent Suit Category)
+                                        </option>
+                                        {children.map((child) => (
+                                          <option key={child.id} value={child.id}>
+                                            &nbsp;&nbsp;↳ {child.name} (Suit Sub-Category)
+                                          </option>
+                                        ))}
+                                      </optgroup>
+                                    );
+                                  })}
+                                {categories
+                                  .filter(
+                                    (c) =>
+                                      (c.slug?.includes('suit') || c.name?.toLowerCase().includes('suit') || c.slug?.includes('unstitched')) &&
+                                      !categories.some((p) => (p.isParent || !p.parentId) && (p.slug?.includes('suit') || p.name?.toLowerCase().includes('suit')))
+                                  )
+                                  .map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                      📁 {c.name}
+                                    </option>
+                                  ))}
+                              </>
+                            );
+                          }
+
                           return (
                             <>
                               {categories
                                 .filter(
                                   (c) =>
                                     (c.isParent || !c.parentId) &&
+                                    !c.slug?.includes('suit') &&
+                                    !c.name?.toLowerCase().includes('suit') &&
                                     !c.slug?.includes('semi-maheshwari') &&
                                     !c.name?.toLowerCase().includes('semi maheshwari') &&
                                     c.id !== 'semi-maheshwari-sarees-id'
@@ -3376,6 +4189,8 @@ export default function AdminDashboard() {
                                   const children = categories.filter(
                                     (c) =>
                                       c.parentId === parent.id &&
+                                      !c.slug?.includes('suit') &&
+                                      !c.name?.toLowerCase().includes('suit') &&
                                       !c.slug?.includes('semi-maheshwari') &&
                                       !c.name?.toLowerCase().includes('semi maheshwari')
                                   );
@@ -3397,6 +4212,8 @@ export default function AdminDashboard() {
                                   (c) =>
                                     !c.isParent &&
                                     c.parentId &&
+                                    !c.slug?.includes('suit') &&
+                                    !c.name?.toLowerCase().includes('suit') &&
                                     !c.slug?.includes('semi-maheshwari') &&
                                     !c.name?.toLowerCase().includes('semi maheshwari') &&
                                     !categories.some((p) => p.id === c.parentId)
@@ -3554,9 +4371,14 @@ export default function AdminDashboard() {
         <div className="mt-6 space-y-6">
           {/* Add Category Form Card */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm max-w-2xl">
-            <h3 className="text-lg font-serif font-bold text-amber-950 mb-4 pb-2 border-b border-gray-100 flex items-center gap-2">
-              <FolderPlus className="w-5 h-5 text-amber-800" />
-              <span>Add New Saree Category</span>
+            <h3 className="text-lg font-serif font-bold text-amber-950 mb-4 pb-2 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FolderPlus className="w-5 h-5 text-amber-800" />
+                <span>Add New Category (Saree / Suit / Collection)</span>
+              </div>
+              <span className="text-[10px] bg-amber-100 text-amber-950 font-bold px-2 py-0.5 rounded-full">
+                Universal Manager
+              </span>
             </h3>
 
             <form onSubmit={handleAddCategory} className="space-y-4 text-xs">
@@ -3565,7 +4387,7 @@ export default function AdminDashboard() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Garbha Reshami Special, Tissue Zari, Royal Mulberry Silk"
+                  placeholder="e.g. Garbha Reshami Special, Tissue Zari, Maheshwari Suit Sets"
                   value={catName}
                   onChange={(e) => setCatName(e.target.value)}
                   className="w-full border border-gray-300 rounded p-2.5 focus:ring-1 focus:ring-amber-800 text-xs font-medium"
@@ -3612,22 +4434,32 @@ export default function AdminDashboard() {
 
                   {!!catParentId && (
                     <div className="pt-1">
-                      <label className="block text-amber-950 font-bold mb-1">Select Parent Category *</label>
+                      <label className="block text-amber-950 font-bold mb-1">Select Parent Category (Parent चुनें) *</label>
                       <select
                         value={catParentId}
                         onChange={(e) => {
                           setCatParentId(e.target.value);
                           setCatIsParent(false);
                         }}
-                        className="w-full border border-amber-300 rounded-lg p-2 text-xs bg-white font-medium focus:ring-1 focus:ring-amber-800 text-gray-900"
+                        className="w-full border border-amber-300 rounded-lg p-2.5 text-xs bg-white font-bold focus:ring-1 focus:ring-amber-800 text-gray-900"
                       >
                         {categories
                           .filter((c) => c.isParent || !c.parentId)
-                          .map((parent) => (
-                            <option key={parent.id} value={parent.id}>
-                              📁 {parent.name}
-                            </option>
-                          ))}
+                          .map((parent) => {
+                            let typeHint = 'Saree Parent';
+                            if (parent.slug?.includes('suit') || parent.name?.toLowerCase().includes('suit')) {
+                              typeHint = 'Suit Parent';
+                            } else if (parent.slug?.includes('semi') || parent.name?.toLowerCase().includes('semi')) {
+                              typeHint = 'Semi Maheshwari Parent';
+                            } else if (parent.slug?.includes('dupatta') || parent.slug?.includes('other')) {
+                              typeHint = 'Other Collection';
+                            }
+                            return (
+                              <option key={parent.id} value={parent.id}>
+                                📁 {parent.name} ({typeHint})
+                              </option>
+                            );
+                          })}
                       </select>
                     </div>
                   )}
@@ -3775,118 +4607,219 @@ export default function AdminDashboard() {
 
           {/* Active Categories List */}
           <div className="space-y-4">
-            <h3 className="font-serif font-bold text-amber-950 text-lg flex items-center gap-2">
-              <Folder className="w-5 h-5 text-amber-800" />
-              <span>Active Saree Categories ({categories.length})</span>
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+              <h3 className="font-serif font-bold text-amber-950 text-lg flex items-center gap-2">
+                <Folder className="w-5 h-5 text-amber-800" />
+                <span>
+                  {catFilter === 'sarees' && `Maheshwari Saree Categories (${categories.filter(isSareeCategory).length})`}
+                  {catFilter === 'suits' && `Maheshwari Suit Categories (${categories.filter(isSuitCategory).length})`}
+                  {catFilter === 'semi' && `Semi Maheshwari Categories (${categories.filter(isSemiCategory).length})`}
+                  {catFilter === 'all' && `All Categories (${categories.length})`}
+                </span>
+              </h3>
 
-            {categories.length === 0 ? (
-              <div className="text-center py-12 bg-slate-50 rounded-lg text-gray-500 text-xs font-semibold">
-                No categories found.
+              {/* Category Filter Tabs */}
+              <div className="flex items-center gap-1 bg-amber-50 p-1 rounded-xl border border-amber-200 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    catFilter === 'all' ? 'bg-amber-950 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  All ({categories.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('sarees')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    catFilter === 'sarees' ? 'bg-amber-900 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  <span>🥻 Saree Categories ({categories.filter(isSareeCategory).length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('suits')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    catFilter === 'suits' ? 'bg-rose-900 text-white shadow-xs' : 'text-rose-900 hover:bg-rose-50'
+                  }`}
+                >
+                  <span>👗 Suit Categories ({categories.filter(isSuitCategory).length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('semi')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    catFilter === 'semi' ? 'bg-amber-800 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  <span>✨ Semi ({categories.filter(isSemiCategory).length})</span>
+                </button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((cat) => (
-                  <div key={cat.id} className={`p-4 border rounded-xl bg-white shadow-xs hover:border-amber-400 transition-all flex flex-col justify-between space-y-3 ${cat.isHidden ? 'border-rose-300 bg-rose-50/20' : 'border-gray-200'}`}>
-                    <div className="flex items-start gap-3">
-                      {/* Avatar & Banner Previews */}
-                      <div className="flex flex-col gap-1.5 shrink-0">
-                        {cat.image ? (
-                          <div className="w-12 h-12 rounded-full border-2 border-amber-600 overflow-hidden shadow-2xs relative" title="Circle Avatar Image">
-                            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                          </div>
-                        ) : (
-                          <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-900 font-bold">
-                            <Folder className="w-5 h-5 text-amber-800" />
-                          </div>
-                        )}
+            </div>
 
-                        {cat.bannerImage && (
-                          <div className="w-14 h-8 rounded border border-amber-500 overflow-hidden shadow-2xs relative" title="Hero Banner Header Image">
-                            <img src={cat.bannerImage} alt={`${cat.name} Banner`} className="w-full h-full object-cover" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                          <h4 className="font-bold text-gray-900 text-sm">{cat.name}</h4>
-                          <span className="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0">
-                            {cat._count?.products || 0} Sarees
-                          </span>
-                        </div>
+            {(() => {
+              const displayedCats = catFilter === 'sarees'
+                ? categories.filter(isSareeCategory)
+                : catFilter === 'suits'
+                ? categories.filter(isSuitCategory)
+                : catFilter === 'semi'
+                ? categories.filter(isSemiCategory)
+                : categories;
 
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {cat.isParent || !cat.parentId ? (
-                            <span className="bg-amber-100 text-amber-950 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
-                              📁 PARENT CATEGORY
-                            </span>
-                          ) : (
-                            <span className="bg-indigo-50 text-indigo-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
-                              ↳ Sub of {cat.parent?.name || categories.find((p) => p.id === cat.parentId)?.name || 'Parent'}
-                            </span>
-                          )}
-
-                          {cat.isHidden ? (
-                            <span className="bg-rose-100 text-rose-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-rose-300 flex items-center gap-1">
-                              <EyeOff className="w-3 h-3 text-rose-700" />
-                              <span>HIDDEN</span>
-                            </span>
-                          ) : (
-                            <span className="bg-emerald-50 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                              <Eye className="w-3 h-3 text-emerald-600" />
-                              <span>VISIBLE</span>
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-[10px] font-mono text-gray-400">slug: {cat.slug}</p>
-                        {cat.description && <p className="text-[11px] text-gray-600 line-clamp-2">{cat.description}</p>}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                      <button
-                        onClick={() => openEditCatModal(cat)}
-                        className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-md font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
-                      >
-                        <Pencil className="w-3.5 h-3.5 text-amber-800" />
-                        <span>Edit</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCategoryVisibility(cat)}
-                        className={`py-1.5 px-2.5 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer ${
-                          cat.isHidden
-                            ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300'
-                            : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300'
-                        }`}
-                      >
-                        {cat.isHidden ? (
-                          <>
-                            <Eye className="w-3.5 h-3.5 text-emerald-800" />
-                            <span>Show</span>
-                          </>
-                        ) : (
-                          <>
-                            <EyeOff className="w-3.5 h-3.5 text-amber-800" />
-                            <span>Hide</span>
-                          </>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                        className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
+              if (displayedCats.length === 0) {
+                return (
+                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-gray-200 text-gray-500 text-xs font-semibold">
+                    No categories found in this filter view.
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayedCats.map((cat) => (
+                    <div key={cat.id} className={`p-4 border rounded-2xl bg-white shadow-xs hover:border-amber-400 transition-all flex flex-col justify-between space-y-3 ${cat.isHidden ? 'border-rose-300 bg-rose-50/20' : 'border-gray-200'}`}>
+                      <div className="flex items-start gap-3">
+                        {/* Avatar & Banner Previews */}
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          {cat.image ? (
+                            <div className="w-12 h-12 rounded-full border-2 border-amber-600 overflow-hidden shadow-2xs relative" title="Circle Avatar Image">
+                              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-900 font-bold">
+                              <Folder className="w-5 h-5 text-amber-800" />
+                            </div>
+                          )}
+
+                          {cat.bannerImage && (
+                            <div className="w-14 h-8 rounded border border-amber-500 overflow-hidden shadow-2xs relative" title="Hero Banner Header Image">
+                              <img src={cat.bannerImage} alt={`${cat.name} Banner`} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <h4 className="font-bold text-gray-900 text-sm truncate">{cat.name}</h4>
+                            {(() => {
+                              let count = 0;
+                              if (products && products.length > 0) {
+                                const childIds = new Set<string>();
+                                childIds.add(cat.id);
+                                categories.forEach((c: any) => {
+                                  if (c.parentId === cat.id) childIds.add(c.id);
+                                });
+                                count = products.filter((p: any) => {
+                                  if (p.categoryId && childIds.has(p.categoryId)) return true;
+                                  if (p.category?.id && childIds.has(p.category.id)) return true;
+                                  if (p.category?.slug && p.category.slug === cat.slug) return true;
+                                  if (p.category?.name && p.category.name.trim().toLowerCase() === cat.name.trim().toLowerCase()) return true;
+                                  return false;
+                                }).length;
+                              } else {
+                                count = cat._count?.products || 0;
+                              }
+                              const isSuit = isSuitCategory(cat);
+                              const unitLabel = isSuit ? (count === 1 ? 'Suit' : 'Suits') : (count === 1 ? 'Saree' : 'Sarees');
+
+                              return (
+                                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shrink-0 ${
+                                  count > 0 ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900'
+                                }`}>
+                                  {count} {unitLabel}
+                                </span>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {cat.isParent || !cat.parentId ? (
+                              <span className="bg-amber-100 text-amber-950 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
+                                📁 PARENT CATEGORY
+                              </span>
+                            ) : (
+                              <span className="bg-indigo-50 text-indigo-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
+                                ↳ Sub of {cat.parent?.name || categories.find((p) => p.id === cat.parentId)?.name || 'Parent'}
+                              </span>
+                            )}
+
+                            {isSuitCategory(cat) ? (
+                              <span className="bg-rose-100 text-rose-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                👗 SUIT
+                              </span>
+                            ) : isSemiCategory(cat) ? (
+                              <span className="bg-purple-100 text-purple-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                ✨ SEMI
+                              </span>
+                            ) : (
+                              <span className="bg-amber-50 text-amber-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                🥻 SAREE
+                              </span>
+                            )}
+
+                            {cat.isHidden ? (
+                              <span className="bg-rose-100 text-rose-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-rose-300 flex items-center gap-1">
+                                <EyeOff className="w-3 h-3 text-rose-700" />
+                                <span>HIDDEN</span>
+                              </span>
+                            ) : (
+                              <span className="bg-emerald-50 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                <Eye className="w-3 h-3 text-emerald-600" />
+                                <span>VISIBLE</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-[10px] font-mono text-gray-400">slug: {cat.slug}</p>
+                          {cat.description && <p className="text-[11px] text-gray-600 line-clamp-2">{cat.description}</p>}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={() => openEditCatModal(cat)}
+                          className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-amber-800" />
+                          <span>Edit</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCategoryVisibility(cat)}
+                          className={`py-1.5 px-2.5 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer ${
+                            cat.isHidden
+                              ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300'
+                              : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300'
+                          }`}
+                        >
+                          {cat.isHidden ? (
+                            <>
+                              <Eye className="w-3.5 h-3.5 text-emerald-800" />
+                              <span>Show</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3.5 h-3.5 text-amber-800" />
+                              <span>Hide</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                          className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

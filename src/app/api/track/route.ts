@@ -149,8 +149,15 @@ export async function POST(req: NextRequest) {
       title = body.title;
     }
 
+    const isAdmin = Boolean(
+      body.isAdmin ||
+      body.userEmail === 'reotihandloom@gmail.com' ||
+      pageUrl.startsWith('/admin') ||
+      pageUrl.startsWith('/reoti-studio-manage')
+    );
+
     const activity = logActivityInStore({
-      type: body.type || 'VISIT',
+      type: body.type || (isAdmin ? 'ADMIN_VISIT' : 'VISIT'),
       title,
       details: body.details || `Page: ${pageUrl} | Device: ${deviceString}${body.referrer ? ` | From: ${body.referrer}` : ''}`,
       userEmail: body.userEmail || null,
@@ -165,6 +172,7 @@ export async function POST(req: NextRequest) {
       pageUrl: pageUrl,
       pageTitle: pageTitle,
       referrer: body.referrer || null,
+      isAdmin,
     });
 
     return NextResponse.json({

@@ -430,11 +430,9 @@ function ProductsContent() {
           categories
         );
 
-        const isLegacyAhilyabai = hero.image.includes('maheshwari_legacy_banner');
-
         return (
           <div className="w-full bg-[#FAF7F2] border border-[#E8DFC8] rounded-2xl overflow-hidden mb-6 shadow-2xs font-sans">
-            <div className="grid grid-cols-1 md:grid-cols-12 items-center">
+            <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
               {/* Left Side: Craft Story & Title */}
               <div className="md:col-span-6 lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-center text-center space-y-3 overflow-hidden">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
@@ -461,26 +459,23 @@ function ProductsContent() {
                 </p>
               </div>
 
-              {/* Right Side: 100% Filled Image Container */}
-              <div className="md:col-span-6 lg:col-span-5 relative w-full h-64 sm:h-72 md:h-[260px] lg:h-[280px] overflow-hidden bg-amber-950 shrink-0">
+              {/* Right Side: Gracefully Framed Hero Image */}
+              <div className="md:col-span-6 lg:col-span-5 relative w-full h-64 sm:h-72 md:h-full min-h-[260px] md:min-h-[300px] overflow-hidden bg-gradient-to-br from-amber-950 to-stone-900 shrink-0">
                 <img
                   src={hero.image}
                   alt={hero.title}
-                  className={`w-full h-full ${
-                    isLegacyAhilyabai
-                      ? 'object-cover object-[30%_20%]'
-                      : 'object-cover object-center'
-                  }`}
+                  className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                 />
-                
-                {/* Reoti Handloom Watermark Overlay */}
+
+                {/* Reoti Handloom Signature Watermark */}
                 <WatermarkOverlay variant="pdp" />
 
-                {/* Soft Bottom Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                {/* Soft Bottom & Side Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent pointer-events-none hidden md:block" />
 
                 {/* Authentic Reoti Handloom Heritage Watermark Badge */}
-                <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
+                <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
                   <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-300 shrink-0">
                     <img src="/logo.jpg" alt="Reoti Logo" className="w-full h-full object-cover" />
                   </div>

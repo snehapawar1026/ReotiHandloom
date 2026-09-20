@@ -1,21 +1,24 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getStoreData } from '@/lib/storeManager';
+import { NextRequest, NextResponse } from 'next/server';
+import { getStoreData, clearActivitiesInStore } from '@/lib/storeManager';
 
-export async function GET() {
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export async function GET(req: NextRequest) {
+  const storeActivities = getStoreData().activities || [];
+  return NextResponse.json({
+    success: true,
+    activities: storeActivities,
+  });
+}
+
+export async function DELETE(req: NextRequest) {
   try {
-    const activities = await prisma.activityLog.findMany({
-      take: 20,
-      orderBy: { createdAt: 'desc' },
-    });
-
-    if (activities && activities.length > 0) {
-      return NextResponse.json({ success: true, activities });
-    }
-  } catch (error: any) {
-    console.warn('[FALLBACK] Serving activities from storeManager:', error.message);
+    const { searchParams } = new URL(req.url);
+    const filterType = (searchParams.get('type') || 'ALL') as any;
+    clearActivitiesInStore(filterType);
+    return NextResponse.json({ success: true, message: 'Activities cleared successfully.' });
+  } catch (e: any) {
+    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
   }
-
-  const storeActivities = (getStoreData().activities || []).slice(0, 20);
-  return NextResponse.json({ success: true, activities: storeActivities });
 }

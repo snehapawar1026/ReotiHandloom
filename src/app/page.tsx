@@ -25,11 +25,13 @@ const SAREE_TABS = [
 ];
 
 const SUIT_TABS = [
-  { id: 'all', name: 'TISSUE SUITS' },
-  { id: 'bagh-cotton', name: 'BAGH COTTON' },
+  { id: 'all', name: 'TOP-SELLING' },
+  { id: 'maheshwari-suits', name: 'MAHESHWARI SUITS' },
+  { id: 'tissue-suits', name: 'TISSUE SUITS' },
+  { id: 'bagh-cotton-suits', name: 'BAGH COTTON' },
   { id: 'maheshwari-bagh', name: 'MAHESHWARI BAGH SUITS' },
   { id: 'butta', name: 'BUTTA SUITS' },
-  { id: 'bagh-indigo', name: 'BAGH INDIGO' },
+  { id: 'indigo-cotton-suit', name: 'BAGH INDIGO' },
   { id: 'handblock', name: 'HANDBLOCK PRINT' },
   { id: 'traditional-border', name: 'TRADITIONAL BORDER' },
 ];
@@ -122,17 +124,40 @@ export default function Home() {
       fetch(`/api/products?_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
     ])
       .then(([catData, prodData]) => {
-        if (catData.success) setCategories(catData.categories || []);
+        if (catData.success) {
+          const handloomCategories = (catData.categories || []).filter((c: any) => {
+            const slug = (c.slug || '').toLowerCase();
+            const name = (c.name || '').toLowerCase();
+            const id = c.id;
+            return (
+              !slug.includes('semi-maheshwari') &&
+              !slug.includes('semi-') &&
+              !name.includes('semi maheshwari') &&
+              id !== 'semi-maheshwari-sarees-id' &&
+              c.parentId !== 'semi-maheshwari-sarees-id'
+            );
+          });
+          setCategories(handloomCategories);
+        }
         if (prodData.success) {
           const handloomOnly = (prodData.products || []).filter((p: ProductItem) => {
             const catSlug = (p.category?.slug || '').toLowerCase();
+            const catName = (p.category?.name || '').toLowerCase();
             const title = (p.title || '').toLowerCase();
             const fabric = (p.fabric || '').toLowerCase();
+            const design = ((p as any).designCode || '').toLowerCase();
+            const catId = (p as any).categoryId || (p as any).category?.id;
+            const slug = (p.slug || '').toLowerCase();
             const isSemi =
+              catId === 'semi-maheshwari-sarees-id' ||
               catSlug.includes('semi-maheshwari') ||
+              catName.includes('semi maheshwari') ||
               fabric.includes('semi') ||
+              design.includes('semi') ||
               title.includes('semi maheshwari') ||
-              title.includes('semi-maheshwari');
+              title.includes('semi-maheshwari') ||
+              title.startsWith('semi ') ||
+              slug.includes('semi-maheshwari');
             return !isSemi;
           });
           setAllProducts(handloomOnly);
@@ -142,42 +167,109 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Filter Sarees based on selected tab
+  // Helper to determine if a product is a Suit / Dress material
+  const isSuitProduct = (p: ProductItem) => {
+    if (!p) return false;
+    const catSlug = (p.category?.slug || '').toLowerCase();
+    const catName = (p.category?.name || '').toLowerCase();
+    const title = (p.title || '').toLowerCase();
+    const desc = (p.description || '').toLowerCase();
+    const length = (p.lengthWithBlouse || '').toLowerCase();
+    return (
+      catSlug.includes('suit') ||
+      catSlug.includes('dress-material') ||
+      catName.includes('suit') ||
+      catName.includes('dress material') ||
+      title.includes('suit') ||
+      title.includes('dress material') ||
+      title.includes('top dupatta') ||
+      title.includes('unstitched') ||
+      title.includes('kurta') ||
+      desc.includes('suit set') ||
+      desc.includes('2-piece set') ||
+      desc.includes('3-piece set') ||
+      desc.includes('dress material') ||
+      length.includes('top') ||
+      length.includes('dupatta') ||
+      length.includes('piece set')
+    );
+  };
+
+  // Filter Sarees based on selected tab (Strictly Sarees only - Suits excluded)
   const getFilteredSarees = () => {
+    const sareesOnly = allProducts.filter((p) => !isSuitProduct(p));
     if (sareeTab === 'all') {
-      const bestsellersOnly = allProducts.filter((p) => p.isBestSeller);
-      if (bestsellersOnly.length > 0) {
-        const remaining = allProducts.filter((p) => !p.isBestSeller);
-        return [...bestsellersOnly, ...remaining].slice(0, 8);
-      }
-      return allProducts.slice(0, 8);
+      const bestsellers = sareesOnly.filter((p) => p.isBestSeller);
+      return (bestsellers.length > 0 ? bestsellers : sareesOnly).slice(0, 8);
     }
-    return allProducts
-      .filter(
-        (p) =>
-          p.category?.slug === sareeTab ||
-          p.title.toLowerCase().includes(sareeTab.toLowerCase()) ||
-          p.description?.toLowerCase().includes(sareeTab.toLowerCase())
-      )
+    return sareesOnly
+      .filter((p) => {
+        const catSlug = (p.category?.slug || '').toLowerCase();
+        const catName = (p.category?.name || '').toLowerCase();
+        const title = p.title.toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const tab = sareeTab.toLowerCase();
+        return (
+          catSlug.includes(tab) ||
+          catName.includes(tab) ||
+          title.includes(tab) ||
+          desc.includes(tab)
+        );
+      })
       .slice(0, 8);
   };
 
-  // Filter Suits based on selected tab
+  // Filter Suits based on selected tab (Strictly Suits only)
   const getFilteredSuits = () => {
-    const suitsOnly = allProducts.filter(
-      (p) =>
-        p.category?.slug.includes('suit') ||
-        p.title.toLowerCase().includes('suit') ||
-        p.title.toLowerCase().includes('dress material')
-    );
+    const suitsOnly = allProducts.filter((p) => isSuitProduct(p));
 
-    if (suitTab === 'all' || suitsOnly.length === 0) return (suitsOnly.length > 0 ? suitsOnly : allProducts).slice(0, 4);
-    
-    return suitsOnly.filter(
-      (p) =>
-        p.category?.slug === suitTab ||
-        p.title.toLowerCase().includes(suitTab.toLowerCase())
-    ).slice(0, 4);
+    if (suitTab === 'all') {
+      const bestsellers = suitsOnly.filter((p) => p.isBestSeller);
+      return (bestsellers.length > 0 ? bestsellers : suitsOnly).slice(0, 8);
+    }
+
+    return suitsOnly
+      .filter((p) => {
+        const catSlug = (p.category?.slug || '').toLowerCase();
+        const catName = (p.category?.name || '').toLowerCase();
+        const title = p.title.toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const fabric = (p.fabric || '').toLowerCase();
+        const tab = suitTab.toLowerCase();
+
+        if (tab === 'maheshwari-suits') {
+          return catSlug.includes('maheshwari') || title.includes('maheshwari') || catSlug.includes('suit');
+        }
+        if (tab === 'tissue-suits') {
+          return fabric.includes('tissue') || title.includes('tissue') || catSlug.includes('tissue');
+        }
+        if (tab === 'bagh-cotton-suits' || tab === 'bagh-cotton') {
+          return catSlug.includes('bagh') || title.includes('bagh') || fabric.includes('cotton');
+        }
+        if (tab === 'maheshwari-bagh') {
+          return (title.includes('bagh') && title.includes('maheshwari')) || catSlug.includes('bagh');
+        }
+        if (tab === 'butta') {
+          return title.includes('butta') || title.includes('buti') || desc.includes('butta');
+        }
+        if (tab === 'indigo-cotton-suit' || tab === 'bagh-indigo') {
+          return catSlug.includes('indigo') || title.includes('indigo');
+        }
+        if (tab === 'handblock') {
+          return title.includes('handblock') || title.includes('block print') || desc.includes('handblock');
+        }
+        if (tab === 'traditional-border') {
+          return title.includes('border') || (p.borderType && p.borderType !== '');
+        }
+
+        return (
+          catSlug.includes(tab) ||
+          catName.includes(tab) ||
+          title.includes(tab) ||
+          desc.includes(tab)
+        );
+      })
+      .slice(0, 8);
   };
 
   const filteredSarees = getFilteredSarees();
@@ -357,10 +449,11 @@ export default function Home() {
           <div className="py-12 text-center text-xs font-bold text-gray-400">Loading Featured Sarees...</div>
         ) : (
           <MobileProductSlider
-            products={(allProducts.filter((p) => p.isFeatured).length > 0
-              ? allProducts.filter((p) => p.isFeatured)
-              : allProducts
-            ).slice(0, 4)}
+            products={(() => {
+              const sareesOnly = allProducts.filter((p) => !isSuitProduct(p));
+              const featured = sareesOnly.filter((p) => p.isFeatured);
+              return (featured.length > 0 ? featured : sareesOnly).slice(0, 4);
+            })()}
             emptyMessage="Loading Featured Sarees..."
           />
         )}

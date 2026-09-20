@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getStoreData } from '@/lib/storeManager';
+import { getStoreData, isSemiMaheshwari, isSuitProduct } from '@/lib/storeManager';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,6 +33,32 @@ export async function GET(req: NextRequest) {
         c.name?.toLowerCase() === category.toLowerCase()
     );
 
+    const isTargetSuit =
+      category.toLowerCase().includes('suit') ||
+      category.toLowerCase().includes('unstitched') ||
+      Boolean(
+        targetCat &&
+          (targetCat.slug?.toLowerCase().includes('suit') ||
+            targetCat.name?.toLowerCase().includes('suit') ||
+            (targetCat.parentId &&
+              allCategories.some(
+                (p: any) =>
+                  p.id === targetCat.parentId &&
+                  (p.slug?.toLowerCase().includes('suit') || p.name?.toLowerCase().includes('suit'))
+              )))
+      );
+
+    const isTargetSemi =
+      category.toLowerCase().includes('semi-maheshwari') ||
+      category === 'semi-maheshwari-sarees-id' ||
+      Boolean(
+        targetCat &&
+          (targetCat.slug?.toLowerCase().includes('semi-maheshwari') ||
+            targetCat.name?.toLowerCase().includes('semi maheshwari') ||
+            targetCat.parentId === 'semi-maheshwari-sarees-id' ||
+            targetCat.id === 'semi-maheshwari-sarees-id')
+      );
+
     const childCatIds = targetCat
       ? allCategories.filter((c: any) => c.parentId === targetCat.id).map((c: any) => c.id)
       : [];
@@ -53,6 +79,17 @@ export async function GET(req: NextRequest) {
     ]);
 
     storeProducts = storeProducts.filter((p: any) => {
+      const prodIsSemi = isSemiMaheshwari(p, allCategories);
+      const prodIsSuit = isSuitProduct(p, allCategories);
+
+      // Strict boundary check: Semi and Handloom can never mix
+      if (isTargetSemi && !prodIsSemi) return false;
+      if (!isTargetSemi && prodIsSemi) return false;
+
+      // Strict boundary check: Suit and Saree can never mix
+      if (isTargetSuit && !prodIsSuit) return false;
+      if (!isTargetSuit && !category.toLowerCase().includes('dupatta') && prodIsSuit) return false;
+
       // 1. Direct ID match
       if (p.categoryId && allowedCatIds.has(p.categoryId)) return true;
 
@@ -69,15 +106,7 @@ export async function GET(req: NextRequest) {
       }
 
       // 4. Special fallback for "maheshwari-sarees" parent: include all authentic maheshwari child sarees
-      if (category === 'maheshwari-sarees') {
-        const isSemi =
-          p.category?.slug === 'semi-maheshwari-sarees' ||
-          p.category?.slug === 'semi-maheshwari' ||
-          p.categoryId === 'semi-maheshwari-sarees-id';
-        const isSuit =
-          p.category?.slug?.includes('suit') ||
-          p.categoryId === '62c60ff6-1568-4753-8f73-652dd1efd355' ||
-          p.title?.toLowerCase().includes('suit');
+      if (category === 'maheshwari-sarees' && !prodIsSemi && !prodIsSuit) {
         const isDupatta =
           p.category?.slug === 'dupattas' ||
           p.categoryId === '59c903c7-960f-4481-882a-9b16890a3054' ||
@@ -87,7 +116,7 @@ export async function GET(req: NextRequest) {
           p.categoryId === '32118f61-e48f-41f0-bcb7-dd4e599205e8' ||
           p.title?.toLowerCase().includes('chanderi');
 
-        if (!isSemi && !isSuit && !isDupatta && !isChanderi) {
+        if (!isDupatta && !isChanderi) {
           return true;
         }
       }
@@ -95,12 +124,13 @@ export async function GET(req: NextRequest) {
       return false;
     });
   } else if (!includeAll) {
-    storeProducts = storeProducts.filter(
-      (p: any) =>
-        p.category?.slug !== 'semi-maheshwari-sarees' &&
-        p.category?.slug !== 'semi-maheshwari' &&
-        p.categoryId !== 'semi-maheshwari-sarees-id'
-    );
+    // When no specific category is requested (e.g. Home, Bestsellers, Trending, All Sarees), strictly exclude ALL Semi Maheshwari products AND exclude Suit products unless explicitly searched
+    const searchingForSuit = (search || '').toLowerCase().includes('suit');
+    storeProducts = storeProducts.filter((p: any) => {
+      if (isSemiMaheshwari(p, allCategories)) return false;
+      if (!searchingForSuit && isSuitProduct(p, allCategories)) return false;
+      return true;
+    });
   }
   if (fabric) {
     storeProducts = storeProducts.filter((p) => p.fabric?.toLowerCase().includes(fabric.toLowerCase()));

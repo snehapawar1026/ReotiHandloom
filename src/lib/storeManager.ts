@@ -136,6 +136,91 @@ export function getProductBySlugOrId(slugOrId: string) {
   return product || null;
 }
 
+export function isSemiMaheshwari(product: any, allCategories?: any[]): boolean {
+  if (!product) return false;
+  const cats = allCategories || getStoreData().categories || [];
+
+  if (product.categoryId === 'semi-maheshwari-sarees-id') return true;
+
+  const catSlug = (product.category?.slug || '').toLowerCase();
+  const catName = (product.category?.name || '').toLowerCase();
+  if (catSlug.includes('semi-maheshwari') || catName.includes('semi maheshwari')) return true;
+
+  if (product.categoryId) {
+    const matchedCat = cats.find((c: any) => c.id === product.categoryId);
+    if (matchedCat) {
+      const mcSlug = (matchedCat.slug || '').toLowerCase();
+      const mcName = (matchedCat.name || '').toLowerCase();
+      if (
+        mcSlug.includes('semi-maheshwari') ||
+        mcName.includes('semi maheshwari') ||
+        matchedCat.id === 'semi-maheshwari-sarees-id' ||
+        matchedCat.parentId === 'semi-maheshwari-sarees-id'
+      ) {
+        return true;
+      }
+    }
+  }
+
+  const title = (product.title || '').toLowerCase();
+  const fabric = (product.fabric || '').toLowerCase();
+  const designCode = (product.designCode || '').toLowerCase();
+  const slug = (product.slug || '').toLowerCase();
+
+  if (
+    title.includes('semi maheshwari') ||
+    title.includes('semi-maheshwari') ||
+    title.startsWith('semi ') ||
+    fabric.includes('semi') ||
+    designCode.includes('semi') ||
+    slug.includes('semi-maheshwari')
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+export function isSuitProduct(product: any, allCategories?: any[]): boolean {
+  if (!product) return false;
+  const cats = allCategories || getStoreData().categories || [];
+
+  const catSlug = (product.category?.slug || '').toLowerCase();
+  const catName = (product.category?.name || '').toLowerCase();
+  if (catSlug.includes('suit') || catName.includes('suit') || catSlug.includes('unstitched') || catName.includes('unstitched')) {
+    return true;
+  }
+
+  if (product.categoryId) {
+    const matchedCat = cats.find((c: any) => c.id === product.categoryId);
+    if (matchedCat) {
+      const mcSlug = (matchedCat.slug || '').toLowerCase();
+      const mcName = (matchedCat.name || '').toLowerCase();
+      if (mcSlug.includes('suit') || mcName.includes('suit') || mcSlug.includes('unstitched') || mcName.includes('unstitched')) {
+        return true;
+      }
+      if (matchedCat.parentId) {
+        const parentCat = cats.find((c: any) => c.id === matchedCat.parentId);
+        if (parentCat) {
+          const pSlug = (parentCat.slug || '').toLowerCase();
+          const pName = (parentCat.name || '').toLowerCase();
+          if (pSlug.includes('suit') || pName.includes('suit')) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  const title = (product.title || '').toLowerCase();
+  const slug = (product.slug || '').toLowerCase();
+  if (title.includes('suit') || title.includes('kurta') || title.includes('dress material') || slug.includes('suit')) {
+    return true;
+  }
+
+  return false;
+}
+
 export function createProductInStore(productInput: any) {
   const data = getStoreData();
   const id = crypto.randomUUID();
@@ -291,7 +376,36 @@ export function deleteProductInStore(id: string) {
 // ---------------- CATEGORIES ----------------
 
 export function getAllCategories() {
-  return getStoreData().categories;
+  const data = getStoreData();
+  const categories = data.categories || [];
+  const products = data.products || [];
+
+  return categories.map((cat) => {
+    const childIds = new Set<string>();
+    childIds.add(cat.id);
+
+    // If this category is a parent, include child category IDs as well
+    categories.forEach((c) => {
+      if (c.parentId === cat.id) {
+        childIds.add(c.id);
+      }
+    });
+
+    const productCount = products.filter((p: any) => {
+      if (p.categoryId && childIds.has(p.categoryId)) return true;
+      if (p.category?.id && childIds.has(p.category.id)) return true;
+      if (p.category?.slug && p.category.slug === cat.slug) return true;
+      if (p.category?.name && p.category.name.trim().toLowerCase() === cat.name.trim().toLowerCase()) return true;
+      return false;
+    }).length;
+
+    return {
+      ...cat,
+      _count: {
+        products: productCount,
+      },
+    };
+  });
 }
 
 export function createCategoryInStore(catInput: any) {
@@ -386,6 +500,14 @@ export function logActivityInStore(activityInput: any) {
   const data = getStoreData();
   const id = crypto.randomUUID();
 
+  const isAdmin = Boolean(
+    activityInput.isAdmin ||
+    activityInput.userEmail === 'reotihandloom@gmail.com' ||
+    activityInput.userRole === 'admin' ||
+    activityInput.pageUrl?.startsWith('/admin') ||
+    activityInput.pageUrl?.startsWith('/reoti-studio-manage')
+  );
+
   const newActivity = {
     id,
     type: activityInput.type || 'VISIT',
@@ -403,12 +525,27 @@ export function logActivityInStore(activityInput: any) {
     pageUrl: activityInput.pageUrl || '/',
     pageTitle: activityInput.pageTitle || null,
     referrer: activityInput.referrer || null,
+    isAdmin,
+    userRole: isAdmin ? 'ADMIN' : 'CUSTOMER',
     createdAt: new Date().toISOString(),
   };
 
-  const activities = [newActivity, ...(data.activities || [])].slice(0, 300);
+  const activities = [newActivity, ...(data.activities || [])].slice(0, 500);
   saveStoreData({ activities });
   return newActivity;
+}
+
+export function clearActivitiesInStore(filterType?: 'ALL' | 'ADMIN' | 'TEST') {
+  const data = getStoreData();
+  if (filterType === 'ADMIN') {
+    const activities = (data.activities || []).filter(
+      (a: any) => !a.isAdmin && a.userEmail !== 'reotihandloom@gmail.com'
+    );
+    saveStoreData({ activities });
+  } else {
+    saveStoreData({ activities: [] });
+  }
+  return true;
 }
 
 // ---------------- LEADS & ENQUIRIES ----------------

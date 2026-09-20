@@ -44,8 +44,20 @@ const NavbarContent = () => {
         const cached = localStorage.getItem('rh_exact_loc') || sessionStorage.getItem('rh_exact_loc');
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (parsed.city) {
-            setUserLocText(parsed.postal ? `${parsed.city} ${parsed.postal}` : parsed.city);
+          if (
+            parsed.city?.toLowerCase().includes('ghansoli') ||
+            parsed.locationText?.toLowerCase().includes('ghansoli') ||
+            (parsed.city?.toLowerCase().includes('mumbai') && parsed.postal?.startsWith('45'))
+          ) {
+            localStorage.removeItem('rh_exact_loc');
+            sessionStorage.removeItem('rh_exact_loc');
+            setUserLocText('');
+            return;
+          }
+          if (parsed.city && parsed.city !== 'Unknown') {
+            setUserLocText(parsed.postal ? `${parsed.city} (${parsed.postal})` : parsed.city);
+          } else if (parsed.region) {
+            setUserLocText(parsed.region);
           }
         }
       } catch (e) {}
@@ -56,8 +68,28 @@ const NavbarContent = () => {
     return () => window.removeEventListener('rh_location_updated', updateFromCache);
   }, []);
 
-  // Active dropdown state for mobile accordions & desktop hover
+  // Active dropdown state for mobile accordions & desktop menu on click
   const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null);
+  const [activeDesktopMenu, setActiveDesktopMenu] = useState<string | null>(null);
+  const desktopNavRef = React.useRef<HTMLElement>(null);
+
+  // Close desktop mega menu when clicking outside nav
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (desktopNavRef.current && !desktopNavRef.current.contains(e.target as Node)) {
+        setActiveDesktopMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close desktop mega menu when route changes
+  React.useEffect(() => {
+    setActiveDesktopMenu(null);
+    setIsMobileMenuOpen(false);
+  }, [pathname, searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +103,350 @@ const NavbarContent = () => {
   const toggleMobileDropdown = (name: string) => {
     setActiveMobileDropdown(activeMobileDropdown === name ? null : name);
   };
+
+  // Reoti Handloom Official Default Saree Categories
+  const defaultSareeCategories = [
+    {
+      name: 'Garbha Reshami Special',
+      slug: 'garbha-reshami-special',
+      image: '/uploads/saree_1789231637556_rppic.jpeg',
+      tag: 'Festive Special',
+    },
+    {
+      name: 'Nayantara Handloom Sarees',
+      slug: 'nayantara-maheshwari-handloom-sarees',
+      image: '/uploads/saree_1789233209397_zszzb.jpeg',
+      tag: 'Chokha Border',
+    },
+    {
+      name: 'Shaded Maheshwari Handloom',
+      slug: 'shaded-maheshwari-handloom-sarees',
+      image: '/uploads/saree_1789215518469_xe8m4.jpeg',
+      tag: 'Dual Tone / Shaded',
+    },
+    {
+      name: 'Pure Silk Maheshwari',
+      slug: 'pure-silk-maheshwari',
+      image: '/uploads/saree_1789232225833_5kisn.jpeg',
+      tag: '100% Pure Silk',
+    },
+    {
+      name: 'Tissue Zari Shimmer',
+      slug: 'tissue-zari-maheshwari',
+      image: '/uploads/saree_1789232226193_62n8q.jpeg',
+      tag: 'Shimmer Zari',
+    },
+    {
+      name: 'Resham Border Silver Zari',
+      slug: 'resham-border-with-siver-zari',
+      image: '/uploads/saree_1789240597301_iy1ww.jpeg',
+      tag: 'Silver Zari',
+    },
+    {
+      name: 'Classic Maheshwari Sarees',
+      slug: 'maheshwari-sarees',
+      image: '/uploads/saree_1789059507283_4f5xe.jpeg',
+      tag: 'Heritage Weave',
+    },
+    {
+      name: 'Chanderi Handloom Sarees',
+      slug: 'chanderi-sarees',
+      image: '/uploads/saree_1789244838660_j7b7r.jfif',
+      tag: 'Graceful Silk',
+    },
+    {
+      name: 'Premium Bridal Sarees',
+      slug: 'premium-sarees',
+      image: '/uploads/saree_1789231637562_xzakk.jpeg',
+      tag: 'Royal Festivities',
+    },
+    {
+      name: 'Katan Silk Sarees',
+      slug: 'katan-silk',
+      image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+      tag: 'Traditional Buta',
+    },
+    {
+      name: 'Bagh Print Sarees',
+      slug: 'bagh-print',
+      image: '/uploads/saree_1789232225747_d55bp.jpeg',
+      tag: 'Natural Dyes',
+    },
+  ];
+
+  // Fresh browser session check (If app was killed and opened anew, start at Home Page)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const isSessionAlive = sessionStorage.getItem('rh_session_alive');
+
+      if (!isSessionAlive) {
+        // App was killed / newly launched browser process!
+        sessionStorage.setItem('rh_session_alive', 'true');
+
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+
+        const isExempt =
+          currentPath === '/' ||
+          currentPath.startsWith('/admin') ||
+          currentPath.startsWith('/reoti-studio-manage') ||
+          currentPath.startsWith('/login') ||
+          currentPath.startsWith('/checkout') ||
+          currentPath.startsWith('/wholesale') ||
+          currentPath.startsWith('/contact') ||
+          currentPath.startsWith('/about') ||
+          currentSearch.includes('orderId=') ||
+          currentSearch.includes('payment=');
+
+        if (!isExempt) {
+          // Redirect to Home page on fresh app open!
+          router.replace('/');
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  // Dynamic categories from database / admin panel with periodic refresh & focus re-sync
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchFreshCategories = () => {
+      fetch('/api/categories?t=' + Date.now(), { cache: 'no-store' })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.categories)) {
+            setDbCategories(data.categories);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchFreshCategories();
+
+    // Periodic auto-refresh every 30 seconds
+    const interval = setInterval(fetchFreshCategories, 30000);
+
+    // Refresh when user returns / focuses the tab
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchFreshCategories();
+      }
+    };
+
+    window.addEventListener('focus', fetchFreshCategories);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', fetchFreshCategories);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, []);
+
+  // 1. Pure Handloom Sarees Category Processing (Excludes parent from visual cards)
+  const { maheshwariChildCategories, otherSareeCategories, sareeVisualCards } = React.useMemo(() => {
+    const parent = dbCategories.find((c: any) =>
+      c.slug === 'maheshwari-sarees' ||
+      (c.isParent && (c.name || '').toLowerCase() === 'maheshwari sarees') ||
+      c.id === 'bced91f5-ab57-419f-8b41-eaa88a28df85'
+    );
+    const parentId = parent?.id || 'bced91f5-ab57-419f-8b41-eaa88a28df85';
+
+    // Filter out non-saree categories
+    const sareeCats = dbCategories.filter((c: any) => {
+      const name = (c.name || '').toLowerCase();
+      const slug = (c.slug || '').toLowerCase();
+      if (c.isHidden) return false;
+      if (slug.includes('semi-maheshwari') || name.includes('semi maheshwari') || slug.includes('semi_maheshwari')) return false;
+      if (slug.includes('suit') || name.includes('suit')) return false;
+      if (slug.includes('dupatta') || name.includes('dupatta')) return false;
+      if (slug === 'garbha-reshami' && dbCategories.some((x: any) => x.slug === 'garbha-reshami-special')) return false;
+      if (slug === 'pure-silk-sarees' && dbCategories.some((x: any) => x.slug === 'pure-silk-maheshwari')) return false;
+      return true;
+    });
+
+    const knownMaheshwariSlugs = [
+      'garbha-reshami-special',
+      'nayantara-maheshwari-handloom-sarees',
+      'shaded-maheshwari-handloom-sarees',
+      'pure-silk-maheshwari',
+      'tissue-zari-maheshwari',
+      'resham-border-with-siver-zari',
+      'katan-silk',
+    ];
+
+    const children: any[] = [];
+    const others: any[] = [];
+
+    if (sareeCats.length > 0) {
+      sareeCats.forEach((c: any) => {
+        if (c.slug === 'maheshwari-sarees' || c.id === parentId) return; // Skip parent from children list
+
+        const defaultMatch = defaultSareeCategories.find(
+          (d) => d.slug === c.slug || d.name.toLowerCase() === (c.name || '').toLowerCase()
+        );
+        const item = {
+          ...c,
+          name: c.name,
+          slug: c.slug,
+          image: c.image || defaultMatch?.image || '/uploads/saree_1789059507283_4f5xe.jpeg',
+          tag: defaultMatch?.tag || 'Handloom Weave',
+        };
+
+        if (c.parentId === parentId || knownMaheshwariSlugs.includes(c.slug)) {
+          children.push(item);
+        } else {
+          others.push(item);
+        }
+      });
+    } else {
+      defaultSareeCategories.forEach((item) => {
+        if (['chanderi-sarees', 'premium-sarees', 'bagh-print'].includes(item.slug)) {
+          others.push(item);
+        } else {
+          children.push(item);
+        }
+      });
+    }
+
+    // Visual cards ONLY show sub-categories and other categories (Parent category excluded!)
+    const visualCards = [...children, ...others];
+
+    return {
+      maheshwariChildCategories: children,
+      otherSareeCategories: others,
+      sareeVisualCards: visualCards,
+    };
+  }, [dbCategories]);
+
+  // 2. Semi Maheshwari Sarees Category Processing (Dynamic only, no arbitrary filters)
+  const { semiSubCategories, semiVisualCards } = React.useMemo(() => {
+    const parent = dbCategories.find((c: any) =>
+      c.slug === 'semi-maheshwari-sarees' ||
+      c.slug === 'semi-maheshwari' ||
+      c.id === 'semi-maheshwari-sarees-id' ||
+      (c.name || '').toLowerCase().includes('semi maheshwari')
+    );
+    const parentId = parent?.id || 'semi-maheshwari-sarees-id';
+
+    const subs = dbCategories.filter((c: any) => {
+      if (c.isHidden) return false;
+      if (c.slug === 'semi-maheshwari-sarees' || c.slug === 'semi-maheshwari' || c.id === parentId) return false;
+      return (
+        c.parentId === parentId ||
+        (c.parentId && c.parentId.includes('semi')) ||
+        (c.slug && c.slug.includes('semi-maheshwari')) ||
+        (c.name && c.name.toLowerCase().includes('semi maheshwari'))
+      );
+    }).map((c: any) => ({
+      ...c,
+      name: c.name,
+      slug: c.slug,
+      image: c.image || '/uploads/semi_maheshwari_banner.jpg',
+      tag: c.tag || 'Semi Handloom Style',
+    }));
+
+    const visualCards = subs.length > 0
+      ? subs
+      : [
+          {
+            name: 'Semi Maheshwari Sarees',
+            slug: 'semi-maheshwari-sarees',
+            image: '/uploads/semi_maheshwari_banner.jpg',
+            tag: 'Machine-Crafted Collection',
+          },
+        ];
+
+    return {
+      semiSubCategories: subs,
+      semiVisualCards: visualCards,
+    };
+  }, [dbCategories]);
+
+  // 3. Suits & Unstitched Material Category Processing (Dynamic Mega Menu)
+  const { suitSubCategories, otherSuitCategories, suitVisualCards } = React.useMemo(() => {
+    const suitCats = dbCategories.filter((c: any) => {
+      const name = (c.name || '').toLowerCase();
+      const slug = (c.slug || '').toLowerCase();
+      if (c.isHidden) return false;
+      return slug.includes('suit') || name.includes('suit') || slug.includes('unstitched') || name.includes('unstitched');
+    });
+
+    const parent = suitCats.find((c: any) => c.slug === 'maheshwari-suits' || (c.isParent && c.slug.includes('suit')));
+    const parentId = parent?.id || '62c60ff6-1568-4753-8f73-652dd1efd355';
+
+    const subs: any[] = [];
+    const others: any[] = [];
+
+    const defaultSuits = [
+      {
+        name: 'Bagh Cotton Suits',
+        slug: 'bagh-cotton-suits',
+        image: '/uploads/saree_1789231637570_fnani.jpeg',
+        tag: 'Handblock Bagh Print',
+      },
+      {
+        name: 'Indigo Cotton Suit',
+        slug: 'indigo-cotton-suit',
+        image: '/uploads/saree_1789232225743_smxhb.jpeg',
+        tag: 'Natural Indigo Dye',
+      },
+    ];
+
+    if (suitCats.length > 0) {
+      suitCats.forEach((c: any) => {
+        if (c.slug === 'maheshwari-suits' || c.id === parentId) return;
+        const item = {
+          ...c,
+          name: c.name,
+          slug: c.slug,
+          image: c.image || '/uploads/saree_1789231637552_ggljq.jpeg',
+          tag: c.tag || 'Unstitched Suit Set',
+        };
+        if (c.parentId === parentId) {
+          subs.push(item);
+        } else {
+          others.push(item);
+        }
+      });
+    }
+
+    if (subs.length === 0 && others.length === 0) {
+      others.push(...defaultSuits);
+    }
+
+    const visualCards = [...subs, ...others];
+
+    return {
+      suitSubCategories: subs,
+      otherSuitCategories: others,
+      suitVisualCards: visualCards,
+    };
+  }, [dbCategories]);
+
+  // Top Featured Category Cards for Mobile Menu Carousel (Exact match for Screenshot 2)
+  const mobileVisualCategoryList = React.useMemo(() => {
+    const list: any[] = [];
+    maheshwariChildCategories.forEach((c: any) => list.push(c));
+    otherSareeCategories.forEach((c: any) => list.push(c));
+    semiVisualCards.forEach((c: any) => list.push(c));
+    suitVisualCards.forEach((c: any) => list.push(c));
+    list.push({
+      name: 'Handcrafted Dupattas',
+      slug: 'dupattas',
+      image: '/uploads/saree_1789231637559_1qq9u.jpeg',
+      tag: 'Silk & Zari Dupattas',
+    });
+
+    const seen = new Set<string>();
+    return list.filter((item) => {
+      if (!item.slug || seen.has(item.slug)) return false;
+      seen.add(item.slug);
+      return true;
+    });
+  }, [maheshwariChildCategories, otherSareeCategories, semiVisualCards, suitVisualCards]);
 
   // Active route detection logic using usePathname & useSearchParams
   const sortParam = searchParams ? searchParams.get('sort') : null;
@@ -86,7 +462,7 @@ const NavbarContent = () => {
   const isContactActive = pathname === '/contact';
   const isWholesaleActive = pathname === '/wholesale';
 
-  const linkBaseStyle = "py-1 transition-all flex items-center gap-1 font-bold text-xs uppercase tracking-wider";
+  const linkBaseStyle = "py-1.5 transition-all flex items-center gap-1 font-bold text-xs uppercase tracking-wider select-none cursor-pointer";
   const activeLinkStyle = "text-rose-800 font-extrabold border-b-2 border-rose-800 pb-0.5";
   const inactiveLinkStyle = "text-amber-950 hover:text-rose-700";
 
@@ -114,7 +490,7 @@ const NavbarContent = () => {
               <span>@reoti_handloom</span>
             </a>
 
-            {/* Auto Detected Delivery Location Pill (Without Permission Popup) */}
+            {/* Auto Detected Delivery Location Pill */}
             <div
               className="flex items-center gap-1 text-amber-300 font-bold shrink-0 bg-amber-900/40 px-2.5 py-0.5 rounded border border-amber-500/30 select-none"
               title="Delivery Location"
@@ -191,7 +567,7 @@ const NavbarContent = () => {
               <Search className="w-4 h-4 text-amber-800 absolute left-3.5 top-2.5" />
             </form>
 
-            {/* Right Labeled Action Icons (Matching Reoti Unique Style) */}
+            {/* Right Labeled Action Icons */}
             <div className="flex items-center gap-4 sm:gap-6">
               
               {/* Account / User Profile */}
@@ -336,8 +712,11 @@ const NavbarContent = () => {
           </div>
         </div>
 
-        {/* 3. Sub-Navigation Bar Row (Menu Links + Dropdowns + Wholesale Button) */}
-        <nav className="hidden lg:block bg-amber-50/50 border-t border-amber-200/60 font-sans">
+        {/* 3. Sub-Navigation Bar Row (Menu Links + Mega Menu + Dropdowns + Wholesale Button) */}
+        <nav 
+          ref={desktopNavRef}
+          className="hidden lg:block bg-amber-50/50 border-t border-amber-200/60 font-sans relative"
+        >
           <div className="max-w-7xl mx-auto px-4 flex items-center justify-between text-xs font-bold tracking-wider text-amber-950 uppercase">
             
             <div className="flex items-center space-x-7 py-2.5">
@@ -345,6 +724,7 @@ const NavbarContent = () => {
               {/* Home */}
               <Link
                 href="/"
+                onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isHomeActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
                 Home
@@ -353,6 +733,7 @@ const NavbarContent = () => {
               {/* New Arrivals */}
               <Link
                 href="/products?sort=newest"
+                onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isNewArrivalsActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
                 <span>New Arrivals</span>
@@ -361,117 +742,90 @@ const NavbarContent = () => {
                 </span>
               </Link>
 
-              {/* Sarees ▾ Dropdown */}
-              <div className="relative group">
-                <Link
-                  href="/products"
-                  className={`${linkBaseStyle} ${isSareesActive ? activeLinkStyle : inactiveLinkStyle}`}
+              {/* Sarees ▾ Mega-Menu Trigger (Click-Only) */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setActiveDesktopMenu(activeDesktopMenu === 'sarees' ? null : 'sarees')}
+                  className={`${linkBaseStyle} ${isSareesActive ? activeLinkStyle : inactiveLinkStyle} bg-transparent border-0 outline-none cursor-pointer`}
                 >
-                  <span>Sarees</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-amber-700 group-hover:rotate-180 transition-transform" />
-                </Link>
+                  <span>Maheshwari Sarees</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-amber-700 transition-transform duration-200 ${activeDesktopMenu === 'sarees' ? 'rotate-180 text-rose-800' : ''}`} />
+                </button>
+              </div>
 
-                {/* Dropdown Menu */}
-                <div className="absolute left-0 top-full pt-1 hidden group-hover:block w-64 z-50">
-                  <div className="bg-white border border-amber-200 rounded-xl shadow-xl p-3 text-xs space-y-1 font-semibold capitalize tracking-normal text-gray-800">
-                    <div className="px-3 py-1 font-bold text-[10px] uppercase tracking-wider text-amber-900 border-b border-amber-100">
-                      Maheshwari Weaves
-                    </div>
-                    <Link href="/products?category=silk-cotton-maheshwari" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Silk Cotton Maheshwari
-                    </Link>
-                    <Link href="/products?category=pure-silk-maheshwari" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Pure Silk Maheshwari
-                    </Link>
-                    <Link href="/products?category=tissue-zari-maheshwari" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Tissue Zari Shimmer
-                    </Link>
-                    <Link href="/products?category=garbha-reshami-special" className="block px-3 py-2 hover:bg-rose-50 text-rose-700 font-bold rounded-lg transition-colors flex items-center justify-between">
-                      <span>Garbha Reshami Special</span>
-                      <span>✨</span>
-                    </Link>
-                    <Link href="/products?category=nayantara-maheshwari-handloom-sarees" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Nayantara Handloom Sarees
-                    </Link>
-                    <Link href="/products?category=chanderi-sarees" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Chanderi Handloom Sarees
-                    </Link>
-                    <div className="border-t border-amber-100 pt-1">
-                      <Link href="/products" className="block px-3 py-1.5 text-amber-900 font-extrabold text-[11px] uppercase hover:underline">
-                        View All Sarees &rarr;
+              {/* Suits ▾ Mega-Menu Trigger (Click-Only) */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setActiveDesktopMenu(activeDesktopMenu === 'suits' ? null : 'suits')}
+                  className={`${linkBaseStyle} ${isSuitsActive ? activeLinkStyle : inactiveLinkStyle} bg-transparent border-0 outline-none cursor-pointer`}
+                >
+                  <span>Maheshwari Suits</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-amber-700 transition-transform duration-200 ${activeDesktopMenu === 'suits' ? 'rotate-180 text-rose-800' : ''}`} />
+                </button>
+              </div>
+
+              {/* Semi Maheshwari Sarees ▾ Mega-Menu Trigger (Click-Only) */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setActiveDesktopMenu(activeDesktopMenu === 'semi' ? null : 'semi')}
+                  className={`${linkBaseStyle} ${isSemiMaheshwariActive ? activeLinkStyle : inactiveLinkStyle} bg-transparent border-0 outline-none cursor-pointer`}
+                >
+                  <span>Semi Maheshwari Sarees</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-amber-700 transition-transform duration-200 ${activeDesktopMenu === 'semi' ? 'rotate-180 text-rose-800' : ''}`} />
+                </button>
+              </div>
+
+              {/* Other Collection ▾ Dropdown Trigger (Click-Only) */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setActiveDesktopMenu(activeDesktopMenu === 'other' ? null : 'other')}
+                  className={`${linkBaseStyle} ${isOtherActive ? activeLinkStyle : inactiveLinkStyle} bg-transparent border-0 outline-none cursor-pointer`}
+                >
+                  <span>Other Collection</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-amber-700 transition-transform duration-200 ${activeDesktopMenu === 'other' ? 'rotate-180 text-rose-800' : ''}`} />
+                </button>
+
+                {/* Other Collection Dropdown */}
+                {activeDesktopMenu === 'other' && (
+                  <div className="absolute left-0 top-full pt-1.5 w-60 z-50 animate-in fade-in-50 slide-in-from-top-1 duration-150">
+                    <div className="bg-white border border-amber-200 rounded-xl shadow-2xl p-3 text-xs space-y-1 font-semibold capitalize tracking-normal text-gray-800">
+                      <div className="px-3 py-1 font-bold text-[10px] uppercase tracking-wider text-amber-900 border-b border-amber-100">
+                        Artisanal Showcase
+                      </div>
+                      <Link 
+                        href="/products?category=dupattas" 
+                        onClick={() => setActiveDesktopMenu(null)}
+                        className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors"
+                      >
+                        Handcrafted Dupattas
+                      </Link>
+                      <Link 
+                        href="/products?category=bagh-print" 
+                        onClick={() => setActiveDesktopMenu(null)}
+                        className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors"
+                      >
+                        Bagh Print Artisanal Range
+                      </Link>
+                      <Link 
+                        href="/products?category=premium-sarees" 
+                        onClick={() => setActiveDesktopMenu(null)}
+                        className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors"
+                      >
+                        Royal Bridal & Festive Collection
                       </Link>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Suits ▾ Dropdown */}
-              <div className="relative group">
-                <Link
-                  href="/products?category=maheshwari-suits"
-                  className={`${linkBaseStyle} ${isSuitsActive ? activeLinkStyle : inactiveLinkStyle}`}
-                >
-                  <span>Suits</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-amber-700 group-hover:rotate-180 transition-transform" />
-                </Link>
-
-                <div className="absolute left-0 top-full pt-1 hidden group-hover:block w-60 z-50">
-                  <div className="bg-white border border-amber-200 rounded-xl shadow-xl p-3 text-xs space-y-1 font-semibold capitalize tracking-normal text-gray-800">
-                    <div className="px-3 py-1 font-bold text-[10px] uppercase tracking-wider text-amber-900 border-b border-amber-100">
-                      Unstitched & Dress Sets
-                    </div>
-                    <Link href="/products?category=maheshwari-suits" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Maheshwari Suit Sets
-                    </Link>
-                    <Link href="/products?category=bagh-cotton-suits" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Bagh Cotton Suits
-                    </Link>
-                    <Link href="/products?category=indigo-cotton-suit" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Indigo Cotton Suit Sets
-                    </Link>
-                    <Link href="/products?category=bagh-print" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Handblock Printed Suits
-                    </Link>
-                  </div>
-                </div>
-              </div>
-
-              {/* Semi Maheshwari Sarees */}
-              <Link
-                href="/products?category=semi-maheshwari-sarees"
-                className={`${linkBaseStyle} ${isSemiMaheshwariActive ? activeLinkStyle : inactiveLinkStyle}`}
-              >
-                <span>Semi Maheshwari Sarees</span>
-              </Link>
-
-              {/* Other Collection ▾ Dropdown */}
-              <div className="relative group">
-                <Link
-                  href="/products?category=dupattas"
-                  className={`${linkBaseStyle} ${isOtherActive ? activeLinkStyle : inactiveLinkStyle}`}
-                >
-                  <span>Other Collection</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-amber-700 group-hover:rotate-180 transition-transform" />
-                </Link>
-
-                <div className="absolute left-0 top-full pt-1 hidden group-hover:block w-56 z-50">
-                  <div className="bg-white border border-amber-200 rounded-xl shadow-xl p-3 text-xs space-y-1 font-semibold capitalize tracking-normal text-gray-800">
-                    <Link href="/products?category=dupattas" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Handcrafted Dupattas
-                    </Link>
-                    <Link href="/products?category=bagh-print" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Bagh Print Artisanal Range
-                    </Link>
-                    <Link href="/products?category=premium-sarees" className="block px-3 py-2 hover:bg-amber-50 hover:text-rose-700 rounded-lg transition-colors">
-                      Royal Bridal & Festive Collection
-                    </Link>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* About Us */}
               <Link
                 href="/about"
+                onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isAboutActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
                 About Us
@@ -480,6 +834,7 @@ const NavbarContent = () => {
               {/* Contact */}
               <Link
                 href="/contact"
+                onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isContactActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
                 Contact
@@ -489,6 +844,7 @@ const NavbarContent = () => {
             {/* Wholesale Highlighted Pill Button */}
             <Link
               href="/wholesale"
+              onClick={() => setActiveDesktopMenu(null)}
               className={`font-extrabold text-[11px] px-4 py-1.5 rounded-full shadow-xs hover:shadow-md transition-all flex items-center gap-1.5 my-1 ${
                 isWholesaleActive
                   ? 'bg-rose-950 text-amber-200 ring-2 ring-amber-400'
@@ -500,12 +856,390 @@ const NavbarContent = () => {
             </Link>
 
           </div>
+
+          {/* 🌟 1. FULL-WIDTH PURE HANDLOOM SAREES MEGA MENU */}
+          {activeDesktopMenu === 'sarees' && (
+            <div 
+              className="absolute top-full left-0 right-0 w-full bg-white/98 backdrop-blur-md border-t-2 border-b-2 border-amber-200/90 shadow-2xl z-50 animate-in fade-in-50 slide-in-from-top-1 duration-200 max-h-[calc(100vh-130px)] overflow-y-auto overscroll-contain custom-scrollbar"
+            >
+              <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                <div className="flex items-start gap-6 lg:gap-8">
+                  
+                  {/* Left Column: Categorized Text Links with Hierarchy */}
+                  <div className="w-64 lg:w-72 shrink-0 border-r border-amber-100 pr-4 space-y-3 text-xs font-sans max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar select-none">
+                    
+                    {/* All Handloom Sarees Link */}
+                    <Link
+                      href="/products"
+                      onClick={() => setActiveDesktopMenu(null)}
+                      className="flex items-center justify-between py-1.5 px-2.5 rounded-md font-black text-xs uppercase tracking-wider text-rose-900 bg-amber-50/90 hover:bg-amber-100/90 border border-amber-200/80 transition-all shadow-2xs"
+                    >
+                      <span>✨ ALL HANDLOOM SAREES</span>
+                      <span className="text-amber-800">&rarr;</span>
+                    </Link>
+
+                    {/* Maheshwari Sarees Group */}
+                    <div>
+                      <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100/60 rounded flex items-center gap-1.5 mb-1 border border-amber-200/50">
+                        <span>📁</span>
+                        <span>MAHESHWARI SAREES</span>
+                      </div>
+                      <div className="pl-2 space-y-0.5 border-l-2 border-amber-200 ml-2">
+                        <Link
+                          href="/products?category=maheshwari-sarees"
+                          onClick={() => setActiveDesktopMenu(null)}
+                          className="block py-1 px-2 rounded text-gray-900 hover:text-rose-800 hover:bg-amber-50 font-bold transition-all text-xs"
+                        >
+                          All Maheshwari Sarees
+                        </Link>
+                        {maheshwariChildCategories.map((child: any) => (
+                          <Link
+                            key={child.slug || child.name}
+                            href={`/products?category=${child.slug}`}
+                            onClick={() => setActiveDesktopMenu(null)}
+                            className="block py-0.5 px-2 rounded text-gray-700 hover:text-rose-800 hover:bg-amber-50 hover:font-bold transition-all text-xs flex items-center gap-1.5"
+                          >
+                            <span className="text-amber-600 font-bold">↳</span>
+                            <span className="truncate">{child.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Other Handloom Categories */}
+                    {otherSareeCategories.length > 0 && (
+                      <div>
+                        <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100/60 rounded flex items-center gap-1.5 mb-1 border border-amber-200/50">
+                          <span>📁</span>
+                          <span>OTHER HANDLOOM SAREES</span>
+                        </div>
+                        <div className="pl-2 space-y-0.5 border-l-2 border-amber-200 ml-2">
+                          {otherSareeCategories.map((other: any) => (
+                            <Link
+                              key={other.slug || other.name}
+                              href={`/products?category=${other.slug}`}
+                              onClick={() => setActiveDesktopMenu(null)}
+                              className="block py-1 px-2 rounded text-gray-700 hover:text-rose-800 hover:bg-amber-50 hover:font-bold transition-all text-xs"
+                            >
+                              {other.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Right Main Section: Reoti Handloom Saree Visual Photo Cards Grid (Subcategories ONLY - No parent card) */}
+                  <div className="flex-1 max-h-[calc(100vh-180px)] overflow-y-auto pr-1 pb-4 custom-scrollbar">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 lg:gap-2.5">
+                      {sareeVisualCards.map((card: any) => (
+                        <Link
+                          key={card.slug || card.id || card.name}
+                          href={`/products?category=${card.slug}`}
+                          onClick={() => setActiveDesktopMenu(null)}
+                          className="group/card relative rounded-lg overflow-hidden aspect-[3/4] bg-neutral-900 border border-amber-200/80 shadow-2xs hover:shadow-lg transition-all duration-300 hover:scale-[1.03] block select-none"
+                        >
+                          <img
+                            src={card.image || '/uploads/saree_1789059507283_4f5xe.jpeg'}
+                            alt={card.name}
+                            className="w-full h-full object-cover object-center group-hover/card:scale-110 transition-transform duration-500 opacity-95 group-hover/card:opacity-100"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-1.5 sm:p-2 text-center">
+                            <span className="text-white font-serif font-bold text-[10px] sm:text-[11px] leading-tight drop-shadow-md group-hover/card:text-amber-300 transition-colors line-clamp-2">
+                              {card.name}
+                            </span>
+                            <span className="text-[8px] sm:text-[8.5px] text-amber-200/90 font-sans tracking-tight mt-0.5 uppercase block truncate">
+                              {card.tag || 'Handloom Collection'}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 🌟 2. FULL-WIDTH SUITS & UNSTITCHED MATERIAL MEGA MENU */}
+          {activeDesktopMenu === 'suits' && (
+            <div 
+              className="absolute top-full left-0 right-0 w-full bg-white/98 backdrop-blur-md border-t-2 border-b-2 border-amber-200/90 shadow-2xl z-50 animate-in fade-in-50 slide-in-from-top-1 duration-200 max-h-[calc(100vh-130px)] overflow-y-auto overscroll-contain custom-scrollbar"
+              onMouseEnter={() => setActiveDesktopMenu('suits')}
+            >
+              <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                
+                {/* Header Strip */}
+                <div className="mb-4 bg-gradient-to-r from-amber-100 via-rose-50 to-amber-100 border border-amber-300/60 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs font-bold text-amber-950 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-gradient-to-r from-amber-900 to-rose-900 text-amber-100 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-xs">
+                      ✨ MAHESHWARI SUITS & DRESS MATERIALS
+                    </span>
+                    <span className="hidden md:inline text-amber-900 font-medium text-xs">
+                      Authentic Handcrafted Unstitched Suit Sets with Pure Handloom Dupattas
+                    </span>
+                  </div>
+                  <Link
+                    href="/products?category=maheshwari-suits"
+                    onClick={() => setActiveDesktopMenu(null)}
+                    className="text-rose-800 font-black text-xs uppercase hover:underline flex items-center gap-1 shrink-0"
+                  >
+                    <span>View All Suits &rarr;</span>
+                  </Link>
+                </div>
+
+                <div className="flex items-start gap-6 lg:gap-8">
+                  
+                  {/* Left Column: Suit Categories Hierarchy */}
+                  <div className="w-64 lg:w-72 shrink-0 border-r border-amber-100 pr-4 space-y-3 text-xs font-sans max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar select-none">
+                    
+                    <Link
+                      href="/products?category=maheshwari-suits"
+                      onClick={() => setActiveDesktopMenu(null)}
+                      className="flex items-center justify-between py-1.5 px-2.5 rounded-md font-black text-xs uppercase tracking-wider text-rose-900 bg-amber-50/90 hover:bg-amber-100/90 border border-amber-200/80 transition-all shadow-2xs"
+                    >
+                      <span>✨ ALL SUITS & DRESS SETS</span>
+                      <span className="text-amber-800">&rarr;</span>
+                    </Link>
+
+                    {/* Maheshwari Suits Group */}
+                    <div>
+                      <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100/60 rounded flex items-center gap-1.5 mb-1 border border-amber-200/50">
+                        <span>📁</span>
+                        <span>MAHESHWARI SUITS</span>
+                      </div>
+                      <div className="pl-2 space-y-0.5 border-l-2 border-amber-200 ml-2">
+                        <Link
+                          href="/products?category=maheshwari-suits"
+                          onClick={() => setActiveDesktopMenu(null)}
+                          className="block py-1 px-2 rounded text-gray-900 hover:text-rose-800 hover:bg-amber-50 font-bold transition-all text-xs"
+                        >
+                          All Maheshwari Suits
+                        </Link>
+                        {suitSubCategories.map((sub: any) => (
+                          <Link
+                            key={sub.slug || sub.name}
+                            href={`/products?category=${sub.slug}`}
+                            onClick={() => setActiveDesktopMenu(null)}
+                            className="block py-0.5 px-2 rounded text-gray-700 hover:text-rose-800 hover:bg-amber-50 hover:font-bold transition-all text-xs flex items-center gap-1.5"
+                          >
+                            <span className="text-amber-600 font-bold">↳</span>
+                            <span className="truncate">{sub.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Other Suit Collections */}
+                    {otherSuitCategories.length > 0 && (
+                      <div>
+                        <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100/60 rounded flex items-center gap-1.5 mb-1 border border-amber-200/50">
+                          <span>📁</span>
+                          <span>OTHER SUIT COLLECTIONS</span>
+                        </div>
+                        <div className="pl-2 space-y-0.5 border-l-2 border-amber-200 ml-2">
+                          {otherSuitCategories.map((other: any) => (
+                            <Link
+                              key={other.slug || other.name}
+                              href={`/products?category=${other.slug}`}
+                              onClick={() => setActiveDesktopMenu(null)}
+                              className="block py-1 px-2 rounded text-gray-700 hover:text-rose-800 hover:bg-amber-50 hover:font-bold transition-all text-xs"
+                            >
+                              {other.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Right Main Section: Suit Visual Photo Cards Grid */}
+                  <div className="flex-1 max-h-[calc(100vh-180px)] overflow-y-auto pr-1 pb-4 custom-scrollbar">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 lg:gap-3">
+                      {suitVisualCards.map((card: any) => (
+                        <Link
+                          key={card.slug || card.name}
+                          href={`/products?category=${card.slug}`}
+                          onClick={() => setActiveDesktopMenu(null)}
+                          className="group/card relative rounded-lg overflow-hidden aspect-[3/4] bg-neutral-900 border border-amber-200/80 shadow-2xs hover:shadow-lg transition-all duration-300 hover:scale-[1.03] block select-none"
+                        >
+                          <img
+                            src={card.image || '/uploads/saree_1789231637552_ggljq.jpeg'}
+                            alt={card.name}
+                            className="w-full h-full object-cover object-center group-hover/card:scale-110 transition-transform duration-500 opacity-95 group-hover/card:opacity-100"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-2 text-center">
+                            <span className="text-white font-serif font-bold text-[11px] sm:text-[12px] leading-tight drop-shadow-md group-hover/card:text-amber-300 transition-colors line-clamp-2">
+                              {card.name}
+                            </span>
+                            <span className="text-[8.5px] sm:text-[9px] text-amber-200/90 font-sans tracking-tight mt-0.5 uppercase block truncate">
+                              {card.tag || 'Unstitched Suit Material'}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 🌟 3. FULL-WIDTH DEDICATED SEMI MAHESHWARI MEGA MENU */}
+          {activeDesktopMenu === 'semi' && (
+            <div 
+              className="absolute top-full left-0 right-0 w-full bg-white/98 backdrop-blur-md border-t-2 border-b-2 border-rose-300/90 shadow-2xl z-50 animate-in fade-in-50 slide-in-from-top-1 duration-200 max-h-[calc(100vh-130px)] overflow-y-auto overscroll-contain custom-scrollbar"
+            >
+              <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+                
+                {/* Special Highlight Header Strip */}
+                <div className="mb-4 bg-gradient-to-r from-amber-100 via-rose-50 to-amber-100 border border-amber-300/60 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs font-bold text-amber-950 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-gradient-to-r from-rose-800 to-amber-900 text-amber-100 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider shadow-xs">
+                      ✨ SEMI MAHESHWARI COLLECTION
+                    </span>
+                    <span className="hidden md:inline text-amber-900 font-medium text-xs">
+                      Machine-crafted sarees inspired by traditional Maheshwari handloom artistry • Lightweight & Budget-Friendly
+                    </span>
+                  </div>
+                  <Link
+                    href="/products?category=semi-maheshwari-sarees"
+                    onClick={() => setActiveDesktopMenu(null)}
+                    className="text-rose-800 font-black text-xs uppercase hover:underline flex items-center gap-1 shrink-0"
+                  >
+                    <span>View All Semi &rarr;</span>
+                  </Link>
+                </div>
+
+                <div className="flex items-start gap-6 lg:gap-8">
+                  
+                  {/* Left Column: Dynamic Semi Maheshwari Subcategory Links */}
+                  <div className="w-64 lg:w-72 shrink-0 border-r border-amber-100 pr-4 space-y-3 text-xs font-sans max-h-[calc(100vh-180px)] overflow-y-auto custom-scrollbar select-none">
+                    <Link
+                      href="/products?category=semi-maheshwari-sarees"
+                      onClick={() => setActiveDesktopMenu(null)}
+                      className="flex items-center justify-between py-1.5 px-2.5 rounded-md font-black text-xs uppercase tracking-wider text-rose-900 bg-amber-50/90 hover:bg-amber-100/90 border border-amber-200/80 transition-all shadow-2xs"
+                    >
+                      <span>✨ ALL SEMI MAHESHWARI</span>
+                      <span className="text-amber-800">&rarr;</span>
+                    </Link>
+
+                    <div>
+                      <div className="px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-950 bg-amber-100/60 rounded flex items-center gap-1.5 mb-1 border border-amber-200/50">
+                        <span>📁</span>
+                        <span>SEMI MAHESHWARI SAREES</span>
+                      </div>
+                      <div className="pl-2 space-y-0.5 border-l-2 border-rose-300 ml-2">
+                        <Link
+                          href="/products?category=semi-maheshwari-sarees"
+                          onClick={() => setActiveDesktopMenu(null)}
+                          className="block py-1 px-2 rounded text-gray-900 hover:text-rose-800 hover:bg-amber-50 font-bold transition-all text-xs"
+                        >
+                          All Semi Maheshwari Sarees
+                        </Link>
+                        {semiSubCategories.map((sub: any) => (
+                          <Link
+                            key={sub.slug || sub.name}
+                            href={`/products?category=${sub.slug}`}
+                            onClick={() => setActiveDesktopMenu(null)}
+                            className="block py-0.5 px-2 rounded text-gray-700 hover:text-rose-800 hover:bg-amber-50 hover:font-bold transition-all text-xs flex items-center gap-1.5"
+                          >
+                            <span className="text-rose-600 font-bold">↳</span>
+                            <span className="truncate">{sub.name}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Main Section: Dynamic Semi Maheshwari Visual Cards Grid */}
+                  <div className="flex-1 max-h-[calc(100vh-180px)] overflow-y-auto pr-1 pb-4 custom-scrollbar">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 lg:gap-3">
+                      {semiVisualCards.map((card: any) => (
+                        <Link
+                          key={card.slug || card.name}
+                          href={`/products?category=${card.slug}`}
+                          onClick={() => setActiveDesktopMenu(null)}
+                          className="group/card relative rounded-lg overflow-hidden aspect-[3/4] bg-neutral-900 border border-amber-300/80 shadow-2xs hover:shadow-lg transition-all duration-300 hover:scale-[1.03] block select-none"
+                        >
+                          <img
+                            src={card.image || '/uploads/semi_maheshwari_banner.jpg'}
+                            alt={card.name}
+                            className="w-full h-full object-cover object-center group-hover/card:scale-110 transition-transform duration-500 opacity-95 group-hover/card:opacity-100"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-2 text-center">
+                            <span className="text-white font-serif font-bold text-[11px] sm:text-[12px] leading-tight drop-shadow-md group-hover/card:text-amber-300 transition-colors line-clamp-2">
+                              {card.name}
+                            </span>
+                            <span className="text-[8.5px] sm:text-[9px] text-amber-200/90 font-sans tracking-wide mt-0.5 uppercase block truncate font-semibold">
+                              {card.tag || 'Semi Handloom Collection'}
+                            </span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* 4. Mobile Menu Drawer */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-amber-200 px-5 py-5 space-y-4 font-bold text-xs uppercase tracking-wider text-amber-950 animate-in slide-in-from-top-2 duration-200">
+          <div className="lg:hidden bg-white border-b border-amber-200 px-4 sm:px-5 py-4 space-y-3 font-bold text-xs uppercase tracking-wider text-amber-950 animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
             
+            {/* Mobile Visual Categories Carousel */}
+            {mobileVisualCategoryList.length > 0 && (
+              <div className="pb-3 border-b border-amber-100">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-amber-900/80">
+                    Explore Collections
+                  </span>
+                  <Link
+                    href="/products"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-[10px] text-rose-700 font-bold hover:underline lowercase"
+                  >
+                    view all &rarr;
+                  </Link>
+                </div>
+                <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none snap-x -mx-1 px-1">
+                  {mobileVisualCategoryList.map((card: any) => (
+                    <Link
+                      key={card.slug || card.name}
+                      href={`/products?category=${card.slug}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="group/mcard flex-shrink-0 w-24 sm:w-28 relative rounded-xl overflow-hidden aspect-[3/4] bg-neutral-900 border border-amber-300/70 shadow-sm snap-start select-none active:scale-95 transition-all"
+                    >
+                      <img
+                        src={card.image || '/uploads/saree_1789231637552_ggljq.jpeg'}
+                        alt={card.name}
+                        className="w-full h-full object-cover object-center group-hover/mcard:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-1.5 text-center">
+                        <span className="text-white font-serif font-bold text-[10px] sm:text-[11px] leading-tight drop-shadow-md group-hover/mcard:text-amber-300 line-clamp-2">
+                          {card.name}
+                        </span>
+                        <span className="text-[7.5px] sm:text-[8px] text-amber-200 font-sans tracking-tight uppercase truncate mt-0.5 font-semibold">
+                          {card.tag || 'Handcrafted'}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Link
               href="/"
               onClick={() => setIsMobileMenuOpen(false)}
@@ -524,7 +1258,7 @@ const NavbarContent = () => {
               }`}
             >
               <span>New Arrivals</span>
-              <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded-full">NEW</span>
+              <span className="bg-rose-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">NEW</span>
             </Link>
 
             {/* Mobile Sarees Accordion */}
@@ -535,26 +1269,41 @@ const NavbarContent = () => {
                   isSareesActive ? 'text-rose-700 font-extrabold' : 'text-gray-900'
                 }`}
               >
-                <span>Sarees</span>
+                <span>Maheshwari Sarees</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${activeMobileDropdown === 'sarees' ? 'rotate-180' : ''}`} />
               </button>
               {activeMobileDropdown === 'sarees' && (
                 <div className="pl-4 pt-1 space-y-2 text-xs font-semibold capitalize text-gray-600 tracking-normal border-l-2 border-amber-300 ml-1">
-                  <Link href="/products?category=silk-cotton-maheshwari" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Silk Cotton Maheshwari
+                  <Link href="/products" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-rose-800 font-black uppercase">
+                    ALL HANDLOOM SAREES &rarr;
                   </Link>
-                  <Link href="/products?category=pure-silk-maheshwari" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Pure Silk Maheshwari
+                  <Link href="/products?category=maheshwari-sarees" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-gray-900 font-bold">
+                    📁 Maheshwari Sarees (All)
                   </Link>
-                  <Link href="/products?category=tissue-zari-maheshwari" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Tissue Zari Shimmer
-                  </Link>
-                  <Link href="/products?category=garbha-reshami-special" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-rose-700 font-extrabold">
-                    Garbha Reshami Special ✨
-                  </Link>
-                  <Link href="/products?category=nayantara-maheshwari-handloom-sarees" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Nayantara Handloom Sarees
-                  </Link>
+                  {maheshwariChildCategories.map((child: any) => (
+                    <Link
+                      key={child.slug || child.name}
+                      href={`/products?category=${child.slug}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block py-1 pl-2 text-gray-600 hover:text-rose-700"
+                    >
+                      ↳ {child.name}
+                    </Link>
+                  ))}
+                  {otherSareeCategories.length > 0 && (
+                    <div className="pt-1 border-t border-gray-100">
+                      {otherSareeCategories.map((other: any) => (
+                        <Link
+                          key={other.slug || other.name}
+                          href={`/products?category=${other.slug}`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block py-1 font-bold text-gray-900 hover:text-rose-700"
+                        >
+                          📁 {other.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -567,59 +1316,88 @@ const NavbarContent = () => {
                   isSuitsActive ? 'text-rose-700 font-extrabold' : 'text-gray-900'
                 }`}
               >
-                <span>Suits</span>
+                <span>Maheshwari Suits</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${activeMobileDropdown === 'suits' ? 'rotate-180' : ''}`} />
               </button>
               {activeMobileDropdown === 'suits' && (
                 <div className="pl-4 pt-1 space-y-2 text-xs font-semibold capitalize text-gray-600 tracking-normal border-l-2 border-amber-300 ml-1">
-                  <Link href="/products?category=maheshwari-suits" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Maheshwari Suit Sets
+                  <Link href="/products?category=maheshwari-suits" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-rose-800 font-black uppercase">
+                    ALL SUITS &rarr;
                   </Link>
-                  <Link href="/products?category=bagh-cotton-suits" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Bagh Cotton Suits
+                  <Link href="/products?category=maheshwari-suits" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-gray-900 font-bold">
+                    📁 Maheshwari Suits (All)
                   </Link>
-                  <Link href="/products?category=indigo-cotton-suit" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Indigo Cotton Suit Sets
-                  </Link>
+                  {suitSubCategories.map((sub: any) => (
+                    <Link
+                      key={sub.slug || sub.name}
+                      href={`/products?category=${sub.slug}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block py-1 pl-2 text-gray-600 hover:text-rose-700"
+                    >
+                      ↳ {sub.name}
+                    </Link>
+                  ))}
+                  {otherSuitCategories.length > 0 && (
+                    <div className="pt-1 border-t border-gray-100">
+                      {otherSuitCategories.map((other: any) => (
+                        <Link
+                          key={other.slug || other.name}
+                          href={`/products?category=${other.slug}`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="block py-1 font-bold text-gray-900 hover:text-rose-700"
+                        >
+                          📁 {other.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
 
-              {/* Mobile Semi Maheshwari Sarees */}
-              <div className="border-b border-gray-100 pb-2">
-                <Link
-                  href="/products?category=semi-maheshwari-sarees"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block py-2 font-bold text-xs uppercase tracking-wider ${
-                    isSemiMaheshwariActive ? 'text-rose-700 font-extrabold' : 'text-gray-900 hover:text-rose-700'
-                  }`}
-                >
-                  Semi Maheshwari Sarees
-                </Link>
-              </div>
-
-            {/* Mobile Other Collection Accordion */}
+            {/* Mobile Semi Maheshwari Sarees Accordion */}
             <div className="border-b border-gray-100 pb-2">
               <button
-                onClick={() => toggleMobileDropdown('other')}
+                onClick={() => toggleMobileDropdown('semi')}
                 className={`w-full flex items-center justify-between py-2 ${
-                  isOtherActive ? 'text-rose-700 font-extrabold' : 'text-gray-900'
+                  isSemiMaheshwariActive ? 'text-rose-700 font-extrabold' : 'text-gray-900'
                 }`}
               >
-                <span>Other Collection</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${activeMobileDropdown === 'other' ? 'rotate-180' : ''}`} />
+                <span>Semi Maheshwari Sarees</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${activeMobileDropdown === 'semi' ? 'rotate-180' : ''}`} />
               </button>
-              {activeMobileDropdown === 'other' && (
-                <div className="pl-4 pt-1 space-y-2 text-xs font-semibold capitalize text-gray-600 tracking-normal border-l-2 border-amber-300 ml-1">
-                  <Link href="/products?category=dupattas" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Handcrafted Dupattas
+              {activeMobileDropdown === 'semi' && (
+                <div className="pl-4 pt-1 space-y-2 text-xs font-semibold capitalize text-gray-600 tracking-normal border-l-2 border-rose-400 ml-1">
+                  <Link href="/products?category=semi-maheshwari-sarees" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-rose-800 font-black uppercase">
+                    ALL SEMI MAHESHWARI &rarr;
                   </Link>
-                  <Link href="/products?category=bagh-print" onClick={() => setIsMobileMenuOpen(false)} className="block py-1">
-                    Bagh Print Collection
+                  <Link href="/products?category=semi-maheshwari-sarees" onClick={() => setIsMobileMenuOpen(false)} className="block py-1 text-gray-900 font-bold">
+                    📁 Semi Maheshwari Sarees (All)
                   </Link>
+                  {semiSubCategories.map((sub: any) => (
+                    <Link
+                      key={sub.slug || sub.name}
+                      href={`/products?category=${sub.slug}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block py-1 pl-2 text-gray-600 hover:text-rose-700"
+                    >
+                      ↳ {sub.name}
+                    </Link>
+                  ))}
                 </div>
               )}
             </div>
+
+            {/* Mobile Handcrafted Dupattas Direct Link */}
+            <Link
+              href="/products?category=dupattas"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`block py-2 border-b border-gray-100 ${
+                categoryParam === 'dupattas' ? 'text-rose-700 font-extrabold' : 'text-gray-900 hover:text-rose-700'
+              }`}
+            >
+              Handcrafted Dupattas
+            </Link>
 
             <Link
               href="/about"
@@ -655,7 +1433,7 @@ const NavbarContent = () => {
             <Link
               href="/wholesale"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="w-full py-3 bg-gradient-to-r from-amber-900 to-rose-900 text-amber-100 rounded-xl font-extrabold text-center flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-amber-900 to-rose-900 text-amber-100 rounded-xl font-extrabold text-center flex items-center justify-center gap-2 shadow-md active:scale-98 transition-transform"
             >
               <Tag className="w-4 h-4 text-amber-300" />
               <span>Wholesale / Bulk Orders</span>

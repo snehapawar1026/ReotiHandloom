@@ -79,6 +79,19 @@
       "bannerImage": null
     },
     {
+      "id": "c194e823-1123-4567-89ab-cdef01234567",
+      "name": "Shaded Maheshwari Handloom Sarees",
+      "slug": "shaded-maheshwari-handloom-sarees",
+      "description": "Exquisite Shaded Maheshwari Sarees featuring dual tones & connecting butis.",
+      "image": "/uploads/saree_1789215518469_xe8m4.jpeg",
+      "parentId": "bced91f5-ab57-419f-8b41-eaa88a28df85",
+      "isParent": false,
+      "isHidden": false,
+      "createdAt": "2026-09-12T17:15:34.477+00:00",
+      "updatedAt": "2026-09-12T18:22:11.555+00:00",
+      "bannerImage": null
+    },
+    {
       "id": "bced91f5-ab57-419f-8b41-eaa88a28df85",
       "name": "Maheshwari Sarees",
       "slug": "maheshwari-sarees",

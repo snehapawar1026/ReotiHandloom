@@ -55,12 +55,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Reoti Handloom Authentic Heritage Watermark Badge */}
-        <div className="absolute bottom-2 right-2 bg-white/95 backdrop-blur-xs text-[#581C1C] px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider uppercase border border-amber-300/80 pointer-events-none flex items-center gap-1 shadow-2xs z-10">
+        {/* Reoti Handloom Authentic Heritage Watermark Badge (Bottom-Left) */}
+        <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-xs text-[#581C1C] px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider uppercase border border-amber-300/80 pointer-events-none flex items-center gap-1 shadow-2xs z-10">
           <div className="w-2.5 h-2.5 rounded-full overflow-hidden border border-amber-600 shrink-0">
             <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-serif font-extrabold text-[8px] text-[#581C1C]">REOTI HANDLOOM</span>
+          <span className="text-[7px] text-amber-700 font-normal lowercase">• authentic</span>
         </div>
 
         {/* Top-Right Action Icon: Wishlist Heart */}
