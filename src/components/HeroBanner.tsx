@@ -16,18 +16,26 @@ interface BannerItem {
 const DEFAULT_BANNERS: BannerItem[] = [
   {
     id: 'b1',
-    title: 'Maharani Ahilyabai Holkar Royal Maheshwar Weaves',
-    subtitle: 'Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 5th generation weaver craftsmanship.',
-    image: '/uploads/maheshwari_legacy_banner.png',
-    tag: 'ROYAL MAHESHWAR HERITAGE',
+    title: 'Get Ready For Upcoming Festivals with Royal Maheshwari Weaves',
+    subtitle: 'Celebrate Navratri, Karwa Chauth, Dussehra & Diwali in authentic silk-cotton handloom sarees crafted at Maheshwar Fort looms.',
+    image: '/uploads/festival_banner_stairs.jpg',
+    tag: '✨ UPCOMING FESTIVE COLLECTION 2026',
     link: '/products',
   },
   {
     id: 'b2',
-    title: 'Authentic Maheshwari Handloom Sarees & Suits',
-    subtitle: '100% Certified Craftmark & Handloom Mark Quality Guarantee directly from Maheshwar weavers.',
-    image: '/studio/studio_1.jpg',
-    tag: 'DIRECT LOOM PRICE',
+    title: 'Authentic Handcrafted Sarees for Every Joyous Celebration',
+    subtitle: 'Lightweight drapes with gleaming reversible zari borders, woven with pure devotion by traditional master artisans.',
+    image: '/uploads/festival_banner_friends.jpg',
+    tag: '🌸 FESTIVE CELEBRATIONS • DIRECT FROM WEAVERS',
+    link: '/products?category=silk-cotton-maheshwari',
+  },
+  {
+    id: 'b3',
+    title: 'Maharani Ahilyabai Holkar Royal Maheshwar Weaves',
+    subtitle: 'Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 5th generation weaver craftsmanship.',
+    image: '/uploads/maheshwari_legacy_banner.png',
+    tag: 'ROYAL MAHESHWAR HERITAGE',
     link: '/products',
   },
 ];
@@ -41,7 +49,12 @@ export const HeroBanner = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
-          setBanners(data.banners);
+          const cleaned = data.banners.filter((b: any) => !b.image?.includes('unsplash.com'));
+          if (cleaned.length > 0) {
+            setBanners(cleaned);
+          } else {
+            setBanners(DEFAULT_BANNERS);
+          }
         }
       })
       .catch(console.error);

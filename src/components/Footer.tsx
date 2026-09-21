@@ -133,7 +133,7 @@ export const Footer = () => {
             CUSTOMER ASSISTANCE
           </h4>
           <ul className="space-y-2.5 text-amber-200/80 font-medium">
-            <li><Link href="/products" className="hover:text-amber-400">Track Order Status</Link></li>
+            <li><Link href="/orders" className="hover:text-amber-400">My Orders & Tracking</Link></li>
             <li><Link href="/wishlist" className="hover:text-amber-400">My Wishlist</Link></li>
             <li><span className="hover:text-amber-400">Handloom Care Instructions</span></li>
             <li><Link href="/policies/shipping-policy" className="hover:text-amber-400">Shipping & Delivery Policy</Link></li>

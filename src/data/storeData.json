@@ -979,26 +979,37 @@
   ],
   "banners": [
     {
-      "id": "c2e7af2c-fcad-4545-9354-df7d35c64ba7",
-      "title": "ROYAL MAHESHWARI HERITAGE",
-      "subtitle": "Authentic Handloom Sarees Woven Direct from Maheshwar Fort Artisans",
-      "image": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1600&q=80",
+      "id": "festive-banner-stairs-1",
+      "title": "Get Ready For Upcoming Festivals with Royal Maheshwari Weaves",
+      "subtitle": "Celebrate Navratri, Karwa Chauth, Dussehra & Diwali in authentic silk-cotton handloom sarees crafted at Maheshwar Fort looms.",
+      "image": "/uploads/festival_banner_stairs.jpg",
       "link": "/products",
-      "tag": "FESTIVE SALE • UP TO 40% OFF",
+      "tag": "✨ UPCOMING FESTIVE COLLECTION 2026",
       "sortOrder": 1,
       "active": true,
-      "createdAt": "2026-09-10T16:11:48.331+00:00"
+      "createdAt": "2026-09-22T02:12:00.000Z"
     },
     {
-      "id": "22e1d079-f79e-4ec6-8549-920f3848cab3",
-      "title": "EXQUISITE SILK COTTON SAREES",
-      "subtitle": "Featherlight Drape with Regal Reversible Zari Borders",
-      "image": "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1600&q=80",
+      "id": "festive-banner-friends-2",
+      "title": "Authentic Handcrafted Sarees for Every Joyous Celebration",
+      "subtitle": "Lightweight drapes with gleaming reversible zari borders, woven with pure devotion by traditional master artisans.",
+      "image": "/uploads/festival_banner_friends.jpg",
       "link": "/products?category=silk-cotton-maheshwari",
-      "tag": "NEW ARRIVALS 2026",
+      "tag": "🌸 FESTIVE CELEBRATIONS • DIRECT FROM WEAVERS",
       "sortOrder": 2,
       "active": true,
-      "createdAt": "2026-09-10T16:11:48.363+00:00"
+      "createdAt": "2026-09-22T02:12:00.000Z"
+    },
+    {
+      "id": "c2e7af2c-fcad-4545-9354-df7d35c64ba7",
+      "title": "Maharani Ahilyabai Holkar Royal Maheshwar Weaves",
+      "subtitle": "Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 5th generation weaver craftsmanship.",
+      "image": "/uploads/maheshwari_legacy_banner.png",
+      "link": "/products",
+      "tag": "ROYAL MAHESHWAR HERITAGE",
+      "sortOrder": 3,
+      "active": true,
+      "createdAt": "2026-09-10T16:11:48.331+00:00"
     }
   ],
   "instaPosts": [

@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'OTe0o81YHYEe421wqkXHmM6r';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || 'jYDDeSwNt5AbybZIynsGZ5qw';
 
     if (razorpay_order_id && razorpay_signature) {
       const generatedSignature = crypto

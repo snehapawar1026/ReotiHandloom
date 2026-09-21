@@ -46,6 +46,12 @@ import {
   ArrowLeft,
   ChevronRight,
   LayoutGrid,
+  Truck,
+  CheckCircle2,
+  Search,
+  XCircle,
+  AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 
@@ -208,6 +214,276 @@ export default function AdminDashboard() {
     }
   };
 
+  // Order Management state (Amazon / Myntra / Nykaa style order processing & tracking)
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('ALL');
+  const [orderSearchQuery, setOrderSearchQuery] = useState<string>('');
+  const [selectedOrderForDispatch, setSelectedOrderForDispatch] = useState<any | null>(null);
+  const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<any | null>(null);
+  const [selectedOrderForCancel, setSelectedOrderForCancel] = useState<any | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('Out of Stock / Saree Unavailable');
+  const [cancelCustomNote, setCancelCustomNote] = useState<string>('');
+  const [dispatchCourier, setDispatchCourier] = useState<string>('Delhivery');
+  const [dispatchTrackingNumber, setDispatchTrackingNumber] = useState<string>('');
+  const [dispatchTrackingUrl, setDispatchTrackingUrl] = useState<string>('');
+  const [dispatchEstimatedDelivery, setDispatchEstimatedDelivery] = useState<string>('3-5 Business Days');
+  const [dispatchNotes, setDispatchNotes] = useState<string>('');
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState<boolean>(false);
+  const [orderActionMsg, setOrderActionMsg] = useState<string>('');
+
+  const getCustomerStatusWhatsAppUrl = (order: any, targetStatus?: string, extraData: any = {}) => {
+    const custPhone = (order.customerPhone || '').replace(/\D/g, '');
+    if (!custPhone) return '#';
+
+    const orderNum = order.orderNumber || order.id;
+    const status = (targetStatus || order.status || 'PROCESSING').toUpperCase();
+    const courier = extraData.courierPartner || order.courierPartner || 'Reoti Handloom Express';
+    const trackNo = extraData.trackingNumber || order.trackingNumber || '';
+    const est = extraData.estimatedDelivery || order.estimatedDelivery || '3-5 Business Days';
+    const reason = extraData.cancellationReason || order.cancellationReason || 'Order cancelled';
+    const isCod = (order.paymentMethod || '').toUpperCase().includes('COD') || (order.paymentMethod || '').toUpperCase().includes('CASH') || order.paymentStatus === 'PENDING_COD';
+    const isPaid = order.paymentStatus === 'PAID' || (!isCod && (order.paymentMethod || '').toLowerCase().includes('razorpay'));
+
+    let msgText = '';
+
+    if (status === 'CONFIRMED') {
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `We are delighted to confirm that your *Reoti Handloom Maheshwari Order #${orderNum}* has been *ACCEPTED & CONFIRMED* by our master weavers!\n\n` +
+        `📦 *Order Total:* ₹${Number(order.totalAmount || 0).toLocaleString()}\n` +
+        (isCod
+          ? `💵 *Payment Mode:* Cash on Delivery (Pay ₹${Number(order.totalAmount || 0).toLocaleString()} upon delivery)\n`
+          : `💳 *Payment Mode:* Prepaid Online (Paid Successfully)\n`) +
+        `🧵 *Status:* Confirmed & Under Preparation at Maheshwar Workshop\n` +
+        `📍 *Delivery Address:* ${order.shippingAddress || 'Your Address'}\n\n` +
+        `🔍 *Track Order in Real-Time:* https://reotihandloom.com (Click "ORDERS" at top)\n\n` +
+        `Thank you for patronizing authentic Indian handloom heritage! 🌸\n` +
+        `📞 *Customer Support:* +91 96174 44445`;
+    } else if (status === 'PACKED') {
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `Your *Reoti Handloom Maheshwari Order #${orderNum}* has successfully passed our quality inspection and is now *SAFELY PACKED* in heritage gift packaging!\n\n` +
+        `📦 *Status:* Packed & Ready for Courier Dispatch\n` +
+        (isCod
+          ? `💵 *Payment on Delivery:* ₹${Number(order.totalAmount || 0).toLocaleString()} (Cash / UPI accepted by courier executive)\n`
+          : `💳 *Payment Status:* Pre-Paid Online\n`) +
+        `🚚 *Next Step:* Handover to Logistics Partner\n\n` +
+        `🔍 *Track Order:* https://reotihandloom.com\n\n` +
+        `Thank you for supporting handloom craftsmanship! 🌸\n` +
+        `📞 *Customer Support:* +91 96174 44445`;
+    } else if (status === 'SHIPPED' || status === 'IN_TRANSIT') {
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `Your *Reoti Handloom Maheshwari Order #${orderNum}* has been *DISPATCHED* from our Maheshwar workshop!\n\n` +
+        `📦 *Status:* In-Transit (Dispatched)\n` +
+        `🚚 *Courier Partner:* ${courier}\n` +
+        `🔖 *Tracking / AWB No:* ${trackNo || 'RH-' + orderNum}\n` +
+        `📅 *Estimated Delivery:* ${est}\n` +
+        (isCod
+          ? `💵 *Amount to Pay on Delivery:* ₹${Number(order.totalAmount || 0).toLocaleString()} (Cash or UPI to delivery agent)\n\n`
+          : `💳 *Payment Status:* Pre-Paid Online (Zero collection required)\n\n`) +
+        `🔍 *Track Order in Real-Time:* https://reotihandloom.com (Click "ORDERS" at top)\n\n` +
+        `Thank you for supporting authentic handloom weavers of Maheshwar! 🌸\n` +
+        `📞 *Customer Support:* +91 96174 44445`;
+    } else if (status === 'OUT_FOR_DELIVERY') {
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `Exciting news! Your *Reoti Handloom Maheshwari Order #${orderNum}* is *OUT FOR DELIVERY* today!\n\n` +
+        `🛵 *Status:* Out for Delivery\n` +
+        `🚚 *Courier Partner:* ${courier}\n` +
+        (trackNo ? `🔖 *Tracking No:* ${trackNo}\n` : '') +
+        `📍 *Delivery Address:* ${order.shippingAddress || 'Your Address'}\n` +
+        (isCod
+          ? `💵 *Amount Payable:* ₹${Number(order.totalAmount || 0).toLocaleString()} (Please keep exact cash or UPI ready for delivery executive)\n\n`
+          : `💳 *Payment:* Pre-Paid Online (No collection needed)\n\n`) +
+        `Please keep your phone handy to receive the parcel from the delivery executive.\n\n` +
+        `📞 *Customer Support:* +91 96174 44445`;
+    } else if (status === 'DELIVERED') {
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `Your *Reoti Handloom Maheshwari Order #${orderNum}* has been *SUCCESSFULLY DELIVERED*!\n\n` +
+        (isCod
+          ? `💵 *Payment:* ₹${Number(order.totalAmount || 0).toLocaleString()} Cash on Delivery received upon delivery.\n`
+          : `💳 *Payment:* Pre-Paid Online.\n`) +
+        `🌸 We hope you adore your authentic handcrafted Maheshwari saree/suit!\n` +
+        `⭐ We would love to receive your feedback & review on our website.\n\n` +
+        `📞 *For Future Orders or Queries:* +91 96174 44445\n` +
+        `🌐 *Website:* https://reotihandloom.com\n\n` +
+        `Thank you for celebrating genuine Indian handloom heritage with Reoti Handloom! 🌸`;
+    } else if (status === 'CANCELLED') {
+      const refundInfo = isCod
+        ? `💵 *Payment Info:* Cash on Delivery Order (Zero payment charged. No refund required).`
+        : `💳 *Refund Info:* Full refund of ₹${Number(order.totalAmount || 0).toLocaleString()} will be automatically credited to your original payment method in 3-5 working days.`;
+
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `Important update regarding your *Reoti Handloom Maheshwari Order #${orderNum}*:\n\n` +
+        `❌ *Order Status:* CANCELLED\n` +
+        `⚠️ *Reason:* ${reason}\n` +
+        `${refundInfo}\n\n` +
+        `We sincerely apologize for any inconvenience caused. If you would like assistance selecting any other pure Maheshwari saree or suit, please reply directly to this message.\n\n` +
+        `📞 *Customer Support:* +91 96174 44445\n` +
+        `🌐 *Website:* https://reotihandloom.com\n\n` +
+        `Thank you for your patience and understanding!`;
+    } else {
+      msgText =
+        `Greetings from Reoti Handloom! 🙏\n\n` +
+        `Thank you for placing your order with *Reoti Handloom Maheshwar*!\n\n` +
+        `📦 *Order ID:* #${orderNum}\n` +
+        `💰 *Total Amount:* ₹${Number(order.totalAmount || 0).toLocaleString()}\n` +
+        (isCod
+          ? `💵 *Payment Mode:* Cash on Delivery (Pay upon arrival)\n`
+          : `💳 *Payment Mode:* Prepaid Online\n`) +
+        `📍 *Shipping Address:* ${order.shippingAddress || 'Your Address'}\n` +
+        `🧵 *Status:* Order Placed (Under Review by Master Weavers)\n\n` +
+        `🔍 *Track Order:* https://reotihandloom.com (Click "ORDERS" at top)\n\n` +
+        `📞 *Support Helpline:* +91 96174 44445`;
+    }
+
+    return `https://wa.me/91${custPhone}?text=${encodeURIComponent(msgText)}`;
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string, extraData: any = {}, shouldNotifyWhatsApp: boolean = true) => {
+    setIsUpdatingOrder(true);
+
+    // Auto-open WhatsApp message for customer synchronously
+    if (shouldNotifyWhatsApp) {
+      const targetOrder = orders.find((o) => o.id === orderId || o.orderNumber === orderId);
+      if (targetOrder) {
+        const waUrl = getCustomerStatusWhatsAppUrl(targetOrder, newStatus, extraData);
+        if (waUrl && waUrl !== '#') {
+          try {
+            window.open(waUrl, '_blank');
+          } catch (e) {
+            console.error('WhatsApp popup error:', e);
+          }
+        }
+      }
+    }
+
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: orderId,
+          status: newStatus,
+          ...extraData,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId || o.orderNumber === orderId
+              ? { ...o, status: newStatus, ...extraData, updatedAt: new Date().toISOString() }
+              : o
+          )
+        );
+        setOrderActionMsg(`✅ Order #${data.order?.orderNumber || orderId} status updated to ${newStatus}`);
+        setTimeout(() => setOrderActionMsg(''), 4000);
+      } else {
+        alert(data.error || 'Failed to update order');
+      }
+    } catch (err: any) {
+      alert('Error updating order: ' + err.message);
+    } finally {
+      setIsUpdatingOrder(false);
+    }
+  };
+
+  const handleOpenDispatchModal = (order: any) => {
+    setSelectedOrderForDispatch(order);
+    setDispatchCourier(order.courierPartner || 'Delhivery');
+    setDispatchTrackingNumber(order.trackingNumber || '');
+    setDispatchTrackingUrl(order.trackingUrl || '');
+    setDispatchEstimatedDelivery(order.estimatedDelivery || '3-5 Business Days');
+    setDispatchNotes(order.notes || '');
+  };
+
+  const handleSaveDispatchAndNotify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderForDispatch) return;
+
+    let autoUrl = dispatchTrackingUrl.trim();
+    const trackNo = dispatchTrackingNumber.trim();
+    if (!autoUrl && trackNo) {
+      const c = dispatchCourier.toLowerCase();
+      if (c.includes('anjani')) {
+        autoUrl = `https://www.shreeanjanicourier.com/`;
+      } else if (c.includes('maruti')) {
+        autoUrl = `https://track.shreemaruti.com/`;
+      } else if (c.includes('dtdc')) {
+        autoUrl = `https://track.dtdc.com/ctrack/track?strRefNo=${trackNo}`;
+      } else if (c.includes('delhivery')) {
+        autoUrl = `https://www.delhivery.com/track/package/${trackNo}`;
+      } else if (c.includes('blue')) {
+        autoUrl = `https://www.bluedart.com/tracking`;
+      } else if (c.includes('post') || c.includes('speed')) {
+        autoUrl = `https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx`;
+      } else if (c.includes('shiprocket')) {
+        autoUrl = `https://shiprocket.co/tracking/${trackNo}`;
+      }
+    }
+
+    const dispatchData = {
+      courierPartner: dispatchCourier,
+      trackingNumber: trackNo,
+      trackingUrl: autoUrl,
+      estimatedDelivery: dispatchEstimatedDelivery,
+      notes: dispatchNotes,
+    };
+
+    // Auto-open WhatsApp tracking message IMMEDIATELY (sync)
+    const waUrl = getCustomerStatusWhatsAppUrl(selectedOrderForDispatch, 'SHIPPED', dispatchData);
+    if (waUrl && waUrl !== '#') {
+      try {
+        window.open(waUrl, '_blank');
+      } catch (e) {
+        console.error('Error opening WhatsApp tracking:', e);
+      }
+    }
+
+    await handleUpdateOrderStatus(selectedOrderForDispatch.id, 'SHIPPED', dispatchData, false);
+
+    setSelectedOrderForDispatch(null);
+  };
+
+  const handleOpenCancelModal = (order: any) => {
+    setSelectedOrderForCancel(order);
+    setCancelReason('Out of Stock / Saree Unavailable');
+    setCancelCustomNote('');
+  };
+
+  const handleConfirmCancelOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderForCancel) return;
+
+    const finalReason = cancelReason.includes('Other')
+      ? (cancelCustomNote.trim() || 'Unforeseen circumstances')
+      : cancelReason;
+    
+    const noteText = `Cancelled by Admin. Reason: ${finalReason}${cancelCustomNote ? `. Note: ${cancelCustomNote}` : ''}`;
+
+    const cancelData = {
+      cancellationReason: finalReason,
+      notes: noteText,
+    };
+
+    // Auto-open WhatsApp message directly
+    const waUrl = getCustomerStatusWhatsAppUrl(selectedOrderForCancel, 'CANCELLED', cancelData);
+    if (waUrl && waUrl !== '#') {
+      try {
+        window.open(waUrl, '_blank');
+      } catch (err) {
+        console.error('Popup error:', err);
+      }
+    }
+
+    await handleUpdateOrderStatus(selectedOrderForCancel.id, 'CANCELLED', cancelData, false);
+
+    setSelectedOrderForCancel(null);
+  };
+
   // Admin Auth Form state
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
@@ -228,6 +504,7 @@ export default function AdminDashboard() {
   const [lengthWithBlouse, setLengthWithBlouse] = useState('6.3 Meters (With Blouse Piece)');
   const [designCode, setDesignCode] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [semiCategoryId, setSemiCategoryId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [uploadedPreview, setUploadedPreview] = useState<string>('');
   const [imagesList, setImagesList] = useState<string[]>([]);
@@ -325,18 +602,27 @@ export default function AdminDashboard() {
           activities: resCustomers.activities || [],
         });
       }
-      if (resCategories.success) {
+      if (resCategories.success && Array.isArray(resCategories.categories)) {
         setCategories(resCategories.categories);
-        if (resCategories.categories.length > 0 && !categoryId) {
+        setCategoryId((prev) => {
+          if (prev) return prev;
           const silkCottonCat = resCategories.categories.find(
             (c: any) =>
-              c.name.toLowerCase().includes('silk cotton') ||
-              c.slug.includes('silk-cotton')
+              c.name?.toLowerCase().includes('silk cotton') ||
+              c.slug?.includes('silk-cotton')
           );
-          const defaultCatId = silkCottonCat ? silkCottonCat.id : resCategories.categories[0].id;
-          setCategoryId(defaultCatId);
-          setEditCategoryId(defaultCatId);
-        }
+          return silkCottonCat ? silkCottonCat.id : (resCategories.categories[0]?.id || '');
+        });
+        setSemiCategoryId((prev) => {
+          if (prev) return prev;
+          const semiCat = resCategories.categories.find(
+            (c: any) =>
+              c.slug === 'semi-maheshwari-sarees' ||
+              c.id === 'semi-maheshwari-sarees-id' ||
+              c.name?.toLowerCase().includes('semi maheshwari')
+          );
+          return semiCat ? semiCat.id : '';
+        });
       }
       fetchInstaPosts();
     } catch (e) {
@@ -594,7 +880,7 @@ export default function AdminDashboard() {
     const semiCat = categories.find(
       (c) => c.slug === 'semi-maheshwari-sarees' || c.id === 'semi-maheshwari-sarees-id' || c.name?.toLowerCase().includes('semi maheshwari')
     );
-    const effectiveCategoryId = isSemi ? (categoryId || semiCat?.id || 'semi-maheshwari-sarees-id') : categoryId;
+    const effectiveCategoryId = isSemi ? (semiCategoryId || semiCat?.id || 'semi-maheshwari-sarees-id') : categoryId;
 
     if (!title || !price || !effectiveCategoryId) {
       setFormMsg('Please fill in required product fields (Title, Price, Category).');
@@ -2363,56 +2649,506 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Tab 1: Orders Dashboard */}
+      {/* Tab 1: Orders Dashboard (Amazon / Myntra / Nykaa Style Order Fulfillment & Tracking) */}
       {activeTab === 'orders' && (
-        <div className="mt-6 space-y-4">
-          {orders.length === 0 ? (
-            <div className="text-center py-12 bg-slate-50 rounded-lg text-gray-500 text-xs font-semibold">
-              No customer orders received yet.
-            </div>
-          ) : (
-            <div className="overflow-x-auto border border-gray-200 rounded-lg">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-amber-50 text-amber-950 font-bold uppercase border-b border-amber-200">
-                  <tr>
-                    <th className="p-3">Order ID</th>
-                    <th className="p-3">Customer</th>
-                    <th className="p-3">Phone</th>
-                    <th className="p-3">Address</th>
-                    <th className="p-3">Amount</th>
-                    <th className="p-3">Payment</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {orders.map((o) => (
-                    <tr key={o.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-bold text-amber-900">#{o.orderNumber}</td>
-                      <td className="p-3 font-semibold">{o.customerName}</td>
-                      <td className="p-3 text-gray-600">{o.customerPhone}</td>
-                      <td className="p-3 text-gray-600 max-w-xs truncate">{o.shippingAddress}</td>
-                      <td className="p-3 font-bold text-rose-700">₹{o.totalAmount.toLocaleString()}</td>
-                      <td className="p-3">
-                        <span className="bg-slate-100 px-2 py-0.5 rounded font-semibold text-[10px]">
-                          {o.paymentMethod} ({o.paymentStatus})
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px] flex items-center gap-1 w-fit">
-                          <Clock className="w-3 h-3" />
-                          <span>{o.status}</span>
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-400 text-[10px]">
-                        {new Date(o.createdAt).toLocaleDateString('en-IN')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="mt-6 space-y-6">
+          {/* Order Action Toast Notice */}
+          {orderActionMsg && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 font-bold text-xs flex items-center justify-between shadow-xs animate-in fade-in">
+              <span>{orderActionMsg}</span>
+              <button onClick={() => setOrderActionMsg('')} className="text-emerald-700 hover:text-emerald-950 font-black">✕</button>
             </div>
           )}
+
+          {/* Metric Summary Counters */}
+          {(() => {
+            const totalCount = orders.length;
+            const processingCount = orders.filter((o) => (o.status || 'PROCESSING').toUpperCase() === 'PROCESSING').length;
+            const confirmedCount = orders.filter((o) => ['CONFIRMED', 'PACKED'].includes((o.status || '').toUpperCase())).length;
+            const shippedCount = orders.filter((o) => ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes((o.status || '').toUpperCase())).length;
+            const deliveredCount = orders.filter((o) => (o.status || '').toUpperCase() === 'DELIVERED').length;
+
+            return (
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div
+                  onClick={() => setOrderStatusFilter('ALL')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                    orderStatusFilter === 'ALL'
+                      ? 'bg-amber-950 text-amber-100 border-amber-900 shadow-sm'
+                      : 'bg-white border-amber-200/80 text-gray-800 hover:bg-amber-50/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">All Orders</span>
+                    <Package className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <p className="text-xl font-serif font-black mt-1">{totalCount}</p>
+                  <p className="text-[10px] opacity-75">₹{orders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0).toLocaleString()} Value</p>
+                </div>
+
+                <div
+                  onClick={() => setOrderStatusFilter('PROCESSING')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                    orderStatusFilter === 'PROCESSING'
+                      ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
+                      : 'bg-amber-50/80 border-amber-200 text-amber-950 hover:bg-amber-100/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">🟡 New / Action</span>
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <p className="text-xl font-serif font-black mt-1">{processingCount}</p>
+                  <p className="text-[10px] opacity-75">Needs Acceptance</p>
+                </div>
+
+                <div
+                  onClick={() => setOrderStatusFilter('CONFIRMED')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                    orderStatusFilter === 'CONFIRMED'
+                      ? 'bg-blue-800 text-white border-blue-900 shadow-sm'
+                      : 'bg-blue-50/80 border-blue-200 text-blue-950 hover:bg-blue-100/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">🔵 Confirmed</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <p className="text-xl font-serif font-black mt-1">{confirmedCount}</p>
+                  <p className="text-[10px] opacity-75">Ready to Pack</p>
+                </div>
+
+                <div
+                  onClick={() => setOrderStatusFilter('SHIPPED')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                    orderStatusFilter === 'SHIPPED'
+                      ? 'bg-indigo-800 text-white border-indigo-900 shadow-sm'
+                      : 'bg-indigo-50/80 border-indigo-200 text-indigo-950 hover:bg-indigo-100/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">🚚 Dispatched</span>
+                    <Truck className="w-4 h-4" />
+                  </div>
+                  <p className="text-xl font-serif font-black mt-1">{shippedCount}</p>
+                  <p className="text-[10px] opacity-75">In-Transit / Courier</p>
+                </div>
+
+                <div
+                  onClick={() => setOrderStatusFilter('DELIVERED')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer col-span-2 sm:col-span-1 ${
+                    orderStatusFilter === 'DELIVERED'
+                      ? 'bg-emerald-800 text-white border-emerald-900 shadow-sm'
+                      : 'bg-emerald-50/80 border-emerald-200 text-emerald-950 hover:bg-emerald-100/70'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider">🟢 Delivered</span>
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <p className="text-xl font-serif font-black mt-1">{deliveredCount}</p>
+                  <p className="text-[10px] opacity-75">Fulfilled Orders</p>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Search & Filter Bar */}
+          <div className="bg-white p-3.5 border border-gray-200 rounded-2xl shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Search input */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                value={orderSearchQuery}
+                onChange={(e) => setOrderSearchQuery(e.target.value)}
+                placeholder="Search by Order #, Customer, Phone or City..."
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-9 pr-4 text-xs font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-700 focus:bg-white"
+              />
+            </div>
+
+            {/* Status Pills Switcher */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-xs font-bold">
+              {(['ALL', 'PROCESSING', 'CONFIRMED', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLED'] as const).map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setOrderStatusFilter(st)}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all cursor-pointer ${
+                    orderStatusFilter === st
+                      ? 'bg-amber-950 text-amber-100 shadow-xs'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {st === 'ALL'
+                    ? 'All'
+                    : st === 'PROCESSING'
+                    ? '🟡 Placed'
+                    : st === 'CONFIRMED'
+                    ? '🔵 Confirmed'
+                    : st === 'PACKED'
+                    ? '📦 Packed'
+                    : st === 'SHIPPED'
+                    ? '🚚 Dispatched'
+                    : st === 'DELIVERED'
+                    ? '🟢 Delivered'
+                    : '🔴 Cancelled'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Filtered Orders Listing */}
+          {(() => {
+            let filtered = [...orders];
+
+            if (orderStatusFilter !== 'ALL') {
+              if (orderStatusFilter === 'CONFIRMED') {
+                filtered = filtered.filter((o) => ['CONFIRMED', 'PACKED'].includes((o.status || '').toUpperCase()));
+              } else if (orderStatusFilter === 'SHIPPED') {
+                filtered = filtered.filter((o) => ['SHIPPED', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes((o.status || '').toUpperCase()));
+              } else {
+                filtered = filtered.filter((o) => (o.status || 'PROCESSING').toUpperCase() === orderStatusFilter);
+              }
+            }
+
+            if (orderSearchQuery.trim()) {
+              const q = orderSearchQuery.toLowerCase().replace(/^#/, '');
+              filtered = filtered.filter(
+                (o) =>
+                  o.orderNumber?.toLowerCase().includes(q) ||
+                  o.id?.toLowerCase().includes(q) ||
+                  o.customerName?.toLowerCase().includes(q) ||
+                  o.customerPhone?.includes(q) ||
+                  o.shippingAddress?.toLowerCase().includes(q)
+              );
+            }
+
+            if (filtered.length === 0) {
+              return (
+                <div className="text-center py-16 bg-amber-50/30 border border-dashed border-amber-200 rounded-2xl text-gray-500 text-xs font-semibold space-y-2">
+                  <Package className="w-8 h-8 text-amber-800/40 mx-auto" />
+                  <p className="text-sm font-bold text-gray-700">No orders match your filter criteria.</p>
+                  <p className="text-gray-400">Try changing the status tab or clearing the search query.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                {filtered.map((order) => {
+                  let orderItems: any[] = [];
+                  try {
+                    orderItems = typeof order.items === 'string' ? JSON.parse(order.items) : order.items || [];
+                  } catch (e) {}
+
+                  const orderStatus = (order.status || 'PROCESSING').toUpperCase();
+                  const waUrl = getCustomerStatusWhatsAppUrl(order, orderStatus);
+                  const isProcessing = orderStatus === 'PROCESSING';
+
+                  return (
+                    <div
+                      key={order.id}
+                      className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs hover:border-amber-400 transition-all font-sans"
+                    >
+                      {/* Top Header Strip */}
+                      <div className="bg-gradient-to-r from-amber-50 via-rose-50/40 to-amber-50 px-4 py-3 border-b border-amber-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-xl bg-amber-950 text-white font-bold text-xs">
+                            #{order.orderNumber || order.id}
+                          </div>
+                          <div>
+                            <span className="font-mono text-gray-500 text-[11px] block">
+                              Placed on {new Date(order.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <span className="font-extrabold text-gray-900 text-sm">
+                              {order.customerName}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Payment status badge */}
+                          {(() => {
+                            const isCod = (order.paymentMethod || '').toUpperCase().includes('COD') || (order.paymentMethod || '').toUpperCase().includes('CASH') || order.paymentStatus === 'PENDING_COD';
+                            const isPaid = order.paymentStatus === 'PAID';
+                            return (
+                              <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
+                                isCod
+                                  ? isPaid
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                    : 'bg-amber-100 text-amber-950 border-amber-400 font-black'
+                                  : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              }`}>
+                                {isCod
+                                  ? isPaid
+                                    ? '💵 COD (Cash Collected ✓)'
+                                    : `💵 COD (Collect ₹${Number(order.totalAmount).toLocaleString()})`
+                                  : `💳 ONLINE PAID (₹${Number(order.totalAmount).toLocaleString()})`}
+                              </span>
+                            );
+                          })()}
+
+                          {/* Total Amount */}
+                          <div className="bg-white px-3 py-1 rounded-xl border border-gray-200 font-extrabold text-rose-800 text-sm shadow-2xs">
+                            ₹{Number(order.totalAmount).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Main Card Body */}
+                      <div className="p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                        
+                        {/* Column 1: Ordered Sarees / Items Breakdown (6 cols) */}
+                        <div className="lg:col-span-5 space-y-2.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">
+                            Ordered Sarees & Handloom Items ({orderItems.length || 1})
+                          </span>
+                          
+                          <div className="space-y-2">
+                            {orderItems.length > 0 ? (
+                              orderItems.map((item: any, idx: number) => {
+                                const title = item.product?.title || item.title || 'Maheshwari Handloom Saree';
+                                const img = item.product?.image || item.image || (item.product?.images ? JSON.parse(item.product.images || '[]')[0] : '/uploads/saree_1789221965397_lf0kg.jpeg');
+                                const price = item.price || item.product?.price || order.totalAmount;
+                                const qty = item.quantity || 1;
+
+                                return (
+                                  <div key={idx} className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-white border border-gray-200 shrink-0">
+                                      <img src={img} alt={title} className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 text-xs">
+                                      <h5 className="font-bold text-gray-900 truncate">{title}</h5>
+                                      <p className="text-[11px] text-gray-500 mt-0.5">
+                                        Qty: <span className="font-bold text-gray-900">{qty}</span> • Price: <span className="font-bold text-rose-800">₹{Number(price).toLocaleString()}</span>
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-600 font-medium">
+                                Handloom Product Item • Total: ₹{Number(order.totalAmount).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Column 2: Customer Delivery Address & Direct Contact (4 cols) */}
+                        <div className="lg:col-span-4 space-y-2.5 text-xs bg-amber-50/30 p-3.5 rounded-xl border border-amber-100">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-950 flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Delivery Destination</span>
+                          </span>
+
+                          <p className="text-gray-800 font-medium text-[11px] leading-relaxed">
+                            {order.shippingAddress || 'Maheshwar, Madhya Pradesh, India'}
+                          </p>
+
+                          <div className="pt-2 border-t border-amber-100 flex items-center justify-between gap-2">
+                            <div className="font-mono font-bold text-gray-900 text-xs">
+                              📞 +91 {order.customerPhone}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <a
+                                href={`tel:+91${(order.customerPhone || '').replace(/\D/g, '')}`}
+                                className="p-1.5 bg-white border border-gray-200 hover:bg-gray-100 rounded-lg text-gray-700"
+                                title="Call Customer"
+                              >
+                                📞
+                              </a>
+                              <a
+                                href={`https://wa.me/91${(order.customerPhone || '').replace(/\D/g, '')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold"
+                                title="Chat on WhatsApp"
+                              >
+                                💬
+                              </a>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Column 3: Status & Tracking Fulfillment Actions (3 cols) */}
+                        <div className="lg:col-span-3 space-y-3 text-xs flex flex-col justify-between h-full">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block mb-1">
+                              Fulfillment Status
+                            </span>
+
+                            {/* Status Selector Dropdown */}
+                            <select
+                              value={orderStatus}
+                              disabled={isUpdatingOrder}
+                              onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                              className={`w-full text-xs font-bold rounded-xl p-2 border outline-none cursor-pointer shadow-2xs transition-all ${
+                                orderStatus === 'DELIVERED'
+                                  ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                                  : orderStatus === 'SHIPPED' || orderStatus === 'IN_TRANSIT'
+                                  ? 'bg-indigo-50 text-indigo-900 border-indigo-300'
+                                  : orderStatus === 'CONFIRMED' || orderStatus === 'PACKED'
+                                  ? 'bg-blue-50 text-blue-900 border-blue-300'
+                                  : orderStatus === 'CANCELLED'
+                                  ? 'bg-rose-50 text-rose-900 border-rose-300'
+                                  : 'bg-amber-50 text-amber-950 border-amber-300'
+                              }`}
+                            >
+                              <option value="PROCESSING">🟡 Placed (New Order)</option>
+                              <option value="CONFIRMED">🔵 Confirmed (Accepted)</option>
+                              <option value="PACKED">📦 Packed (Ready for Dispatch)</option>
+                              <option value="SHIPPED">🚚 Dispatched (In-Transit)</option>
+                              <option value="OUT_FOR_DELIVERY">🛵 Out For Delivery</option>
+                              <option value="DELIVERED">🟢 Delivered to Customer</option>
+                              <option value="CANCELLED">🔴 Cancelled / Out of Stock</option>
+                              <option value="RETURNED">↩️ Returned (RTO - Restocked)</option>
+                            </select>
+
+                            {/* Tracking Info if Dispatched */}
+                            {order.trackingNumber && (
+                              <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-gray-700 space-y-0.5">
+                                <p><span className="text-gray-500">Courier:</span> <span className="font-bold">{order.courierPartner || 'Delhivery'}</span></p>
+                                <p><span className="text-gray-500">AWB:</span> <span className="font-mono font-bold text-amber-900">{order.trackingNumber}</span></p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quick Action Buttons */}
+                          <div className="space-y-1.5 pt-2">
+                            {/* If COD and not marked PAID yet: Cash Collection Button */}
+                            {(() => {
+                              const isCod = (order.paymentMethod || '').toUpperCase().includes('COD') || (order.paymentMethod || '').toUpperCase().includes('CASH') || order.paymentStatus === 'PENDING_COD';
+                              if (isCod && order.paymentStatus !== 'PAID' && orderStatus !== 'CANCELLED') {
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleUpdateOrderStatus(
+                                        order.id,
+                                        order.status || 'PROCESSING',
+                                        {
+                                          paymentStatus: 'PAID',
+                                          notes: `${order.notes || ''} [COD Cash Collected: ₹${Number(order.totalAmount).toLocaleString()}]`,
+                                        },
+                                        false
+                                      )
+                                    }
+                                    className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[11px]"
+                                    title="Mark COD Cash as Collected from Customer"
+                                  >
+                                    <span>💵 Mark Cash Collected (₹{Number(order.totalAmount).toLocaleString()})</span>
+                                  </button>
+                                );
+                              }
+                              return null;
+                            })()}
+
+                            {/* If New / Processing: Prominent "Accept Order" button */}
+                            {isProcessing && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateOrderStatus(order.id, 'CONFIRMED')}
+                                className="w-full py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-xs"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Accept Order</span>
+                              </button>
+                            )}
+
+                            {/* Add Tracking & Dispatch Details Modal Trigger (if not cancelled) */}
+                            {orderStatus !== 'CANCELLED' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenDispatchModal(order)}
+                                className="w-full py-1.5 bg-amber-950 hover:bg-black text-amber-100 font-bold rounded-xl shadow-2xs transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[11px]"
+                              >
+                                <Truck className="w-3.5 h-3.5 text-amber-300" />
+                                <span>{order.trackingNumber ? 'Edit Courier & Tracking' : '🚚 Dispatch & Add Tracking'}</span>
+                              </button>
+                            )}
+
+                            {/* 1-Click WhatsApp Dynamic Status Notification Link (if not cancelled) */}
+                            {orderStatus !== 'CANCELLED' && (
+                              <a
+                                href={waUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[11px]"
+                                title="Send real-time status update to customer on WhatsApp"
+                              >
+                                <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>
+                                  {orderStatus === 'CONFIRMED'
+                                    ? '📲 Send "Confirmed" Alert'
+                                    : orderStatus === 'PACKED'
+                                    ? '📲 Send "Packed" Alert'
+                                    : orderStatus === 'SHIPPED' || orderStatus === 'IN_TRANSIT'
+                                    ? '📲 Send "Dispatched" Alert'
+                                    : orderStatus === 'OUT_FOR_DELIVERY'
+                                    ? '📲 Send "Out for Delivery" Alert'
+                                    : orderStatus === 'DELIVERED'
+                                    ? '📲 Send "Delivered" Greeting'
+                                    : '📲 Send WhatsApp Update'}
+                                </span>
+                              </a>
+                            )}
+
+                            {/* View / Print Invoice */}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrderForInvoice(order)}
+                              className="w-full py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[11px]"
+                            >
+                              <span>📄 View & Print Invoice</span>
+                            </button>
+
+                            {/* Cancel Order Action (if not already cancelled) */}
+                            {orderStatus !== 'CANCELLED' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenCancelModal(order)}
+                                className="w-full py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[11px]"
+                                title="Cancel order and immediately notify customer on WhatsApp"
+                              >
+                                <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                                <span>❌ Cancel Order & WhatsApp</span>
+                              </button>
+                            )}
+
+                            {/* If CANCELLED: Show Reason and Resend WhatsApp button */}
+                            {orderStatus === 'CANCELLED' && (
+                              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl space-y-1.5 text-[11px] text-rose-950">
+                                <div className="flex items-center gap-1 font-extrabold text-rose-900">
+                                  <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                                  <span>Order Cancelled</span>
+                                </div>
+                                {order.cancellationReason && (
+                                  <p className="text-[10px] text-rose-700">
+                                    <span className="font-semibold">Reason:</span> {order.cancellationReason}
+                                  </p>
+                                )}
+                                <a
+                                  href={getCustomerStatusWhatsAppUrl(order, 'CANCELLED')}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full py-1 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer text-[10px] mt-1 shadow-2xs"
+                                  title="Send or resend cancellation message to customer"
+                                >
+                                  <MessageSquare className="w-3 h-3" />
+                                  <span>📲 Resend WhatsApp Notice</span>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
 
@@ -3578,8 +4314,8 @@ export default function AdminDashboard() {
 
                     return (
                       <select
-                        value={categoryId || semiParent?.id || 'semi-maheshwari-sarees-id'}
-                        onChange={(e) => setCategoryId(e.target.value)}
+                        value={semiCategoryId || semiParent?.id || 'semi-maheshwari-sarees-id'}
+                        onChange={(e) => setSemiCategoryId(e.target.value)}
                         className="w-full border border-rose-300 rounded p-2 text-xs bg-white font-bold text-rose-950 focus:ring-1 focus:ring-rose-800"
                       >
                         {semiParent && (
@@ -5323,6 +6059,444 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1: Dispatch & Courier Tracking Details Modal (Amazon/Myntra/Nykaa style) */}
+      {selectedOrderForDispatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-amber-300 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-amber-950 via-rose-950 to-neutral-950 p-4 sm:p-5 text-white flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">
+                  Order Fulfillment & Logistics
+                </span>
+                <h3 className="font-serif font-extrabold text-lg sm:text-xl text-amber-100">
+                  Dispatch Order #{selectedOrderForDispatch.orderNumber || selectedOrderForDispatch.id}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedOrderForDispatch(null)}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <form onSubmit={handleSaveDispatchAndNotify} className="p-5 sm:p-6 space-y-4 overflow-y-auto text-xs font-sans">
+              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200 space-y-1">
+                <p className="font-bold text-gray-900">
+                  Customer: <span className="font-extrabold text-amber-950">{selectedOrderForDispatch.customerName}</span> (+91 {selectedOrderForDispatch.customerPhone})
+                </p>
+                <p className="text-gray-600 text-[11px] truncate">
+                  Address: {selectedOrderForDispatch.shippingAddress}
+                </p>
+              </div>
+
+              {/* Courier Partner Selection */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  Select Courier Partner / Logistics Service *
+                </label>
+                <select
+                  value={dispatchCourier}
+                  onChange={(e) => setDispatchCourier(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-bold text-xs bg-white text-gray-900 focus:ring-2 focus:ring-amber-700 outline-none"
+                >
+                  <option value="Delhivery">Delhivery Surface / Express</option>
+                  <option value="DTDC Express">DTDC Courier & Cargo</option>
+                  <option value="Shree Anjani Courier">Shree Anjani Courier</option>
+                  <option value="Shree Maruti Courier">Shree Maruti Courier</option>
+                  <option value="Blue Dart">Blue Dart Express</option>
+                  <option value="India Post (Speed Post)">India Post (Speed Post / Regd. Parcel)</option>
+                  <option value="Shiprocket">Shiprocket Automated Logistics</option>
+                  <option value="Ecom Express">Ecom Express</option>
+                  <option value="Trackon Couriers">Trackon Couriers</option>
+                  <option value="The Professional Couriers">The Professional Couriers (TPC)</option>
+                  <option value="Self Handover / Local Maheshwar">Self Handover / Local Maheshwar Handloom Delivery</option>
+                </select>
+              </div>
+
+              {/* Tracking / AWB Number */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  AWB / Tracking Consignment Number *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 143289012344 or DTDC982341"
+                  value={dispatchTrackingNumber}
+                  onChange={(e) => setDispatchTrackingNumber(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-mono font-bold text-xs text-amber-950 bg-amber-50/30 focus:ring-2 focus:ring-amber-700 outline-none"
+                />
+              </div>
+
+              {/* Estimated Delivery Window */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  Estimated Delivery Timeline
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 2-4 Business Days or By Friday, 26 Sep"
+                  value={dispatchEstimatedDelivery}
+                  onChange={(e) => setDispatchEstimatedDelivery(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-semibold text-xs text-gray-900 bg-white focus:ring-2 focus:ring-amber-700 outline-none"
+                />
+              </div>
+
+              {/* Optional Custom Tracking URL */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  Direct Tracking URL (Auto-generated if empty)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Leave empty to auto-generate tracking link based on courier..."
+                  value={dispatchTrackingUrl}
+                  onChange={(e) => setDispatchTrackingUrl(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-medium text-xs text-gray-700 bg-white focus:ring-2 focus:ring-amber-700 outline-none"
+                />
+              </div>
+
+              {/* Internal / Customer Notes */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  Dispatch Notes (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Handcrafted Maheshwari Saree packed securely in heritage gift box with weaver tag."
+                  value={dispatchNotes}
+                  onChange={(e) => setDispatchNotes(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-medium text-xs text-gray-700 bg-white focus:ring-2 focus:ring-amber-700 outline-none"
+                />
+              </div>
+
+              {/* Submit & Action Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderForDispatch(null)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isUpdatingOrder}
+                  className="px-5 py-2.5 rounded-xl bg-amber-950 hover:bg-black text-white font-extrabold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Truck className="w-4 h-4 text-amber-300" />
+                  <span>{isUpdatingOrder ? 'Saving...' : 'Save & Mark as Dispatched'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Luxury Printable Invoice & Dispatch Packing Slip */}
+      {selectedOrderForInvoice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl border border-amber-300 overflow-hidden flex flex-col max-h-[95vh]">
+            {/* Header with Print CTA */}
+            <div className="bg-gradient-to-r from-amber-950 to-neutral-950 p-4 text-white flex items-center justify-between print:hidden">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-300">
+                  <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="font-serif font-bold text-amber-200 text-sm">Official Invoice & Packing Slip</h4>
+                  <p className="text-[10px] text-gray-300">Order #{selectedOrderForInvoice.orderNumber || selectedOrderForInvoice.id}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="px-4 py-1.5 bg-amber-400 hover:bg-amber-300 text-amber-950 font-extrabold text-xs rounded-xl shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                >
+                  <span>🖨️ Print Invoice</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderForInvoice(null)}
+                  className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Invoice Printable Area */}
+            <div className="p-6 sm:p-8 space-y-6 overflow-y-auto text-xs font-sans bg-white print:p-0">
+              {/* Brand Header */}
+              <div className="flex items-start justify-between border-b-2 border-amber-900 pb-4">
+                <div>
+                  <h2 className="text-2xl font-serif font-black text-amber-950 tracking-tight">Reoti Handloom</h2>
+                  <p className="text-[11px] font-serif italic text-amber-800">Something &quot;more&quot; in Maheshwari Handloom</p>
+                  <p className="text-[10px] text-gray-600 mt-1">
+                    Ahilya Fort Road, Maheshwar, Madhya Pradesh - 451224<br />
+                    Phone: +91 96174 44445 • Email: reotihandloom@gmail.com<br />
+                    Web: https://reotihandloom.com
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <span className="bg-amber-100 text-amber-950 text-[10px] font-black uppercase px-2.5 py-1 rounded border border-amber-300">
+                    TAX INVOICE
+                  </span>
+                  <p className="font-mono font-bold text-sm text-gray-900 mt-2">
+                    #{selectedOrderForInvoice.orderNumber || selectedOrderForInvoice.id}
+                  </p>
+                  <p className="text-[10px] text-gray-500">
+                    Date: {new Date(selectedOrderForInvoice.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Customer & Shipping Details */}
+              <div className="grid grid-cols-2 gap-4 bg-amber-50/40 p-4 rounded-xl border border-amber-200/80">
+                <div>
+                  <span className="text-[10px] font-extrabold text-amber-950 uppercase tracking-wider block mb-1">
+                    Billed & Shipped To:
+                  </span>
+                  <p className="font-bold text-gray-900 text-sm">{selectedOrderForInvoice.customerName}</p>
+                  <p className="text-gray-700 text-xs mt-0.5 whitespace-pre-line leading-relaxed">
+                    {selectedOrderForInvoice.shippingAddress}
+                  </p>
+                  <p className="font-mono font-bold text-gray-900 text-[11px] mt-1">
+                    Mobile: +91 {selectedOrderForInvoice.customerPhone}
+                  </p>
+                </div>
+
+                <div className="text-right space-y-1">
+                  <span className="text-[10px] font-extrabold text-amber-950 uppercase tracking-wider block mb-1">
+                    Payment & Shipping:
+                  </span>
+                  {(() => {
+                    const isCod = (selectedOrderForInvoice.paymentMethod || '').toUpperCase().includes('COD') || (selectedOrderForInvoice.paymentMethod || '').toUpperCase().includes('CASH') || selectedOrderForInvoice.paymentStatus === 'PENDING_COD';
+                    return (
+                      <>
+                        <p><span className="text-gray-500">Payment Mode:</span> <span className="font-bold">{isCod ? 'Cash on Delivery (COD)' : selectedOrderForInvoice.paymentMethod || 'Prepaid Online'}</span></p>
+                        <p><span className="text-gray-500">Payment Status:</span> <span className={`font-bold ${selectedOrderForInvoice.paymentStatus === 'PAID' ? 'text-emerald-800' : 'text-amber-800'}`}>{selectedOrderForInvoice.paymentStatus || (isCod ? 'PENDING_COD' : 'PAID')}</span></p>
+                        {isCod && selectedOrderForInvoice.paymentStatus !== 'PAID' && (
+                          <div className="bg-amber-100/90 text-amber-950 p-1 rounded text-[10px] font-bold border border-amber-300">
+                            💵 COLLECT ₹{Number(selectedOrderForInvoice.totalAmount).toLocaleString()} CASH UPON DELIVERY
+                          </div>
+                        )}
+                        <p><span className="text-gray-500">Courier Partner:</span> <span className="font-bold">{selectedOrderForInvoice.courierPartner || 'Handloom Express'}</span></p>
+                        {selectedOrderForInvoice.trackingNumber && (
+                          <p><span className="text-gray-500">Tracking AWB:</span> <span className="font-mono font-bold text-amber-950">{selectedOrderForInvoice.trackingNumber}</span></p>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-amber-950 text-amber-100 font-bold uppercase text-[10px]">
+                    <tr>
+                      <th className="p-3">#</th>
+                      <th className="p-3">Handloom Product Description</th>
+                      <th className="p-3 text-center">Qty</th>
+                      <th className="p-3 text-right">Unit Price</th>
+                      <th className="p-3 text-right">Total (INR)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {(() => {
+                      let items: any[] = [];
+                      try {
+                        items = typeof selectedOrderForInvoice.items === 'string'
+                          ? JSON.parse(selectedOrderForInvoice.items)
+                          : selectedOrderForInvoice.items || [];
+                      } catch (e) {}
+
+                      if (items.length === 0) {
+                        return (
+                          <tr>
+                            <td className="p-3 text-gray-400">1</td>
+                            <td className="p-3 font-bold text-gray-900">Authentic Maheshwari Handloom Saree</td>
+                            <td className="p-3 text-center font-bold">1</td>
+                            <td className="p-3 text-right font-bold">₹{Number(selectedOrderForInvoice.totalAmount).toLocaleString()}</td>
+                            <td className="p-3 text-right font-bold text-rose-800">₹{Number(selectedOrderForInvoice.totalAmount).toLocaleString()}</td>
+                          </tr>
+                        );
+                      }
+
+                      return items.map((it: any, idx: number) => {
+                        const title = it.product?.title || it.title || 'Maheshwari Handloom Saree';
+                        const qty = it.quantity || 1;
+                        const price = it.price || it.product?.price || selectedOrderForInvoice.totalAmount;
+                        const lineTotal = price * qty;
+
+                        return (
+                          <tr key={idx}>
+                            <td className="p-3 text-gray-400">{idx + 1}</td>
+                            <td className="p-3">
+                              <p className="font-bold text-gray-900">{title}</p>
+                              <p className="text-[10px] text-gray-500">Pure Handloom • Craft Origin: Maheshwar</p>
+                            </td>
+                            <td className="p-3 text-center font-bold">{qty}</td>
+                            <td className="p-3 text-right font-bold">₹{Number(price).toLocaleString()}</td>
+                            <td className="p-3 text-right font-bold text-rose-800">₹{Number(lineTotal).toLocaleString()}</td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                  <tfoot className="bg-amber-50/80 border-t-2 border-amber-900 font-bold text-xs">
+                    <tr>
+                      <td colSpan={4} className="p-3 text-right text-gray-700 uppercase tracking-wider">
+                        Grand Total (Inclusive of all Handloom taxes):
+                      </td>
+                      <td className="p-3 text-right text-rose-900 text-sm font-black">
+                        ₹{Number(selectedOrderForInvoice.totalAmount).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Authenticity & Return Policy Footer */}
+              <div className="pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-gray-500">
+                <div className="space-y-0.5">
+                  <p className="font-bold text-amber-950">✓ 100% Genuine Maheshwar Handloom Certified</p>
+                  <p>Thank you for promoting traditional Indian handloom craftsmanship.</p>
+                </div>
+                <div className="text-right font-serif italic text-amber-900 text-xs">
+                  Authorized Signatory • Reoti Handloom
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Cancel Order & Instant WhatsApp Notification Modal */}
+      {selectedOrderForCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-rose-300 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-rose-950 via-red-950 to-neutral-950 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-rose-500/20 rounded-xl border border-rose-400/30">
+                  <XCircle className="w-5 h-5 text-rose-300" />
+                </div>
+                <div>
+                  <h4 className="font-serif font-bold text-base text-rose-100">
+                    Cancel Order #{selectedOrderForCancel.orderNumber || selectedOrderForCancel.id}
+                  </h4>
+                  <p className="text-[11px] text-rose-300/80">
+                    Update order status and notify customer directly on WhatsApp
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedOrderForCancel(null)}
+                className="p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <form onSubmit={handleConfirmCancelOrder} className="p-5 sm:p-6 space-y-4 overflow-y-auto text-xs font-sans">
+              {/* Order & Customer Summary */}
+              <div className="p-3 bg-rose-50/70 rounded-xl border border-rose-200 space-y-1">
+                <p className="font-bold text-gray-900">
+                  Customer: <span className="font-extrabold text-rose-950">{selectedOrderForCancel.customerName}</span> (+91 {selectedOrderForCancel.customerPhone})
+                </p>
+                <p className="text-gray-600 text-[11px]">
+                  Order Total: <span className="font-bold text-gray-900">₹{Number(selectedOrderForCancel.totalAmount || 0).toLocaleString()}</span> • Payment Mode: <span className="font-bold">{selectedOrderForCancel.paymentMethod || 'RAZORPAY_ONLINE'} ({selectedOrderForCancel.paymentStatus || 'PAID'})</span>
+                </p>
+              </div>
+
+              {/* Cancellation Reason Selector */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  Select Reason for Cancellation *
+                </label>
+                <select
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-bold text-xs bg-white text-gray-900 focus:ring-2 focus:ring-rose-700 outline-none"
+                >
+                  <option value="Out of Stock / Saree Unavailable">📦 Out of Stock / Saree Unavailable</option>
+                  <option value="Fabric Quality Check Issue">🔍 Fabric Quality Check Issue</option>
+                  <option value="Customer Requested Cancellation">👤 Customer Requested Cancellation</option>
+                  <option value="Delivery Pincode Unserviceable">📍 Delivery Pincode Unserviceable</option>
+                  <option value="Payment / Address Verification Failed">💳 Payment / Address Verification Failed</option>
+                  <option value="Other / Custom Reason">📝 Other / Custom Reason</option>
+                </select>
+              </div>
+
+              {/* Custom Note */}
+              <div>
+                <label className="block font-bold text-gray-800 mb-1">
+                  Additional Note / Message (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Refund initiated. Alternatively, you may choose another saree from our latest Maheshwari collection."
+                  value={cancelCustomNote}
+                  onChange={(e) => setCancelCustomNote(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl p-2.5 font-medium text-xs text-gray-700 bg-white focus:ring-2 focus:ring-rose-700 outline-none"
+                />
+              </div>
+
+              {/* Live WhatsApp Message Preview */}
+              <div className="bg-emerald-50/60 p-3 rounded-xl border border-emerald-200 text-[11px] text-gray-700 space-y-1">
+                <span className="font-bold text-emerald-900 flex items-center gap-1">
+                  <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>WhatsApp Message Preview:</span>
+                </span>
+                <p className="font-sans text-gray-600 whitespace-pre-line bg-white p-2.5 rounded-lg border border-emerald-100 text-[10px] leading-relaxed">
+                  Greetings from Reoti Handloom! 🙏{'\n'}
+                  Important update regarding your Reoti Handloom Order #{selectedOrderForCancel.orderNumber || selectedOrderForCancel.id}:{'\n'}
+                  ❌ Status: CANCELLED{'\n'}
+                  ⚠️ Reason: {cancelReason.includes('Other') ? (cancelCustomNote || 'Unforeseen circumstances') : cancelReason}{'\n'}
+                  {cancelCustomNote ? `📝 Note: ${cancelCustomNote}\n` : ''}
+                  💳 {(selectedOrderForCancel.paymentMethod || '').toLowerCase().includes('razorpay') || selectedOrderForCancel.paymentStatus === 'PAID'
+                    ? `Refund Info: Full refund of ₹${Number(selectedOrderForCancel.totalAmount || 0).toLocaleString()} will be automatically refunded to your original source in 3-5 days.`
+                    : 'Payment: No payment charged (Cash on Delivery).'}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrderForCancel(null)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 font-bold transition-all cursor-pointer"
+                >
+                  Keep Order
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isUpdatingOrder}
+                  className="px-5 py-2.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-extrabold shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4 text-rose-200" />
+                  <span>{isUpdatingOrder ? 'Processing...' : 'Confirm Cancel & Send WhatsApp'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

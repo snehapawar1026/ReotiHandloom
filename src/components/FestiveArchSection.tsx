@@ -12,38 +12,38 @@ interface ArchCategory {
 
 const ARCH_ITEMS: ArchCategory[] = [
   {
-    title: 'Suit Sets',
+    title: 'Festive Sarees',
     subtitle: 'to steal the show',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+    image: '/uploads/festival_banner_stairs.jpg',
     link: '/products?category=silk-cotton-maheshwari',
   },
   {
-    title: 'Anarkalis',
-    subtitle: 'for Visarjan looks',
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    title: 'Heritage Weaves',
+    subtitle: 'for every pooja & ritual',
+    image: '/uploads/festival_banner_friends.jpg',
     link: '/products?category=silk-cotton-maheshwari',
   },
   {
-    title: 'Shararas',
-    subtitle: 'for pandal hopping',
-    image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
+    title: 'Maheshwari Suits',
+    subtitle: 'for festive gatherings',
+    image: '/uploads/saree_1789221965397_lf0kg.jpeg',
+    link: '/products?category=maheshwari-suits',
+  },
+  {
+    title: 'Tissue Zari',
+    subtitle: 'to shine in evening events',
+    image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
     link: '/products?category=tissue-zari-maheshwari',
   },
   {
-    title: 'Fusion Sets',
-    subtitle: 'to shine in',
-    image: 'https://images.unsplash.com/photo-1609357605129-26f69add5d6e?auto=format&fit=crop&w=800&q=80',
-    link: '/products?category=garbha-reshami-special',
-  },
-  {
-    title: 'Heritage sarees',
-    subtitle: 'for every pooja',
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80',
+    title: 'Royal Classics',
+    subtitle: 'for timeless elegance',
+    image: '/uploads/saree_1789233209397_zszzb.jpeg',
     link: '/products?category=pure-silk-maheshwari',
   },
   {
     title: 'Paithani Sarees',
-    subtitle: 'for authentic vibes',
+    subtitle: 'for authentic festive vibes',
     image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
     link: '/products',
   },
@@ -55,10 +55,10 @@ export const FestiveArchSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <span className="text-xs font-extrabold tracking-[0.25em] uppercase text-amber-200 block mb-1">
-            FESTIVE CELEBRATIONS
+            FESTIVE CELEBRATIONS • UPCOMING SPECIAL
           </span>
           <h2 className="text-3xl sm:text-5xl font-serif font-extrabold tracking-wide text-white">
-            Get Ready For Ganesh Chaturthi
+            Get Ready For Upcoming Festivals
           </h2>
           <div className="w-24 h-0.5 bg-amber-300/60 mx-auto mt-3 rounded-full" />
         </div>

@@ -77,7 +77,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
     }
 
     // Launch Official Razorpay Payment Modal SDK
-    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_TbVnGDp1SvyoA5';
+    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TegkAKQQIv99EM';
 
     const loadRazorpayScript = () => {
       return new Promise((resolve) => {

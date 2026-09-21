@@ -119,6 +119,14 @@ export const CartDrawer = () => {
       alert('Please fill in all address details');
       return;
     }
+    if (paymentMethod === 'COD') {
+      handleFinalizeOrderWithPayment({
+        paymentMethod: 'CASH_ON_DELIVERY',
+        transactionId: 'COD_' + Math.floor(100000 + Math.random() * 900000),
+        paymentStatus: 'PENDING_COD',
+      });
+      return;
+    }
     setIsGatewayOpen(true);
   };
 
@@ -357,9 +365,13 @@ export const CartDrawer = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-rose-700 hover:bg-rose-800 text-white font-bold text-sm py-3 rounded uppercase tracking-wider shadow transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-rose-700 hover:bg-rose-800 text-white font-bold text-sm py-3 rounded uppercase tracking-wider shadow transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  {isSubmitting ? 'Processing Order...' : `CONFIRM & PAY ₹${finalPayable.toLocaleString()}`}
+                  {isSubmitting
+                    ? 'Processing Order...'
+                    : paymentMethod === 'COD'
+                    ? `PLACE CASH ON DELIVERY ORDER (₹${finalPayable.toLocaleString()})`
+                    : `CONFIRM & PAY ₹${finalPayable.toLocaleString()}`}
                 </button>
               </form>
             ) : cart.length === 0 ? (

@@ -486,6 +486,10 @@ export function createOrderInStore(orderInput: any) {
     paymentMethod: orderInput.paymentMethod || 'UPI',
     paymentStatus: orderInput.paymentStatus || (orderInput.paymentMethod === 'COD' ? 'PENDING' : 'PAID'),
     status: 'PROCESSING',
+    courierPartner: orderInput.courierPartner || null,
+    trackingNumber: orderInput.trackingNumber || null,
+    trackingUrl: orderInput.trackingUrl || null,
+    estimatedDelivery: orderInput.estimatedDelivery || '3-5 Business Days',
     items: typeof orderInput.items === 'string' ? orderInput.items : JSON.stringify(orderInput.items),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -494,6 +498,49 @@ export function createOrderInStore(orderInput: any) {
   const orders = [newOrder, ...(data.orders || [])];
   saveStoreData({ orders });
   return newOrder;
+}
+
+export function updateOrderInStore(idOrNumber: string, updateInput: any) {
+  const data = getStoreData();
+  const currentOrders = data.orders || [];
+  const index = currentOrders.findIndex(
+    (o: any) => o.id === idOrNumber || o.orderNumber === idOrNumber || o.orderNumber === idOrNumber.replace(/^#/, '')
+  );
+  if (index === -1) return null;
+
+  const existing = currentOrders[index];
+  const updatedOrder = {
+    ...existing,
+    ...updateInput,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const orders = [...currentOrders];
+  orders[index] = updatedOrder;
+  saveStoreData({ orders });
+  return updatedOrder;
+}
+
+export function deleteOrderInStore(idOrNumber: string) {
+  const data = getStoreData();
+  const orders = (data.orders || []).filter(
+    (o: any) => o.id !== idOrNumber && o.orderNumber !== idOrNumber && o.orderNumber !== idOrNumber.replace(/^#/, '')
+  );
+  saveStoreData({ orders });
+  return true;
+}
+
+export function getOrderByIdOrNumber(idOrNumber: string) {
+  const data = getStoreData();
+  const clean = idOrNumber.trim().replace(/^#/, '').toLowerCase();
+  return (
+    (data.orders || []).find(
+      (o: any) =>
+        o.id === idOrNumber ||
+        o.orderNumber?.toLowerCase() === clean ||
+        o.customerPhone?.includes(clean)
+    ) || null
+  );
 }
 
 export function logActivityInStore(activityInput: any) {

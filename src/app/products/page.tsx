@@ -92,40 +92,7 @@ const CATEGORY_HERO_MAP: Record<string, { title: string; description: string; im
   },
 };
 
-const KANGURA_TRIANGLES = [
-  { outer: '180.0,100.0 194.54,109.31 178.46,115.61', inner: '182.21,102.42 191.06,108.97 181.11,113.66', dot: [187.83, 108.65] },
-  { outer: '178.46,115.61 190.91,127.58 173.91,130.61', inner: '180.16,118.41 187.56,126.56 176.88,129.22', dot: [184.45, 125.62] },
-  { outer: '173.91,130.61 183.78,144.78 166.52,144.45', inner: '175.03,133.7 180.7,143.13 169.7,143.66', dot: [177.83, 141.6] },
-  { outer: '166.52,144.45 173.44,160.27 156.57,156.57', inner: '167.01,147.69 170.73,158.05 159.85,156.42', dot: [168.22, 155.99] },
-  { outer: '156.57,156.57 160.27,173.44 144.45,166.52', inner: '156.42,159.85 158.05,170.73 147.69,167.01', dot: [155.99, 168.22] },
-  { outer: '144.45,166.52 144.78,183.78 130.61,173.91', inner: '143.66,169.7 143.13,180.7 133.7,175.03', dot: [141.6, 177.83] },
-  { outer: '130.61,173.91 127.58,190.91 115.61,178.46', inner: '129.22,176.88 126.56,187.56 118.41,180.16', dot: [125.62, 184.45] },
-  { outer: '115.61,178.46 109.31,194.54 100.0,180.0', inner: '113.66,181.11 108.97,191.06 102.42,182.21', dot: [108.65, 187.83] },
-  { outer: '100.0,180.0 90.69,194.54 84.39,178.46', inner: '97.58,182.21 91.03,191.06 86.34,181.11', dot: [91.35, 187.83] },
-  { outer: '84.39,178.46 72.42,190.91 69.39,173.91', inner: '81.59,180.16 73.44,187.56 70.78,176.88', dot: [74.38, 184.45] },
-  { outer: '69.39,173.91 55.22,183.78 55.55,166.52', inner: '66.3,175.03 56.87,180.7 56.34,169.7', dot: [58.4, 177.83] },
-  { outer: '55.55,166.52 39.73,173.44 43.43,156.57', inner: '52.31,167.01 41.95,170.73 43.58,159.85', dot: [44.01, 168.22] },
-  { outer: '43.43,156.57 26.56,160.27 33.48,144.45', inner: '40.15,156.42 29.27,158.05 32.99,147.69', dot: [31.78, 155.99] },
-  { outer: '33.48,144.45 16.22,144.78 26.09,130.61', inner: '30.3,143.66 19.3,143.13 24.97,133.7', dot: [22.17, 141.6] },
-  { outer: '26.09,130.61 9.09,127.58 21.54,115.61', inner: '23.12,129.22 12.44,126.56 19.84,118.41', dot: [15.55, 125.62] },
-  { outer: '21.54,115.61 5.46,109.31 20.0,100.0', inner: '18.89,113.66 8.94,108.97 17.79,102.42', dot: [12.17, 108.65] },
-  { outer: '20.0,100.0 5.46,90.69 21.54,84.39', inner: '17.79,97.58 8.94,91.03 18.89,86.34', dot: [12.17, 91.35] },
-  { outer: '21.54,84.39 9.09,72.42 26.09,69.39', inner: '19.84,81.59 12.44,73.44 23.12,70.78', dot: [15.55, 74.38] },
-  { outer: '26.09,69.39 16.22,55.22 33.48,55.55', inner: '24.97,66.3 19.3,56.87 30.3,56.34', dot: [22.17, 58.4] },
-  { outer: '33.48,55.55 26.56,39.73 43.43,43.43', inner: '32.99,52.31 29.27,41.95 40.15,43.58', dot: [31.78, 44.01] },
-  { outer: '43.43,43.43 39.73,26.56 55.55,33.48', inner: '43.58,40.15 41.95,29.27 52.31,32.99', dot: [44.01, 31.78] },
-  { outer: '55.55,33.48 55.22,16.22 69.39,26.09', inner: '56.34,30.3 56.87,19.3 66.3,24.97', dot: [58.4, 22.17] },
-  { outer: '69.39,26.09 72.42,9.09 84.39,21.54', inner: '70.78,23.12 73.44,12.44 81.59,19.84', dot: [74.38, 15.55] },
-  { outer: '84.39,21.54 90.69,5.46 100.0,20.0', inner: '86.34,18.89 91.03,8.94 97.58,17.79', dot: [91.35, 12.17] },
-  { outer: '100.0,20.0 109.31,5.46 115.61,21.54', inner: '102.42,17.79 108.97,8.94 113.66,18.89', dot: [108.65, 12.17] },
-  { outer: '115.61,21.54 127.58,9.09 130.61,26.09', inner: '118.41,19.84 126.56,12.44 129.22,23.12', dot: [125.62, 15.55] },
-  { outer: '130.61,26.09 144.78,16.22 144.45,33.48', inner: '133.7,24.97 143.13,19.3 143.66,30.3', dot: [141.6, 22.17] },
-  { outer: '144.45,33.48 160.27,26.56 156.57,43.43', inner: '147.69,32.99 158.05,29.27 156.42,40.15', dot: [155.99, 31.78] },
-  { outer: '156.57,43.43 173.44,39.73 166.52,55.55', inner: '159.85,43.58 170.73,41.95 167.01,52.31', dot: [168.22, 44.01] },
-  { outer: '166.52,55.55 183.78,55.22 173.91,69.39', inner: '169.7,56.34 180.7,56.87 175.03,66.3', dot: [177.83, 58.4] },
-  { outer: '173.91,69.39 190.91,72.42 178.46,84.39', inner: '176.88,70.78 187.56,73.44 180.16,81.59', dot: [184.45, 74.38] },
-  { outer: '178.46,84.39 194.54,90.69 180.0,100.0', inner: '181.11,86.34 191.06,91.03 182.21,97.58', dot: [187.83, 91.35] },
-];
+
 
 function getHeroContent(
   selectedCategory: string,
@@ -133,8 +100,19 @@ function getHeroContent(
   selectedColor: string,
   isTrending: boolean,
   isBestSeller: boolean,
+  selectedSort: string,
   categories: any[]
 ) {
+  if (selectedSort === 'newest') {
+    return {
+      title: 'New Arrivals',
+      subtitle: 'Maheshwari silk-cotton, fresh off the loom',
+      description:
+        'Discover our newest Maheshwari silk sarees, handwoven on traditional pit looms in Maheshwar. Each new arrival features the signature silk-cotton weave, lustrous zari borders, and striped pallu that define this centuries-old craft. Shop authentic Maheshwari silk sarees online, Direct from Master Weavers.\n\nStep into the world of timeless elegance with Reoti’s New Arrivals. Our curated collection celebrates the artistry of Authentic Handwoven Maheshwari Sarees and Dress materials, each piece meticulously crafted by skilled artisans. Known for their delicate textures, vibrant colors, and intricate patterns.',
+      image: '/uploads/saree_1789233209397_zszzb.jpeg',
+    };
+  }
+
   if (selectedCategory) {
     const staticHero = CATEGORY_HERO_MAP[selectedCategory];
     const cat = categories.find((c) => c.slug === selectedCategory);
@@ -219,6 +197,7 @@ function ProductsContent() {
   const [isFilterOpenMobile, setIsFilterOpenMobile] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [hideCategoryStrip, setHideCategoryStrip] = useState<boolean>(false);
+  const [isCategoryExplorerOpen, setIsCategoryExplorerOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -392,89 +371,90 @@ function ProductsContent() {
     selectedCategory || selectedFabric || isTrending || isBestSeller || isFeatured || selectedColor
   );
 
+  const isNewArrivals = selectedSort === 'newest';
+  const isCategorySelected = Boolean(selectedCategory);
+
+  const handleSelectCategory = (slug: string) => {
+    updateFilter('category', slug);
+    setIsCategoryExplorerOpen(false);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans">
-      {/* Breadcrumb Path & Header Reset Button */}
-      <div className="text-xs text-gray-500 mb-4 font-medium flex items-center justify-between">
-        <div>
+      {/* Breadcrumb Path & Header Actions */}
+      <div className="text-xs text-gray-500 mb-4 font-medium flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center flex-wrap">
           <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/')}>Home</span>
           <span className="mx-1.5">/</span>
-          <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/products')}>Catalog</span>
-          <span className="mx-1.5">/</span>
-          <span className="text-gray-900 font-bold">
-            {selectedCategory
-              ? categories.find((c) => c.slug === selectedCategory)?.name || 'Category'
-              : 'Maheshwari Sarees'}
-          </span>
+          {isNewArrivals ? (
+            <>
+              <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/products')}>Collections</span>
+              <span className="mx-1.5">/</span>
+              <span className="text-gray-900 font-bold">New Arrivals</span>
+            </>
+          ) : (
+            <>
+              <span className="hover:text-rose-600 cursor-pointer" onClick={() => router.push('/products')}>Catalog</span>
+              <span className="mx-1.5">/</span>
+              <span className="text-gray-900 font-bold">
+                {selectedCategory
+                  ? categories.find((c) => c.slug === selectedCategory)?.name || 'Category'
+                  : 'Maheshwari Sarees'}
+              </span>
+            </>
+          )}
         </div>
 
-        {activeFiltersCount > 0 && (
-          <button
-            onClick={clearAllFilters}
-            className="text-xs font-extrabold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
-          >
-            <RefreshCw className="w-3 h-3 text-rose-600" />
-            <span>Reset All Filters</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {activeFiltersCount > 0 && (
+            <button
+              onClick={clearAllFilters}
+              className="text-xs font-extrabold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer shadow-2xs"
+            >
+              <RefreshCw className="w-3 h-3 text-rose-600" />
+              <span>Reset All Filters</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Full-Width Category Split Hero Banner */}
-      {hasCategoryOrFilterSelected && (() => {
+      {/* When on New Arrivals */}
+      {isNewArrivals ? (() => {
         const hero = getHeroContent(
           selectedCategory,
           selectedFabric,
           selectedColor,
           isTrending,
           isBestSeller,
+          selectedSort,
           categories
         );
-
         return (
           <div className="w-full bg-[#FAF7F2] border border-[#E8DFC8] rounded-2xl overflow-hidden mb-6 shadow-2xs font-sans">
             <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
               {/* Left Side: Craft Story & Title */}
-              <div className="md:col-span-6 lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-center text-center space-y-3 overflow-hidden">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
-                  {hero.title}{' '}
-                  <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl lg:text-3xl block sm:inline mt-1 sm:mt-0">
-                    {isSemiMaheshwariView
-                      ? 'सेमी माहेश्वरी साड़ियाँ'
-                      : selectedCategory.includes('suit')
-                      ? 'माहेश्वरी सूट सेट्स'
-                      : selectedCategory.includes('dupatta')
-                      ? 'दुपट्टे'
-                      : 'माहेश्वरी साड़ियाँ'}
-                  </span>
+              <div className="md:col-span-6 lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-center space-y-3 overflow-hidden">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
+                  {hero.title}
                 </h1>
-                <p className="text-xs sm:text-sm text-[#8B4513]/80 font-bold tracking-wider uppercase">
-                  {isSemiMaheshwariView
-                    ? 'सेमी माहेश्वरी साड़ियाँ ~ সেমি মাহেশ্বরী শাড়ি ~ செமி மகேஸ்வரி புடவைகள் ~ સેમી મહેશ્વરી સાડીઓ'
-                    : selectedCategory.includes('suit')
-                    ? 'माहेश्वरी सूट ~ মাহেশ্বরী স্যুট ~ மகேஸ்வரி சூட்கள் ~ મહેશ્વરી સૂટ'
-                    : 'माहेश्वरी साड़ियाँ ~ माहेश्वरी শাড়ি ~ மகேஸ்வரி புடவைகள் ~ મહેશ્વરી સાડીઓ'}
+                <p className="font-serif italic text-[#8B4513] text-lg sm:text-xl font-normal">
+                  {(hero as any).subtitle || 'Maheshwari silk-cotton, fresh off the loom'}
                 </p>
-                <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium max-w-xl mx-auto line-clamp-4 sm:line-clamp-none">
+                <div className="w-16 h-0.5 bg-[#8B4513]/40 rounded-full my-1" />
+                <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium whitespace-pre-line">
                   {hero.description}
                 </p>
               </div>
 
               {/* Right Side: Gracefully Framed Hero Image */}
-              <div className="md:col-span-6 lg:col-span-5 relative w-full h-64 sm:h-72 md:h-full min-h-[260px] md:min-h-[300px] overflow-hidden bg-gradient-to-br from-amber-950 to-stone-900 shrink-0">
+              <div className="md:col-span-6 lg:col-span-5 relative w-full h-80 sm:h-96 md:h-full min-h-[320px] sm:min-h-[360px] overflow-hidden bg-gradient-to-br from-amber-950 to-stone-900 shrink-0">
                 <img
                   src={hero.image}
                   alt={hero.title}
                   className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                 />
-
-                {/* Reoti Handloom Signature Watermark */}
                 <WatermarkOverlay variant="pdp" />
-
-                {/* Soft Bottom & Side Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent pointer-events-none hidden md:block" />
-
-                {/* Authentic Reoti Handloom Heritage Watermark Badge */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
                   <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-300 shrink-0">
                     <img src="/logo.jpg" alt="Reoti Logo" className="w-full h-full object-cover" />
@@ -487,7 +467,293 @@ function ProductsContent() {
             </div>
           </div>
         );
-      })()}
+      })() : (
+        <>
+          {/* Authentic Scalloped Kangura Ring Circular Category Strip (Matching Homepage) */}
+          <div className="w-full mb-6 bg-[#FAF7F2]/90 border border-[#E8DFC8] rounded-2xl py-4 px-3 sm:px-6 shadow-2xs relative group/carousel font-sans">
+            {/* Left Scroll Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollCategories('left')}
+              className="flex absolute -left-2 sm:-left-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-[#581C1C] border border-[#E8DFC8] shadow-xl hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95 hover:scale-105"
+              aria-label="Scroll Left"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+
+            {/* Right Scroll Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollCategories('right')}
+              className="flex absolute -right-2 sm:-right-3 top-1/2 -translate-y-1/2 z-30 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white text-[#581C1C] border border-[#E8DFC8] shadow-xl hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95 hover:scale-105"
+              aria-label="Scroll Right"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+
+            <div
+              ref={categoryScrollRef}
+              className="flex gap-4 sm:gap-6 lg:gap-8 overflow-x-auto pb-2 pt-1 scrollbar-none justify-start px-6 sm:px-8 scroll-smooth w-full overscroll-x-contain"
+            >
+              {/* "All" Circular Avatar */}
+              <button
+                type="button"
+                onClick={() =>
+                  handleSelectCategory(
+                    isSemiMaheshwariView
+                      ? 'semi-maheshwari-sarees'
+                      : selectedCategory.includes('suit')
+                      ? 'maheshwari-suits'
+                      : ''
+                  )
+                }
+                className="flex flex-col items-center group cursor-pointer shrink-0 focus:outline-none"
+              >
+                <div className="relative w-22 h-22 sm:w-26 sm:h-26 flex items-center justify-center shrink-0">
+                  {/* Scalloped Bead Ring SVG matching Homepage */}
+                  <svg
+                    className={`absolute inset-0 w-full h-full transition-colors duration-300 pointer-events-none ${
+                      !selectedCategory ||
+                      (isSemiMaheshwariView && selectedCategory === 'semi-maheshwari-sarees') ||
+                      selectedCategory === 'maheshwari-suits'
+                        ? 'text-[#581C1C]'
+                        : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
+                    }`}
+                    viewBox="0 0 100 100"
+                    fill="none"
+                  >
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const angle = (i * 360) / 24;
+                      const rad = (angle * Math.PI) / 180;
+                      const cx = 50 + 44 * Math.cos(rad);
+                      const cy = 50 + 44 * Math.sin(rad);
+                      return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
+                    })}
+                    <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                  <div
+                    className={`w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden p-1 bg-white border transition-all duration-300 ${
+                      !selectedCategory ||
+                      (isSemiMaheshwariView && selectedCategory === 'semi-maheshwari-sarees') ||
+                      selectedCategory === 'maheshwari-suits'
+                        ? 'border-[#581C1C] ring-2 ring-[#581C1C]/40 shadow-lg scale-105'
+                        : 'border-amber-950/20 shadow-md group-hover:border-[#581C1C]'
+                    }`}
+                  >
+                    <img
+                      src={
+                        isSemiMaheshwariView
+                          ? '/uploads/semi_maheshwari_banner.jpg'
+                          : selectedCategory.includes('suit')
+                          ? '/uploads/saree_1789231637552_ggljq.jpeg'
+                          : '/uploads/maheshwari_legacy_banner.png'
+                      }
+                      alt="All"
+                      className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                    />
+                  </div>
+                </div>
+                <span
+                  className={`text-xs font-serif font-bold text-center mt-1.5 leading-snug max-w-[95px] sm:max-w-[115px] transition-colors ${
+                    !selectedCategory ||
+                    (isSemiMaheshwariView && selectedCategory === 'semi-maheshwari-sarees') ||
+                    selectedCategory === 'maheshwari-suits'
+                      ? 'text-[#581C1C] font-black'
+                      : 'text-gray-900 group-hover:text-[#581C1C]'
+                  }`}
+                >
+                  {isSemiMaheshwariView ? 'All Semi' : selectedCategory.includes('suit') ? 'All Suits' : 'All Sarees'}
+                </span>
+              </button>
+
+              {/* Sub-Category Circular Avatars */}
+              {(() => {
+                let displayedCats: any[] = [];
+                if (isSemiMaheshwariView) {
+                  displayedCats = semiSubcategories;
+                } else if (selectedCategory.includes('suit')) {
+                  displayedCats = categories.filter(
+                    (c) =>
+                      (c.slug?.includes('suit') ||
+                        c.name?.toLowerCase().includes('suit') ||
+                        c.parentId?.includes('suit') ||
+                        c.parentId === '62c60ff6-1568-4753-8f73-652dd1efd355') &&
+                      c.slug !== 'maheshwari-suits' &&
+                      !c.isHidden
+                  );
+                  if (displayedCats.length === 0) {
+                    displayedCats = [
+                      {
+                        id: 'bagh-cotton-suits',
+                        name: 'Bagh Cotton Suits',
+                        slug: 'bagh-cotton-suits',
+                        image: '/uploads/saree_1789231637570_fnani.jpeg',
+                      },
+                      {
+                        id: 'indigo-cotton-suit',
+                        name: 'Indigo Cotton Suit',
+                        slug: 'indigo-cotton-suit',
+                        image: '/uploads/saree_1789232225743_smxhb.jpeg',
+                      },
+                      {
+                        id: 'chanderi-suits',
+                        name: 'Chanderi Suits',
+                        slug: 'chanderi-suits',
+                        image: '/uploads/saree_1789231637552_ggljq.jpeg',
+                      },
+                    ];
+                  }
+                } else {
+                  displayedCats = categories.filter(
+                    (c) =>
+                      !c.slug?.includes('semi-maheshwari') &&
+                      !c.name?.toLowerCase().includes('semi maheshwari') &&
+                      !c.slug?.includes('suit') &&
+                      !c.name?.toLowerCase().includes('suit') &&
+                      c.slug !== 'maheshwari-sarees' &&
+                      c.id !== 'maheshwari-sarees-id' &&
+                      !c.isHidden
+                  );
+                }
+
+                return displayedCats.map((cat) => {
+                  const isSelected = selectedCategory === cat.slug;
+                  const imgUrl =
+                    cat.image ||
+                    cat.bannerImage ||
+                    CATEGORY_HERO_MAP[cat.slug]?.image ||
+                    '/uploads/saree_1789221965397_lf0kg.jpeg';
+
+                  return (
+                    <button
+                      key={cat.id || cat.slug}
+                      type="button"
+                      onClick={() =>
+                        handleSelectCategory(
+                          isSelected
+                            ? isSemiMaheshwariView
+                              ? 'semi-maheshwari-sarees'
+                              : selectedCategory.includes('suit')
+                              ? 'maheshwari-suits'
+                              : ''
+                            : cat.slug
+                        )
+                      }
+                      className="flex flex-col items-center group cursor-pointer shrink-0 focus:outline-none"
+                    >
+                      <div className="relative w-22 h-22 sm:w-26 sm:h-26 flex items-center justify-center shrink-0">
+                        {/* Scalloped Bead Ring SVG matching Homepage */}
+                        <svg
+                          className={`absolute inset-0 w-full h-full transition-colors duration-300 pointer-events-none ${
+                            isSelected
+                              ? 'text-[#581C1C]'
+                              : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
+                          }`}
+                          viewBox="0 0 100 100"
+                          fill="none"
+                        >
+                          {Array.from({ length: 24 }).map((_, i) => {
+                            const angle = (i * 360) / 24;
+                            const rad = (angle * Math.PI) / 180;
+                            const cx = 50 + 44 * Math.cos(rad);
+                            const cy = 50 + 44 * Math.sin(rad);
+                            return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
+                          })}
+                          <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                        <div
+                          className={`w-[72px] h-[72px] sm:w-[84px] sm:h-[84px] rounded-full overflow-hidden p-1 bg-white border transition-all duration-300 ${
+                            isSelected
+                              ? 'border-[#581C1C] ring-2 ring-[#581C1C]/40 shadow-lg scale-105'
+                              : 'border-amber-950/20 shadow-md group-hover:border-[#581C1C]'
+                          }`}
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={cat.name}
+                            className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                          />
+                        </div>
+                      </div>
+                      <span
+                        className={`text-xs font-serif font-bold text-center mt-1.5 leading-snug max-w-[95px] sm:max-w-[115px] transition-colors ${
+                          isSelected
+                            ? 'text-[#581C1C] font-black'
+                            : 'text-gray-900 group-hover:text-[#581C1C]'
+                        }`}
+                      >
+                        {cat.name}
+                      </span>
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Hero Banner for Selected Category */}
+          {(() => {
+            const hero = getHeroContent(
+              selectedCategory,
+              selectedFabric,
+              selectedColor,
+              isTrending,
+              isBestSeller,
+              selectedSort,
+              categories
+            );
+            return (
+              <div className="w-full bg-[#FAF7F2] border border-[#E8DFC8] rounded-2xl overflow-hidden mb-6 shadow-2xs font-sans">
+                <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
+                  {/* Left Side: Craft Story & Title */}
+                  <div className="md:col-span-6 lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-center space-y-3 overflow-hidden">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
+                      {hero.title}{' '}
+                      <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl block sm:inline mt-1 sm:mt-0">
+                        {isSemiMaheshwariView
+                          ? 'सेमी माहेश्वरी साड़ियाँ'
+                          : selectedCategory.includes('suit')
+                          ? 'माहेश्वरी सूट सेट्स'
+                          : 'माहेश्वरी साड़ियाँ'}
+                      </span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-[#8B4513]/80 font-bold tracking-wider uppercase">
+                      {isSemiMaheshwariView
+                        ? 'सेमी माहेश्वरी साड़ियाँ ~ Semi Maheshwari Sarees'
+                        : selectedCategory.includes('suit')
+                        ? 'माहेश्वरी सूट ~ Maheshwari Suits'
+                        : 'माहेश्वरी साड़ियाँ ~ Authentic Handloom'}
+                    </p>
+                    <div className="w-16 h-0.5 bg-[#8B4513]/40 rounded-full my-0.5" />
+                    <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium line-clamp-4 sm:line-clamp-none">
+                      {hero.description}
+                    </p>
+                  </div>
+
+                  {/* Right Side: Gracefully Framed Hero Image */}
+                  <div className="md:col-span-6 lg:col-span-5 relative w-full h-80 sm:h-96 md:h-full min-h-[320px] sm:min-h-[360px] overflow-hidden bg-gradient-to-br from-amber-950 to-stone-900 shrink-0">
+                    <img
+                      src={hero.image}
+                      alt={hero.title}
+                      className="w-full h-full object-cover object-top md:object-center transition-transform duration-700 hover:scale-105"
+                    />
+                    <WatermarkOverlay variant="pdp" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
+                      <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-300 shrink-0">
+                        <img src="/logo.jpg" alt="Reoti Logo" className="w-full h-full object-cover" />
+                      </div>
+                      <span className="font-serif font-extrabold text-[#FDE68A] tracking-wider text-[10px]">
+                        REOTI HANDLOOM
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </>
+      )}
 
       <div className="w-full">
         {/* Main Content Area (Full-Width Rewa Handloom Style Layout) */}
@@ -566,279 +832,6 @@ function ProductsContent() {
               )}
             </div>
           )}
-
-          {/* Authentic Maheshwari / Semi Maheshwari Circular Scalloped Category Avatars Carousel with Left & Right Arrows */}
-          <div className="relative group w-full bg-[#FAF7F2]/80 border-y border-[#E8DFC8] py-5 mb-3">
-              
-              {/* Left Carousel Arrow Button */}
-              <button
-                onClick={() => scrollCategories('left')}
-                className="hidden sm:flex absolute left-2 top-[42%] -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/95 text-[#581C1C] border border-[#E8DFC8] shadow-lg hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95"
-                aria-label="Scroll Left"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-
-              {/* Right Carousel Arrow Button */}
-              <button
-                onClick={() => scrollCategories('right')}
-                className="hidden sm:flex absolute right-2 top-[42%] -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-white/95 text-[#581C1C] border border-[#E8DFC8] shadow-lg hover:bg-[#581C1C] hover:text-amber-100 transition-all items-center justify-center cursor-pointer active:scale-95"
-                aria-label="Scroll Right"
-              >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-
-              {/* Scrollable Container */}
-              <div
-                ref={categoryScrollRef}
-                className="w-full overflow-x-auto scrollbar-none px-6 sm:px-12"
-              >
-                <div className="flex items-start gap-5 sm:gap-7 min-w-max">
-                
-                {isSemiMaheshwariView ? (
-                  <>
-                    {/* ALL SEMI MAHESHWARI Circular Avatar */}
-                    {(() => {
-                      const isAllSemiSelected =
-                        selectedCategory === 'semi-maheshwari-sarees' ||
-                        selectedCategory === 'semi-maheshwari' ||
-                        selectedCategory === semiParent.slug ||
-                        !selectedCategory;
-                      return (
-                        <button
-                          onClick={() => updateFilter('category', 'semi-maheshwari-sarees')}
-                          className="flex flex-col items-center group cursor-pointer"
-                        >
-                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
-                            {/* Thin Outline Kangura / Triangular Motif Ring SVG matching user image */}
-                            <svg
-                              className={`absolute inset-0 w-full h-full transition-all duration-300 ${
-                                isAllSemiSelected
-                                  ? 'text-[#581C1C] scale-105 drop-shadow-[0_2px_5px_rgba(88,28,28,0.25)]'
-                                  : 'text-[#8B4513]/70 group-hover:text-[#581C1C] group-hover:scale-105'
-                              }`}
-                              viewBox="0 0 200 200"
-                            >
-                              {/* Inner boundary circle */}
-                              <circle
-                                cx="100"
-                                cy="100"
-                                r="80"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={isAllSemiSelected ? "1.2" : "0.9"}
-                              />
-                              {/* Pointed Kangura Triangles */}
-                              {KANGURA_TRIANGLES.map((t, idx) => (
-                                <g key={idx}>
-                                  <polygon
-                                    points={t.outer}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={isAllSemiSelected ? "1.2" : "0.9"}
-                                    strokeLinejoin="round"
-                                  />
-                                  <polygon
-                                    points={t.inner}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={isAllSemiSelected ? "0.8" : "0.6"}
-                                    strokeLinejoin="round"
-                                    opacity="0.8"
-                                  />
-                                  <circle
-                                    cx={t.dot[0]}
-                                    cy={t.dot[1]}
-                                    r="1.1"
-                                    fill="currentColor"
-                                  />
-                                </g>
-                              ))}
-                            </svg>
-                            {/* Inner Circle Saree Image */}
-                            <div className={`w-[84px] h-[84px] sm:w-[96px] sm:h-[96px] md:w-[108px] md:h-[108px] rounded-full overflow-hidden p-1 bg-white border shadow-md flex items-center justify-center ${
-                              isAllSemiSelected ? 'border-2 border-[#581C1C] ring-2 ring-rose-300' : 'border-amber-950/20'
-                            }`}>
-                              <img
-                                src={semiParent.image || '/uploads/semi_maheshwari_banner.jpg'}
-                                alt="All Semi Maheshwari"
-                                className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
-                              />
-                            </div>
-                          </div>
-                          <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-tight max-w-[110px] sm:max-w-[130px] ${
-                            isAllSemiSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
-                          }`}>
-                            All Semi Maheshwari
-                          </span>
-                        </button>
-                      );
-                    })()}
-
-                    {/* Semi Maheshwari Sub-Categories */}
-                    {semiSubcategories.map((cat) => {
-                      const isSelected = selectedCategory === cat.slug;
-                      const imgUrl = cat.image || cat.bannerImage || semiParent.image || '/uploads/semi_maheshwari_banner.jpg';
-                      return (
-                        <button
-                          key={cat.id || cat.slug}
-                          onClick={() => updateFilter('category', isSelected ? 'semi-maheshwari-sarees' : cat.slug)}
-                          className="flex flex-col items-center group cursor-pointer"
-                        >
-                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
-                            {/* Thin Outline Kangura / Triangular Motif Ring SVG matching user image */}
-                            <svg
-                              className={`absolute inset-0 w-full h-full transition-all duration-300 ${
-                                isSelected
-                                  ? 'text-[#581C1C] scale-105 drop-shadow-[0_2px_5px_rgba(88,28,28,0.25)]'
-                                  : 'text-[#8B4513]/70 group-hover:text-[#581C1C] group-hover:scale-105'
-                              }`}
-                              viewBox="0 0 200 200"
-                            >
-                              {/* Inner boundary circle */}
-                              <circle
-                                cx="100"
-                                cy="100"
-                                r="80"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={isSelected ? "1.2" : "0.9"}
-                              />
-                              {/* Pointed Kangura Triangles */}
-                              {KANGURA_TRIANGLES.map((t, idx) => (
-                                <g key={idx}>
-                                  <polygon
-                                    points={t.outer}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={isSelected ? "1.2" : "0.9"}
-                                    strokeLinejoin="round"
-                                  />
-                                  <polygon
-                                    points={t.inner}
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth={isSelected ? "0.8" : "0.6"}
-                                    strokeLinejoin="round"
-                                    opacity="0.8"
-                                  />
-                                  <circle
-                                    cx={t.dot[0]}
-                                    cy={t.dot[1]}
-                                    r="1.1"
-                                    fill="currentColor"
-                                  />
-                                </g>
-                              ))}
-                            </svg>
-                            {/* Inner Circle Saree Image */}
-                            <div className={`w-[84px] h-[84px] sm:w-[96px] sm:h-[96px] md:w-[108px] md:h-[108px] rounded-full overflow-hidden p-1 bg-white border shadow-md flex items-center justify-center ${
-                              isSelected ? 'border-2 border-[#581C1C] ring-2 ring-rose-300' : 'border-amber-950/20'
-                            }`}>
-                              <img
-                                src={imgUrl}
-                                alt={cat.name}
-                                className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
-                              />
-                            </div>
-                          </div>
-                          <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-snug max-w-[110px] sm:max-w-[135px] ${
-                            isSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
-                          }`}>
-                            {cat.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </>
-                ) : (
-                  <>
-                    {/* ALL SAREES Circular Avatar */}
-                    <button
-                      onClick={() => updateFilter('category', '')}
-                      className="flex flex-col items-center group cursor-pointer"
-                    >
-                      <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
-                        <svg
-                          className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
-                            !selectedCategory ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
-                          }`}
-                          viewBox="0 0 100 100"
-                          fill="none"
-                        >
-                          {Array.from({ length: 24 }).map((_, i) => {
-                            const angle = (i * 360) / 24;
-                            const rad = (angle * Math.PI) / 180;
-                            const cx = 50 + 44 * Math.cos(rad);
-                            const cy = 50 + 44 * Math.sin(rad);
-                            return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
-                          })}
-                          <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={!selectedCategory ? '3' : '2'} />
-                        </svg>
-                        <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
-                          <img
-                            src="/uploads/saree_1789221965397_lf0kg.jpeg"
-                            alt="All Sarees"
-                            className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
-                          />
-                        </div>
-                      </div>
-                      <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-tight max-w-[110px] sm:max-w-[130px] ${
-                        !selectedCategory ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
-                      }`}>
-                        All Sarees
-                      </span>
-                    </button>
-
-                    {/* Dynamic Parent Category Circular Avatars Only */}
-                    {handloomParentCategories.map((cat) => {
-                      const isSelected = selectedCategory === cat.slug;
-                      const imgUrl = cat.image || CATEGORY_HERO_MAP[cat.slug]?.image || '/uploads/saree_1789221965397_lf0kg.jpeg';
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => updateFilter('category', isSelected ? '' : cat.slug)}
-                          className="flex flex-col items-center group cursor-pointer"
-                        >
-                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center shrink-0">
-                            <svg
-                              className={`absolute inset-0 w-full h-full transition-colors duration-300 ${
-                                isSelected ? 'text-[#581C1C]' : 'text-[#8B4513]/70 group-hover:text-[#581C1C]'
-                              }`}
-                              viewBox="0 0 100 100"
-                              fill="none"
-                            >
-                              {Array.from({ length: 24 }).map((_, i) => {
-                                const angle = (i * 360) / 24;
-                                const rad = (angle * Math.PI) / 180;
-                                const cx = 50 + 44 * Math.cos(rad);
-                                const cy = 50 + 44 * Math.sin(rad);
-                                return <circle key={i} cx={cx} cy={cy} r="3" fill="currentColor" />;
-                              })}
-                              <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth={isSelected ? '3' : '2'} />
-                            </svg>
-                            <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] md:w-[124px] md:h-[124px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
-                              <img
-                                src={imgUrl}
-                                alt={cat.name}
-                                className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
-                              />
-                            </div>
-                          </div>
-                          <span className={`text-xs sm:text-sm font-serif font-bold mt-2 text-center leading-snug max-w-[110px] sm:max-w-[135px] ${
-                            isSelected ? 'text-[#581C1C] font-extrabold underline underline-offset-4' : 'text-gray-900 group-hover:text-[#581C1C]'
-                          }`}>
-                            {cat.name}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </>
-                )}
-
-              </div>
-            </div>
-          </div>
 
           {/* Rewa Handloom Style Horizontal Filter Bar (Matching media_1789234404852.png) */}
           <div className="w-full bg-[#FAF7F2]/90 border border-[#E8DFC8] rounded-xl p-3 shadow-2xs font-sans flex flex-col md:flex-row items-center justify-between gap-3">

@@ -36,40 +36,40 @@ const SUIT_TABS = [
   { id: 'traditional-border', name: 'TRADITIONAL BORDER' },
 ];
 
-const GANESH_FESTIVE_CARDS = [
+const UPCOMING_FESTIVE_CARDS = [
   {
-    title: 'Suit Sets',
+    title: 'Festive Silk Sarees',
     sub: 'to steal the show',
+    image: '/uploads/festival_banner_stairs.jpg',
+    link: '/products?category=maheshwari-sarees',
+  },
+  {
+    title: 'Heritage Looms',
+    sub: 'for every pooja & celebration',
+    image: '/uploads/festival_banner_friends.jpg',
+    link: '/products?category=silk-cotton-maheshwari',
+  },
+  {
+    title: 'Maheshwari Suits',
+    sub: 'for family get-togethers',
     image: '/uploads/saree_1789221965397_lf0kg.jpeg',
     link: '/products?category=maheshwari-suits',
   },
   {
-    title: 'Anarkalis',
-    sub: 'for Visarjan looks',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
-    link: '/products',
-  },
-  {
-    title: 'Shararas',
-    sub: 'for pandal hopping',
-    image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80',
-    link: '/products',
-  },
-  {
-    title: 'Fusion Sets',
-    sub: 'to shine in',
+    title: 'Tissue Zari',
+    sub: 'for grand evening looks',
     image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=600&q=80',
+    link: '/products?category=tissue-zari-maheshwari',
+  },
+  {
+    title: 'Royal Classics',
+    sub: 'timeless authentic grace',
+    image: '/uploads/saree_1789233209397_zszzb.jpeg',
     link: '/products',
   },
   {
-    title: 'Heritage sarees',
-    sub: 'for every pooja',
-    image: '/uploads/saree_1789233209397_zszzb.jpeg',
-    link: '/products?category=maheshwari-sarees',
-  },
-  {
-    title: 'Paithani Sarees',
-    sub: 'for festive glam',
+    title: 'Garbha Reshami',
+    sub: 'festive signature weaves',
     image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
     link: '/products?category=pure-silk-maheshwari',
   },
@@ -346,17 +346,20 @@ export default function Home() {
       {/* 2. Hero Banner Carousel */}
       <HeroBanner />
 
-      {/* 3. Ganesh Chaturthi Festive Celebration Section (Rounded Corner Radius Container as requested in media_1789239858140.png) */}
+      {/* 3. Upcoming Festive Celebrations Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 my-6">
         <div className="w-full bg-[#E52E4E] text-white py-10 px-4 sm:px-8 rounded-3xl sm:rounded-[36px] shadow-2xl relative overflow-hidden border border-rose-400/30">
           <div className="space-y-6">
             <div className="text-center space-y-1">
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-amber-300">
-                FESTIVE CELEBRATIONS
+                FESTIVE CELEBRATIONS • UPCOMING SPECIAL
               </span>
               <h2 className="text-2xl sm:text-4xl font-serif font-extrabold text-amber-100 tracking-wide">
-                Get Ready For Ganesh Chaturthi
+                Get Ready For Upcoming Festivals
               </h2>
+              <p className="text-xs sm:text-sm font-medium text-amber-200/90 max-w-xl mx-auto pt-1">
+                Authentic handcrafted Maheshwari sarees & suits to celebrate Navratri, Karwa Chauth, Dussehra & Diwali with pure grace.
+              </p>
             </div>
 
             {/* Horizontal Scrollable Festive Cards (Arch Dome Jharokha Frame as in media_1789238433446.png) */}
@@ -378,7 +381,7 @@ export default function Home() {
                 ref={festiveScrollRef}
                 className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none justify-start px-6 scroll-smooth overscroll-x-contain"
               >
-                {GANESH_FESTIVE_CARDS.map((card, idx) => (
+                {UPCOMING_FESTIVE_CARDS.map((card, idx) => (
                   <Link
                     key={idx}
                     href={card.link}
