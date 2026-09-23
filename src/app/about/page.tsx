@@ -122,23 +122,23 @@ export default function AboutPage() {
         {/* Story Text Paragraphs (Centered Layout) */}
         <div className="space-y-6 text-gray-800 text-sm sm:text-base sm:leading-relaxed font-medium max-w-4xl mx-auto text-center">
           <p>
-            We are a team of Renowned Master Weavers and skilled artisans committed to reviving the age-old art of Maheshwari handloom weaving. Our vision is to bring the rich heritage of Maheshwari Weaving directly from Narmada ghat looms to every corner of India and across the globe.
+            Rooted in the timeless temple town of <strong className="font-semibold text-amber-950">Maheshwar on the sacred banks of Maa Narmada</strong>, <strong className="font-semibold text-amber-950">Reoti Handloom</strong> represents generations of master craftsmanship and devotion to the royal Holkar weaving heritage. Carrying forward a celebrated multi-generational artisan legacy, every weave is a living tribute to the historic artistry envisioned by Devi Ahilyabai Holkar.
           </p>
 
           <p>
-            We believe that traditional handloom weaving is not just an art form but a way of life. Every product we create is a celebration of our rich cultural heritage and a tribute to the skill and ingenuity of our weavers. Our commitment to quality shines through every Maheshwari saree we create. It&apos;s the mark of authenticity and skilled craftsmanship.
+            Unlike mass-manufactured powerloom fabrics, each authentic Reoti creation is meticulously hand-crafted on <strong className="font-semibold text-amber-950">traditional wooden pit looms</strong>. From the rhythmic shuttle movement to the delicate interlocking of our signature <em className="italic text-rose-950 font-serif">reversible zari borders (Bugdi)</em> and intricate temple motifs, every saree takes days of dedicated artisan precision.
           </p>
 
           <p>
-            We believe in preserving the art of handweaving, ensuring that every Maheshwari saree is a testament to our cultural heritage and Holkar dynasty weaving traditions.
+            Recognized with prestigious state honors including the <strong className="font-semibold text-amber-950">M.P. State Textile Corporation Award</strong> and cherished by distinguished dignitaries across India, our looms weave only pure mulberry silk, fine hand-spun cotton, and tested zari—delivering featherlight comfort and royal grace.
           </p>
 
           <p>
-            When you wear a Reoti Maheshwari saree, you carry a piece of tradition and sustainability. It&apos;s a symbol of royal elegance, lightweight comfort, and conscious fashion.
+            Our commitment is pure and transparent: <strong className="font-semibold text-amber-950">direct loom-to-wardrobe authenticity</strong>. By connecting our weaver families directly with saree connoisseurs, we preserve fair artisan livelihood while guaranteeing you 100% genuine Maheshwari craftsmanship without middlemen markups.
           </p>
 
           <p>
-            Thank you for choosing Reoti Handloom Maheshwar, and we look forward to sharing our passion for traditional Maheshwari weaving culture with you.
+            When you drape a <strong className="font-semibold text-amber-950">Reoti Handloom</strong> saree, you embrace timeless Narmada ghat culture, sustainable slow fashion, and authentic royal elegance. Thank you for celebrating handloom heritage with us.
           </p>
         </div>
 
