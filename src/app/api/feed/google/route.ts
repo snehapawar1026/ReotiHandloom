@@ -13,6 +13,41 @@ function escapeXml(unsafe: string): string {
     .replace(/'/g, '&apos;');
 }
 
+function getProductImageUrl(p: any, baseUrl: string): string {
+  let imageUrl = '';
+
+  if (Array.isArray(p.images) && p.images.length > 0) {
+    imageUrl = p.images[0];
+  } else if (typeof p.images === 'string' && p.images.trim()) {
+    try {
+      const parsed = JSON.parse(p.images);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        imageUrl = parsed[0];
+      } else if (typeof parsed === 'string') {
+        imageUrl = parsed;
+      } else {
+        imageUrl = p.images;
+      }
+    } catch {
+      imageUrl = p.images;
+    }
+  }
+
+  if (!imageUrl && p.image) {
+    imageUrl = p.image;
+  }
+
+  if (!imageUrl || imageUrl === '[' || imageUrl === '[]' || imageUrl === 'null') {
+    imageUrl = '/logo.png';
+  }
+
+  if (imageUrl && !imageUrl.startsWith('http')) {
+    imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  }
+
+  return imageUrl;
+}
+
 export async function GET() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://reotihandloom.com';
   const data = getStoreData();
@@ -26,12 +61,7 @@ export async function GET() {
         p.description ||
         `Authentic Handwoven Maheshwari Saree directly from 3rd generation master weavers of Maheshwar, Madhya Pradesh. Pure handloom craftsmanship.`;
       const link = `${baseUrl}/products/${p.slug || p.id}`;
-      
-      let imageUrl = p.images && p.images.length > 0 ? p.images[0] : p.image || '/logo.png';
-      if (imageUrl && !imageUrl.startsWith('http')) {
-        imageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-      }
-
+      const imageUrl = getProductImageUrl(p, baseUrl);
       const price = Number(p.price || 0).toFixed(2);
       const inStock = p.inStock !== false && (p.inventoryCount === undefined || p.inventoryCount > 0);
       const availability = inStock ? 'in_stock' : 'out_of_stock';
