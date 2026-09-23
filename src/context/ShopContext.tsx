@@ -18,6 +18,7 @@ export interface ProductItem {
   lengthWithBlouse?: string;
   occasion?: string;
   images: string;
+  videoUrl?: string | null;
   rating?: number;
   reviewCount?: number;
   category?: { name: string; slug: string };

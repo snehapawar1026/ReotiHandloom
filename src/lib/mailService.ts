@@ -301,3 +301,127 @@ export async function sendCustomerOrderConfirmationEmail(order: {
     return false;
   }
 }
+
+/**
+ * 5. Send Instant Order Notification Email to Admin (reotihandloom@hotmail.com)
+ */
+export async function sendAdminNewOrderAlertEmail(order: {
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  shippingAddress: string;
+  totalAmount: number;
+  paymentMethod: string;
+  paymentStatus?: string;
+  items: any[];
+}): Promise<boolean> {
+  try {
+    const transporter = getMailTransporter();
+    const adminTargetEmail = process.env.ADMIN_EMAIL || 'reotihandloom@hotmail.com';
+    const subject = `🚨 NEW ORDER RECEIVED! #${order.orderNumber} - ₹${order.totalAmount.toLocaleString('en-IN')} (${order.customerName})`;
+
+    const itemsHtml = order.items.map((item) => {
+      const prod = item.product || item;
+      const itemPrice = prod.price || 0;
+      const qty = item.quantity || 1;
+      const itemTotal = itemPrice * qty + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0);
+      const rawImg = prod.image || (Array.isArray(prod.images) ? prod.images[0] : (typeof prod.images === 'string' ? JSON.parse(prod.images || '[]')[0] : ''));
+      const img = rawImg ? (rawImg.startsWith('http') ? rawImg : `https://reotihandloom.com${rawImg}`) : '';
+
+      return `
+        <tr style="border-bottom: 1px solid #E8DFC8;">
+          <td style="padding: 12px 8px; width: 60px;">
+            ${img ? `<img src="${img}" alt="Product" style="width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid #D4AF37;" />` : ''}
+          </td>
+          <td style="padding: 12px 8px; font-size: 13px; color: #2D1214;">
+            <strong>${prod.title || 'Handloom Saree / Suit'}</strong><br>
+            <span style="font-size: 11px; color: #786C5E;">
+              Quantity: <strong>${qty}</strong> | Unit Price: ₹${itemPrice.toLocaleString('en-IN')}
+              ${item.hasFallPico ? '<br><span style="color: #8B4513; font-weight: bold;">✔ Fall & Pico Included (+₹200)</span>' : ''}
+            </span>
+          </td>
+          <td style="padding: 12px 8px; text-align: right; font-size: 14px; font-weight: bold; color: #581C1C;">
+            ₹${itemTotal.toLocaleString('en-IN')}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const bodyContent = `
+      <div style="background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 12px; padding: 14px; margin-bottom: 20px; text-align: center;">
+        <span style="font-size: 14px; font-weight: bold; color: #92400E;">
+          ⚡ Instant Store Notification: A new customer order has been placed on Reoti Handloom!
+        </span>
+      </div>
+
+      <div style="background: #FFF9F0; border: 1px solid #E8DFC8; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 12px; font-size: 15px; color: #581C1C; border-bottom: 1px solid #E8DFC8; padding-bottom: 8px;">
+          Customer & Delivery Details:
+        </h3>
+        <table style="width: 100%; font-size: 13px; color: #2D1214; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; width: 35%; color: #786C5E;"><strong>Customer Name:</strong></td>
+            <td style="padding: 6px 0; font-weight: bold; font-size: 14px;">${order.customerName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #786C5E;"><strong>Mobile Phone:</strong></td>
+            <td style="padding: 6px 0;">
+              <a href="tel:${order.customerPhone}" style="color: #581C1C; font-weight: bold; text-decoration: none;">+91 ${order.customerPhone}</a>
+              &nbsp;&nbsp;
+              <a href="https://wa.me/91${order.customerPhone.replace(/[^0-9]/g, '')}" style="color: #166534; font-size: 11px; font-weight: bold; background: #DCFCE7; padding: 3px 8px; border-radius: 12px; text-decoration: none;">💬 WhatsApp</a>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #786C5E;"><strong>Email Address:</strong></td>
+            <td style="padding: 6px 0;">${order.customerEmail || 'Guest Checkout'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #786C5E; vertical-align: top;"><strong>Shipping Address:</strong></td>
+            <td style="padding: 6px 0; font-weight: 500; line-height: 1.4;">${order.shippingAddress}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #786C5E;"><strong>Payment Mode:</strong></td>
+            <td style="padding: 6px 0; font-weight: bold; color: #166534;">
+              ${order.paymentMethod} (${order.paymentStatus || 'PAID / CONFIRMED'})
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #E8DFC8; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+        <h3 style="margin: 0 0 12px; font-size: 15px; color: #581C1C;">
+          Ordered Items:
+        </h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          ${itemsHtml}
+          <tr>
+            <td colspan="2" style="padding: 14px 8px 0; font-size: 15px; font-weight: bold; color: #2D1214;">Grand Total:</td>
+            <td style="padding: 14px 8px 0; text-align: right; font-size: 18px; font-weight: bold; color: #581C1C;">
+              ₹${order.totalAmount.toLocaleString('en-IN')}
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="https://reotihandloom.com/reoti-studio-manage" class="button">
+          Open Admin Panel to Manage & Dispatch
+        </a>
+      </div>
+    `;
+
+    const html = wrapLuxuryEmail(`New Order Alert #${order.orderNumber}`, 'Instant Store Alert', bodyContent);
+    await transporter.sendMail({
+      from: `"Reoti Handloom Store" <${defaultSender()}>`,
+      to: adminTargetEmail,
+      subject,
+      html,
+    });
+    console.log(`[ADMIN EMAIL SENT] Instant order notification sent to ${adminTargetEmail}`);
+    return true;
+  } catch (err: any) {
+    console.error(`[ADMIN EMAIL FAILED] Could not send order alert to admin: ${err.message}`);
+    return false;
+  }
+}

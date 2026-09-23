@@ -11,26 +11,22 @@ export async function GET(
   const { slug } = await params;
   const allProds = getAllProducts();
   const allCats = getStoreData().categories || [];
-  let fallbackProduct = getProductBySlugOrId(slug);
+  const product = getProductBySlugOrId(slug);
 
-  if (!fallbackProduct && allProds.length > 0) {
-    fallbackProduct = allProds[0];
-  }
-
-  if (!fallbackProduct) {
+  if (!product) {
     return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
   }
 
-  const isCurrentSemi = isSemiMaheshwari(fallbackProduct, allCats);
+  const isCurrentSemi = isSemiMaheshwari(product, allCats);
 
   // Candidate pool strictly matches the category realm (Semi vs Authentic Handloom)
   const candidatePool = allProds.filter((p) => {
-    if (p.id === fallbackProduct.id) return false;
+    if (p.id === product.id) return false;
     const isP_Semi = isSemiMaheshwari(p, allCats);
     return isCurrentSemi ? isP_Semi : !isP_Semi;
   });
 
-  const currentDesign = fallbackProduct.designCode?.trim().toLowerCase();
+  const currentDesign = product.designCode?.trim().toLowerCase();
 
   // Find color variants strictly based on exact designCode matching
   let colorVariants: any[] = [];
@@ -41,19 +37,19 @@ export async function GET(
   } else {
     // If product has no designCode, only match other items with no designCode having exact same category & fabric
     colorVariants = candidatePool.filter(
-      (p) => !p.designCode && p.categoryId === fallbackProduct.categoryId && p.fabric === fallbackProduct.fabric
+      (p) => !p.designCode && p.categoryId === product.categoryId && p.fabric === product.fabric
     );
   }
 
   // Ensure current product is always in colorVariants
-  if (!colorVariants.some((p) => p.id === fallbackProduct.id)) {
-    colorVariants = [fallbackProduct, ...colorVariants];
+  if (!colorVariants.some((p) => p.id === product.id)) {
+    colorVariants = [product, ...colorVariants];
   }
 
   // Find related products (Customers Also Liked)
   // 1. First priority: Same category items from candidate pool
   let relatedProducts = candidatePool
-    .filter((p) => p.categoryId === fallbackProduct.categoryId)
+    .filter((p) => p.categoryId === product.categoryId)
     .slice(0, 4);
 
   // 2. Second priority: Fill remaining slots strictly from the same candidate pool (Never cross Semi vs Handloom!)
@@ -69,8 +65,8 @@ export async function GET(
     {
       success: true,
       product: {
-        ...fallbackProduct,
-        reviews: fallbackProduct.reviews || [],
+        ...product,
+        reviews: product.reviews || [],
       },
       colorVariants,
       relatedProducts,

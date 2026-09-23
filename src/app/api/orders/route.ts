@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendAdminEmail } from '@/lib/notifications';
-import { sendCustomerOrderConfirmationEmail } from '@/lib/mailService';
+import { sendCustomerOrderConfirmationEmail, sendAdminNewOrderAlertEmail } from '@/lib/mailService';
 import {
   createOrderInStore,
   updateOrderInStore,
@@ -180,19 +180,35 @@ export async function POST(req: NextRequest) {
       });
     } catch (e) {}
 
-    // Send Email to Admin & Customer
-    sendAdminEmail({
-      title,
-      type: 'ORDER',
-      details,
-      userEmail: customerEmail || undefined,
-      userPhone: customerPhone,
-      amount: parseFloat(totalAmount),
-    }).catch(() => {});
-
-    // Send Luxury Receipt to Customer
+    // Send Instant Order Alert to Admin (reotihandloom@hotmail.com)
     try {
       const orderItems = typeof items === 'string' ? JSON.parse(items) : items;
+      const parsedItems = Array.isArray(orderItems) ? orderItems : [];
+      
+      // Send High Priority Luxury Admin Order Alert
+      sendAdminNewOrderAlertEmail({
+        orderNumber: order.orderNumber,
+        customerName,
+        customerEmail: customerEmail || '',
+        customerPhone,
+        shippingAddress,
+        totalAmount: parseFloat(totalAmount),
+        paymentMethod: paymentMethod || 'ONLINE / PREPAID',
+        paymentStatus: 'PAID / CONFIRMED',
+        items: parsedItems,
+      }).catch((e) => console.error('[Order Alert Error]', e));
+
+      // Also send basic admin log email
+      sendAdminEmail({
+        title,
+        type: 'ORDER',
+        details,
+        userEmail: customerEmail || undefined,
+        userPhone: customerPhone,
+        amount: parseFloat(totalAmount),
+      }).catch(() => {});
+
+      // Send Customer Order Receipt
       sendCustomerOrderConfirmationEmail({
         orderNumber: order.orderNumber,
         customerName,
@@ -200,10 +216,12 @@ export async function POST(req: NextRequest) {
         customerPhone,
         shippingAddress,
         totalAmount: parseFloat(totalAmount),
-        paymentMethod: paymentMethod || 'UPI',
-        items: Array.isArray(orderItems) ? orderItems : [],
+        paymentMethod: paymentMethod || 'ONLINE / PREPAID',
+        items: parsedItems,
       }).catch(() => {});
-    } catch {}
+    } catch (mailErr) {
+      console.error('[Order Email Processing Error]', mailErr);
+    }
 
     return NextResponse.json({ success: true, order });
   } catch (error: any) {

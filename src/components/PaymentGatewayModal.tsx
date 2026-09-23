@@ -133,6 +133,32 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
         theme: {
           color: '#8B263E',
         },
+        method: {
+          netbanking: true,
+          card: true,
+          upi: true,
+          wallet: false,
+          emi: false,
+          paylater: false,
+        },
+        config: {
+          display: {
+            blocks: {
+              preferred: {
+                name: 'Recommended Payment Options',
+                instruments: [
+                  { method: 'upi' },
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                ],
+              },
+            },
+            sequence: ['block.preferred'],
+            preferences: {
+              show_default_blocks: false,
+            },
+          },
+        },
         handler: function (response: any) {
           setIsProcessing(false);
           setPaymentStep('success');

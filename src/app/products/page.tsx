@@ -92,6 +92,125 @@ const CATEGORY_HERO_MAP: Record<string, { title: string; description: string; im
   },
 };
 
+function getCategoryBadgeTexts(selectedCategory: string, heroTitle: string, isSemiMaheshwariView: boolean) {
+  const query = `${selectedCategory} ${heroTitle}`.toLowerCase();
+
+  if (isSemiMaheshwariView || query.includes('semi-maheshwari') || query.includes('semi maheshwari')) {
+    return {
+      hindi: 'सेमी माहेश्वरी साड़ियाँ',
+      subtitle: 'सेमी माहेश्वरी साड़ियाँ ~ Semi Maheshwari Sarees',
+    };
+  }
+
+  if (query.includes('chanderi') || query.includes('चंदेरी')) {
+    if (query.includes('suit') || query.includes('dress') || query.includes('सूट')) {
+      return {
+        hindi: 'चंदेरी सूट सेट्स',
+        subtitle: 'चंदेरी सूट ~ Authentic Handloom',
+      };
+    }
+    return {
+      hindi: 'चंदेरी साड़ियाँ',
+      subtitle: 'चंदेरी साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('katan') || query.includes('कातान')) {
+    return {
+      hindi: 'कातान सिल्क साड़ियाँ',
+      subtitle: 'कातान सिल्क साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('garbha') || query.includes('गर्भ')) {
+    return {
+      hindi: 'गर्भ रेशमी साड़ियाँ',
+      subtitle: 'गर्भ रेशमी साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('silk cotton') || query.includes('silk-cotton') || query.includes('सिल्क कॉटन')) {
+    return {
+      hindi: 'सिल्क कॉटन साड़ियाँ',
+      subtitle: 'सिल्क कॉटन साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('pure silk') || query.includes('pure-silk') || query.includes('प्योर सिल्क')) {
+    return {
+      hindi: 'प्योर सिल्क साड़ियाँ',
+      subtitle: 'प्योर सिल्क साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('tissue') || query.includes('टिशू')) {
+    return {
+      hindi: 'टिशू ज़री साड़ियाँ',
+      subtitle: 'टिशू ज़री साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('nayantara') || query.includes('नयनतारा')) {
+    return {
+      hindi: 'नयनतारा साड़ियाँ',
+      subtitle: 'नयनतारा साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('tussar') || query.includes('टसर')) {
+    return {
+      hindi: 'टसर सिल्क साड़ियाँ',
+      subtitle: 'टसर सिल्क साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('linen') || query.includes('लिनन')) {
+    return {
+      hindi: 'लिनन साड़ियाँ',
+      subtitle: 'लिनन साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('organza') || query.includes('ऑर्गेंज़ा')) {
+    return {
+      hindi: 'ऑर्गेंज़ा साड़ियाँ',
+      subtitle: 'ऑर्गेंज़ा साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('modal') || query.includes('मोडल')) {
+    return {
+      hindi: 'मोडल सिल्क साड़ियाँ',
+      subtitle: 'मोडल सिल्क साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('suit') || query.includes('dress') || query.includes('kurta') || query.includes('सूट')) {
+    if (query.includes('maheshwari')) {
+      return {
+        hindi: 'माहेश्वरी सूट सेट्स',
+        subtitle: 'माहेश्वरी सूट ~ Maheshwari Suits',
+      };
+    }
+    return {
+      hindi: 'सूट सेट्स',
+      subtitle: 'हैंडलूम सूट ~ Authentic Handloom',
+    };
+  }
+
+  if (query.includes('maheshwari') || query.includes('saree') || query.includes('sari')) {
+    return {
+      hindi: 'माहेश्वरी साड़ियाँ',
+      subtitle: 'माहेश्वरी साड़ियाँ ~ Authentic Handloom',
+    };
+  }
+
+  return {
+    hindi: heroTitle,
+    subtitle: `${heroTitle} ~ Authentic Handloom`,
+  };
+}
+
 
 
 function getHeroContent(
@@ -114,13 +233,13 @@ function getHeroContent(
   }
 
   if (selectedCategory) {
+    const cat = categories.find((c) => c.slug === selectedCategory || c.id === selectedCategory);
     const staticHero = CATEGORY_HERO_MAP[selectedCategory];
-    const cat = categories.find((c) => c.slug === selectedCategory);
-    if (staticHero || cat) {
+    if (cat || staticHero) {
       return {
-        title: staticHero?.title || cat?.name || selectedCategory,
-        description: staticHero?.description || cat?.description || `Handcrafted ${cat?.name || ''} online from authentic Maheshwari handloom weavers.`,
-        image: staticHero?.image || cat?.bannerImage || cat?.image || '/uploads/maheshwari_legacy_banner.png',
+        title: cat?.name || staticHero?.title || selectedCategory,
+        description: cat?.description || staticHero?.description || `Handcrafted ${cat?.name || selectedCategory} online from authentic handloom weavers.`,
+        image: cat?.bannerImage || cat?.image || staticHero?.image || '/uploads/maheshwari_legacy_banner.png',
       };
     }
   }
@@ -453,7 +572,7 @@ function ProductsContent() {
                   alt={hero.title}
                   className="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                 />
-                <WatermarkOverlay variant="pdp" />
+                <WatermarkOverlay variant="pdp" imageUrl={hero.image} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
                   <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-300 shrink-0">
@@ -702,6 +821,7 @@ function ProductsContent() {
               selectedSort,
               categories
             );
+            const badgeTexts = getCategoryBadgeTexts(selectedCategory, hero.title, isSemiMaheshwariView);
             return (
               <div className="w-full bg-[#FAF7F2] border border-[#E8DFC8] rounded-2xl overflow-hidden mb-6 shadow-2xs font-sans">
                 <div className="grid grid-cols-1 md:grid-cols-12 items-stretch">
@@ -710,19 +830,11 @@ function ProductsContent() {
                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-extrabold text-[#581C1C] tracking-tight leading-tight">
                       {hero.title}{' '}
                       <span className="font-serif font-normal text-[#8B4513] text-xl sm:text-2xl block sm:inline mt-1 sm:mt-0">
-                        {isSemiMaheshwariView
-                          ? 'सेमी माहेश्वरी साड़ियाँ'
-                          : selectedCategory.includes('suit')
-                          ? 'माहेश्वरी सूट सेट्स'
-                          : 'माहेश्वरी साड़ियाँ'}
+                        {badgeTexts.hindi}
                       </span>
                     </h1>
                     <p className="text-xs sm:text-sm text-[#8B4513]/80 font-bold tracking-wider uppercase">
-                      {isSemiMaheshwariView
-                        ? 'सेमी माहेश्वरी साड़ियाँ ~ Semi Maheshwari Sarees'
-                        : selectedCategory.includes('suit')
-                        ? 'माहेश्वरी सूट ~ Maheshwari Suits'
-                        : 'माहेश्वरी साड़ियाँ ~ Authentic Handloom'}
+                      {badgeTexts.subtitle}
                     </p>
                     <div className="w-16 h-0.5 bg-[#8B4513]/40 rounded-full my-0.5" />
                     <p className="text-xs sm:text-sm text-amber-950/90 leading-relaxed font-medium line-clamp-4 sm:line-clamp-none">
@@ -737,7 +849,7 @@ function ProductsContent() {
                       alt={hero.title}
                       className="w-full h-full object-cover object-top md:object-center transition-transform duration-700 hover:scale-105"
                     />
-                    <WatermarkOverlay variant="pdp" />
+                    <WatermarkOverlay variant="pdp" imageUrl={hero.image} />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute bottom-3 left-3 bg-black/85 backdrop-blur-md text-amber-100 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-amber-400/50 pointer-events-none flex items-center gap-1.5 shadow-lg z-10">
                       <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-300 shrink-0">

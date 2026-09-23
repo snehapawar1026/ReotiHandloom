@@ -6,6 +6,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { HeroBanner } from '@/components/HeroBanner';
 import { GoogleReviewsSection } from '@/components/GoogleReviewsSection';
+import { HandloomBlogSection } from '@/components/HandloomBlogSection';
 import { InstagramFamousSection } from '@/components/InstagramFamousSection';
 import { BrandCommitmentSection } from '@/components/BrandCommitmentSection';
 import { ProductCard } from '@/components/ProductCard';
@@ -121,7 +122,7 @@ export default function Home() {
     const t = Date.now();
     Promise.all([
       fetch(`/api/categories?parentOnly=true&_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
-      fetch(`/api/products?_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch(`/api/products?includeAll=true&_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
     ])
       .then(([catData, prodData]) => {
         if (catData.success) {
@@ -175,7 +176,11 @@ export default function Home() {
     const title = (p.title || '').toLowerCase();
     const desc = (p.description || '').toLowerCase();
     const length = (p.lengthWithBlouse || '').toLowerCase();
+    const catId = ((p as any).categoryId || (p as any).category?.id || '').toLowerCase();
     return (
+      catId === 'maheshwari-suits' ||
+      catId === 'suits' ||
+      catId.includes('suit') ||
       catSlug.includes('suit') ||
       catSlug.includes('dress-material') ||
       catName.includes('suit') ||
@@ -183,11 +188,12 @@ export default function Home() {
       title.includes('suit') ||
       title.includes('dress material') ||
       title.includes('top dupatta') ||
+      title.includes('top-dupatta') ||
       title.includes('unstitched') ||
       title.includes('kurta') ||
       desc.includes('suit set') ||
-      desc.includes('2-piece set') ||
-      desc.includes('3-piece set') ||
+      desc.includes('2-piece') ||
+      desc.includes('3-piece') ||
       desc.includes('dress material') ||
       length.includes('top') ||
       length.includes('dupatta') ||
@@ -326,11 +332,11 @@ export default function Home() {
                     })}
                     <circle cx="50" cy="50" r="39" stroke="currentColor" strokeWidth="2" />
                   </svg>
-                  <div className="w-[80px] h-[80px] sm:w-[92px] sm:h-[92px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md">
+                  <div className="w-[80px] h-[80px] sm:w-[92px] sm:h-[92px] rounded-full overflow-hidden p-1 bg-white border border-amber-950/20 shadow-md flex items-center justify-center">
                     <img
                       src={cat.image || '/uploads/saree_1789221965397_lf0kg.jpeg'}
                       alt={cat.name}
-                      className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover rounded-full scale-135 object-[center_88%] group-hover:scale-145 transition-transform duration-500"
                     />
                   </div>
                 </div>
@@ -663,13 +669,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Instagram Famous Weavers Section */}
+      {/* 6. Handloom Stories & Blog Journal Section */}
+      <HandloomBlogSection />
+
+      {/* 7. Official Instagram Showcase (@reoti_handloom) */}
       <InstagramFamousSection />
 
-      {/* 7. Google Customer Reviews Section */}
+      {/* 8. Google Customer Reviews Section */}
       <GoogleReviewsSection />
 
-      {/* 8. Reoti Handloom Brand Commitment Section (Above Footer) */}
+      {/* 9. Reoti Handloom Brand Commitment Section (Above Footer) */}
       <BrandCommitmentSection />
     </div>
   );

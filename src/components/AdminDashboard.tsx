@@ -52,8 +52,12 @@ import {
   XCircle,
   AlertCircle,
   AlertTriangle,
+  Video,
+  BookOpen,
+  Play,
 } from 'lucide-react';
 import { WatermarkOverlay } from '@/components/WatermarkOverlay';
+import BlogManagerTab from '@/components/BlogManagerTab';
 
 const SAREE_LENGTH_OPTIONS = [
   '6.3 Meters (With Blouse Piece)',
@@ -113,7 +117,7 @@ const SUIT_DUPATTA_OPTIONS = [
 export default function AdminDashboard() {
   const { user, setUser, logout } = useShop();
 
-  const [activeTab, setActiveTab] = useState<'hub' | 'orders' | 'leads' | 'customers' | 'add' | 'products' | 'semi_products' | 'add_semi' | 'categories' | 'push' | 'insta'>('hub');
+  const [activeTab, setActiveTab] = useState<'hub' | 'orders' | 'leads' | 'customers' | 'add' | 'products' | 'semi_products' | 'add_semi' | 'categories' | 'push' | 'insta' | 'blogs'>('hub');
 
   // Dashboard Stats
   const [orders, setOrders] = useState<any[]>([]);
@@ -506,6 +510,8 @@ export default function AdminDashboard() {
   const [categoryId, setCategoryId] = useState('');
   const [semiCategoryId, setSemiCategoryId] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isVideoUploading, setIsVideoUploading] = useState(false);
   const [uploadedPreview, setUploadedPreview] = useState<string>('');
   const [imagesList, setImagesList] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -532,6 +538,8 @@ export default function AdminDashboard() {
   const [editDesignCode, setEditDesignCode] = useState('');
   const [editCategoryId, setEditCategoryId] = useState('');
   const [editImageUrl, setEditImageUrl] = useState('');
+  const [editVideoUrl, setEditVideoUrl] = useState('');
+  const [isEditVideoUploading, setIsEditVideoUploading] = useState(false);
   const [editImagesList, setEditImagesList] = useState<string[]>([]);
   const [editIsFeatured, setEditIsFeatured] = useState(false);
   const [editIsBestSeller, setEditIsBestSeller] = useState(false);
@@ -784,7 +792,14 @@ export default function AdminDashboard() {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseErr) {
+        throw new Error(`Server returned status ${res.status}: ${responseText.slice(0, 100) || 'Upload failed'}`);
+      }
+
       if (data.success && data.urls) {
         setImagesList((prev) => [...prev, ...data.urls]);
       } else {
@@ -836,7 +851,14 @@ export default function AdminDashboard() {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseErr) {
+        throw new Error(`Server returned status ${res.status}: ${responseText.slice(0, 100) || 'Upload failed'}`);
+      }
+
       if (data.success && data.urls) {
         setEditImagesList((prev) => [...prev, ...data.urls]);
       } else {
@@ -872,6 +894,37 @@ export default function AdminDashboard() {
       copy[targetIndex] = temp;
       return copy;
     });
+  };
+
+  // Video File Upload Handler
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (isEdit) setIsEditVideoUploading(true);
+    else setIsVideoUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        if (isEdit) setEditVideoUrl(data.url);
+        else setVideoUrl(data.url);
+      } else {
+        alert('Video upload failed: ' + (data.error || 'Unknown error'));
+      }
+    } catch (err: any) {
+      alert('Video upload error: ' + err.message);
+    } finally {
+      if (isEdit) setIsEditVideoUploading(false);
+      else setIsVideoUploading(false);
+    }
   };
 
   const handleAddProduct = async (e: React.FormEvent, isSemiParam?: boolean) => {
@@ -911,6 +964,7 @@ export default function AdminDashboard() {
           designCode: designCode.trim() || null,
           categoryId: effectiveCategoryId,
           images: JSON.stringify(finalImages),
+          videoUrl: videoUrl.trim() || null,
           isFeatured,
           isBestSeller,
           isTrending,
@@ -930,6 +984,7 @@ export default function AdminDashboard() {
         setBlouseColor('');
         setDesignCode('');
         setImageUrl('');
+        setVideoUrl('');
         setUploadedPreview('');
         setImagesList([]);
         setStock('');
@@ -976,6 +1031,7 @@ export default function AdminDashboard() {
     setEditIsFeatured(p.isFeatured || false);
     setEditIsBestSeller(p.isBestSeller || false);
     setEditIsTrending(p.isTrending || false);
+    setEditVideoUrl(p.videoUrl || '');
     
     let parsedImgs: string[] = [];
     try {
@@ -1028,6 +1084,7 @@ export default function AdminDashboard() {
           isOutOfStock: editIsOutOfStock,
           stock: editStock.trim() !== '' ? parseInt(editStock) : '',
           images: JSON.stringify(finalEditImages),
+          videoUrl: editVideoUrl.trim() || null,
           isFeatured: editIsFeatured,
           isBestSeller: editIsBestSeller,
           isTrending: editIsTrending,
@@ -1076,14 +1133,34 @@ export default function AdminDashboard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
+      let res = await fetch('/api/upload', { method: 'POST', body: formData });
+      let data = await res.json();
+      if (!data.success) {
+        res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        data = await res.json();
+      }
       if (data.success) {
         setCatImage(data.url);
       } else {
-        alert('Upload failed: ' + data.error);
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
     } catch (err: any) {
+      try {
+        const res2 = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        const data2 = await res2.json();
+        if (data2.success) {
+          setCatImage(data2.url);
+          return;
+        }
+      } catch (e) {}
       alert('Upload error: ' + err.message);
     } finally {
       setIsCatUploading(false);
@@ -1099,14 +1176,34 @@ export default function AdminDashboard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
+      let res = await fetch('/api/upload', { method: 'POST', body: formData });
+      let data = await res.json();
+      if (!data.success) {
+        res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        data = await res.json();
+      }
       if (data.success) {
         setEditCatImage(data.url);
       } else {
-        alert('Upload failed: ' + data.error);
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
     } catch (err: any) {
+      try {
+        const res2 = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        const data2 = await res2.json();
+        if (data2.success) {
+          setEditCatImage(data2.url);
+          return;
+        }
+      } catch (e) {}
       alert('Upload error: ' + err.message);
     } finally {
       setIsEditCatUploading(false);
@@ -1122,14 +1219,34 @@ export default function AdminDashboard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
+      let res = await fetch('/api/upload', { method: 'POST', body: formData });
+      let data = await res.json();
+      if (!data.success) {
+        res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        data = await res.json();
+      }
       if (data.success) {
         setCatBannerImage(data.url);
       } else {
-        alert('Upload failed: ' + data.error);
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
     } catch (err: any) {
+      try {
+        const res2 = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        const data2 = await res2.json();
+        if (data2.success) {
+          setCatBannerImage(data2.url);
+          return;
+        }
+      } catch (e) {}
       alert('Upload error: ' + err.message);
     } finally {
       setIsCatBannerUploading(false);
@@ -1145,14 +1262,34 @@ export default function AdminDashboard() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
+      let res = await fetch('/api/upload', { method: 'POST', body: formData });
+      let data = await res.json();
+      if (!data.success) {
+        res = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        data = await res.json();
+      }
       if (data.success) {
         setEditCatBannerImage(data.url);
       } else {
-        alert('Upload failed: ' + data.error);
+        alert('Upload failed: ' + (data.error || 'Unknown error'));
       }
     } catch (err: any) {
+      try {
+        const res2 = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'image/jpeg' },
+          body: file,
+        });
+        const data2 = await res2.json();
+        if (data2.success) {
+          setEditCatBannerImage(data2.url);
+          return;
+        }
+      } catch (e) {}
       alert('Upload error: ' + err.message);
     } finally {
       setIsEditCatBannerUploading(false);
@@ -1454,6 +1591,7 @@ export default function AdminDashboard() {
       case 'categories': return 'Categories';
       case 'push': return 'Push Alerts';
       case 'insta': return 'Instagram Feed';
+      case 'blogs': return 'Blogs & Stories';
       default: return 'Dashboard';
     }
   };
@@ -1470,6 +1608,7 @@ export default function AdminDashboard() {
       case 'categories': return 'Category & Subcategory Hierarchy Manager';
       case 'push': return 'Push Notifications Broadcaster';
       case 'insta': return 'Instagram Feed Showcase Manager';
+      case 'blogs': return 'Handloom Heritage Stories & Blog Management';
       default: return 'Admin Control Center';
     }
   };
@@ -1486,6 +1625,7 @@ export default function AdminDashboard() {
       case 'categories': return <FolderPlus className="w-5 h-5 text-amber-700" />;
       case 'push': return <Bell className="w-5 h-5 text-amber-700" />;
       case 'insta': return <Camera className="w-5 h-5 text-rose-600" />;
+      case 'blogs': return <BookOpen className="w-5 h-5 text-amber-700" />;
       default: return <LayoutGrid className="w-5 h-5 text-amber-700" />;
     }
   };
@@ -1796,6 +1936,29 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Card 9: Handloom Stories & Blogs */}
+            <div
+              onClick={() => navigateTo('blogs')}
+              className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 group-hover:bg-amber-950 group-hover:text-white transition-colors">
+                  <BookOpen className="w-5 h-5 text-amber-800 group-hover:text-white" />
+                </div>
+                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-950 border border-amber-200">
+                  Stories & Videos
+                </span>
+              </div>
+              <div className="mt-4">
+                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-amber-950">Handloom Stories & Blogs</h4>
+                <p className="text-xs text-gray-500 mt-1">Add & publish craft articles with photo & video media</p>
+                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 group-hover:text-amber-950">
+                  <span>Manage Blogs & Media</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* Quick Snapshot Overview on Hub */}
@@ -2009,6 +2172,7 @@ export default function AdminDashboard() {
                   <option value="categories">📁 Category Manager ({categories.length})</option>
                   <option value="push">🔔 Push Alerts</option>
                   <option value="insta">📷 Instagram Feed</option>
+                  <option value="blogs">📖 Handloom Blogs & Stories</option>
                 </select>
               </div>
 
@@ -3888,6 +4052,78 @@ export default function AdminDashboard() {
               )}
             </div>
 
+            {/* Product Video Upload / URL (Draping & Craftsmanship Video) */}
+            <div className="space-y-3 p-4 bg-amber-50/50 border border-amber-200/90 rounded-2xl shadow-2xs font-sans">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-amber-200/60 pb-2">
+                <div>
+                  <label className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Video className="w-4 h-4 text-amber-800" />
+                    <span>Product Video / Reel (Optional)</span>
+                  </label>
+                  <p className="text-[11px] text-amber-900/80 font-medium mt-0.5">
+                    🎬 Upload an MP4 video or paste video URL for live saree draping demonstration.
+                  </p>
+                </div>
+                {isVideoUploading && (
+                  <span className="text-amber-800 animate-pulse text-xs font-bold shrink-0">
+                    Uploading video...
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    Upload Video File (MP4/WebM)
+                  </label>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleVideoUpload(e, false)}
+                    className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-amber-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-amber-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    Or Direct Video URL
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://... or /uploads/..."
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    className="w-full border border-amber-300 bg-white rounded-lg p-2 text-xs font-medium focus:ring-1 focus:ring-amber-800"
+                  />
+                </div>
+              </div>
+
+              {videoUrl && (
+                <div className="mt-2 p-2.5 bg-white rounded-xl border border-amber-300 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-12 h-12 rounded-lg bg-black overflow-hidden relative shrink-0">
+                      <video src={videoUrl} className="w-full h-full object-cover" muted playsInline />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-amber-950 truncate">{videoUrl}</p>
+                      <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Video Ready & Attached</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setVideoUrl('')}
+                    className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer shrink-0"
+                    title="Remove Video"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="block text-amber-950 font-bold mb-1 flex items-center justify-between">
                 <span>Description & Craft Story</span>
@@ -4432,6 +4668,78 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Product Video Upload / URL (Semi Saree Draping Video) */}
+            <div className="space-y-3 p-4 bg-rose-50/50 border border-rose-200/90 rounded-2xl shadow-2xs font-sans">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-rose-200/60 pb-2">
+                <div>
+                  <label className="font-extrabold text-xs text-rose-950 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Video className="w-4 h-4 text-rose-800" />
+                    <span>Semi Saree Video / Reel (Optional)</span>
+                  </label>
+                  <p className="text-[11px] text-rose-900/80 font-medium mt-0.5">
+                    🎬 Upload an MP4 video or paste video URL for live saree demonstration.
+                  </p>
+                </div>
+                {isVideoUploading && (
+                  <span className="text-rose-800 animate-pulse text-xs font-bold shrink-0">
+                    Uploading video...
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    Upload Video File (MP4/WebM)
+                  </label>
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleVideoUpload(e, false)}
+                    className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-rose-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-rose-300"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    Or Direct Video URL
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://... or /uploads/..."
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    className="w-full border border-rose-300 bg-white rounded-lg p-2 text-xs font-medium focus:ring-1 focus:ring-rose-800"
+                  />
+                </div>
+              </div>
+
+              {videoUrl && (
+                <div className="mt-2 p-2.5 bg-white rounded-xl border border-rose-300 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-12 h-12 rounded-lg bg-black overflow-hidden relative shrink-0">
+                      <video src={videoUrl} className="w-full h-full object-cover" muted playsInline />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-rose-950 truncate">{videoUrl}</p>
+                      <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>Video Ready & Attached</span>
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setVideoUrl('')}
+                    className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer shrink-0"
+                    title="Remove Video"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
@@ -5060,6 +5368,78 @@ export default function AdminDashboard() {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Video Upload / URL (Edit Modal) */}
+                <div className="space-y-3 p-4 bg-amber-50/50 border border-amber-200/90 rounded-2xl shadow-2xs font-sans">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-amber-200/60 pb-2">
+                    <div>
+                      <label className="font-extrabold text-xs text-amber-950 flex items-center gap-1.5 uppercase tracking-wider">
+                        <Video className="w-4 h-4 text-amber-800" />
+                        <span>Product Video / Reel (Optional)</span>
+                      </label>
+                      <p className="text-[11px] text-amber-900/80 font-medium mt-0.5">
+                        🎬 Attach an MP4 video or link (Instagram Reel / Draping demo video).
+                      </p>
+                    </div>
+                    {isEditVideoUploading && (
+                      <span className="text-amber-800 animate-pulse text-xs font-bold shrink-0">
+                        Uploading video...
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                        Upload Video File (MP4/WebM)
+                      </label>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => handleVideoUpload(e, true)}
+                        className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-amber-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-amber-300"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                        Or Direct Video URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://... or /uploads/..."
+                        value={editVideoUrl}
+                        onChange={(e) => setEditVideoUrl(e.target.value)}
+                        className="w-full border border-amber-300 bg-white rounded-lg p-2 text-xs font-medium focus:ring-1 focus:ring-amber-800"
+                      />
+                    </div>
+                  </div>
+
+                  {editVideoUrl && (
+                    <div className="mt-2 p-2.5 bg-white rounded-xl border border-amber-300 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-12 h-12 rounded-lg bg-black overflow-hidden relative shrink-0">
+                          <video src={editVideoUrl} className="w-full h-full object-cover" muted playsInline />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold text-amber-950 truncate">{editVideoUrl}</p>
+                          <p className="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>Video Attached</span>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditVideoUrl('')}
+                        className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors cursor-pointer shrink-0"
+                        title="Remove Video"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   )}
                 </div>
@@ -6060,6 +6440,13 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Tab: Handloom Heritage Stories & Blog Manager */}
+      {activeTab === 'blogs' && (
+        <div className="mt-6">
+          <BlogManagerTab />
         </div>
       )}
 

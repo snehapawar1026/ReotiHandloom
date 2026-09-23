@@ -27,7 +27,6 @@ import {
   Award,
   Check,
 } from 'lucide-react';
-import { PaymentGatewayModal } from '@/components/PaymentGatewayModal';
 
 const INDIAN_STATES = [
   'Andhra Pradesh',
@@ -226,8 +225,24 @@ export default function CheckoutPage() {
     setCustomTipAmount((prev) => Math.max(0, prev + delta));
   };
 
+  // Helper to load Razorpay official script
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof window !== 'undefined' && (window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   // Form Submit Handler
-  const handleSubmitCheckout = (e: React.FormEvent) => {
+  const handleSubmitCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
 
@@ -256,8 +271,89 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Open Payment Gateway Modal
-    setIsGatewayOpen(true);
+    // Direct 1-Click Amazon/Myntra style Razorpay Gateway launch
+    setIsSubmitting(true);
+    const isLoaded = await loadRazorpayScript();
+    if (!isLoaded || typeof window === 'undefined' || !(window as any).Razorpay) {
+      setIsSubmitting(false);
+      setFormError('Unable to open payment gateway. Please check your internet connection and try again.');
+      return;
+    }
+
+    const customerFullName = `${firstName} ${lastName}`.trim() || user?.name || 'Valued Patron';
+    const fullShippingAddress = `${address}${apartment ? ', ' + apartment : ''}, ${city}, ${state} - ${pincode}, ${country}`;
+    const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_live_TegkAKQQIv99EM';
+
+    const options = {
+      key: razorpayKey,
+      amount: Math.round(finalTotal * 100), // Amount in paise
+      currency: 'INR',
+      name: 'Reoti Handloom Maheshwar',
+      description: `Order for ${cart.length} Handloom item(s)`,
+      image: 'https://reotihandloom.com/logo.jpg',
+      prefill: {
+        name: customerFullName,
+        email: email || 'patron@reotihandloom.com',
+        contact: phone,
+      },
+      notes: {
+        shipping_address: fullShippingAddress,
+      },
+      theme: {
+        color: '#4A0E17',
+      },
+      method: {
+        netbanking: true,
+        card: true,
+        upi: true,
+        wallet: false,
+        emi: false,
+        paylater: false,
+      },
+      config: {
+        display: {
+          blocks: {
+            preferred: {
+              name: 'Recommended Payment Options',
+              instruments: [
+                { method: 'upi' },
+                { method: 'card' },
+                { method: 'netbanking' },
+              ],
+            },
+          },
+          sequence: ['block.preferred'],
+          preferences: {
+            show_default_blocks: false,
+          },
+        },
+      },
+      handler: function (response: any) {
+        const txnId = response.razorpay_payment_id || 'PAY_' + Date.now();
+        handleFinalizeOrder({
+          paymentMethod: paymentMethod === 'PHONEPE' ? 'PhonePe / UPI' : 'Razorpay Secure (UPI/Cards)',
+          transactionId: txnId,
+          paymentStatus: 'PAID',
+        });
+      },
+      modal: {
+        ondismiss: function () {
+          setIsSubmitting(false);
+        },
+      },
+    };
+
+    try {
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any) {
+        setIsSubmitting(false);
+        setFormError(response.error?.description || 'Payment failed. Please try again with another method.');
+      });
+      rzp.open();
+    } catch (gatewayErr: any) {
+      setIsSubmitting(false);
+      setFormError('Payment gateway error: ' + gatewayErr.message);
+    }
   };
 
   const handleFinalizeOrder = async (paymentData: {
@@ -1334,20 +1430,6 @@ export default function CheckoutPage() {
         </div>
 
       </div>
-
-      {/* Payment Gateway Modal (Razorpay / UPI / Card / COD) */}
-      <PaymentGatewayModal
-        isOpen={isGatewayOpen}
-        onClose={() => setIsGatewayOpen(false)}
-        amount={finalTotal}
-        customerDetails={{
-          name: `${firstName} ${lastName}`.trim() || user?.name || 'Patron',
-          phone,
-          email,
-          address: `${address}${apartment ? ', ' + apartment : ''}, ${city}, ${state} - ${pincode}`,
-        }}
-        onPaymentSuccess={handleFinalizeOrder}
-      />
     </div>
   );
 }

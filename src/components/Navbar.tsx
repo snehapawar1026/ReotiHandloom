@@ -174,40 +174,6 @@ const NavbarContent = () => {
     },
   ];
 
-  // Fresh browser session check (If app was killed and opened anew, start at Home Page)
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    try {
-      const isSessionAlive = sessionStorage.getItem('rh_session_alive');
-
-      if (!isSessionAlive) {
-        // App was killed / newly launched browser process!
-        sessionStorage.setItem('rh_session_alive', 'true');
-
-        const currentPath = window.location.pathname;
-        const currentSearch = window.location.search;
-
-        const isExempt =
-          currentPath === '/' ||
-          currentPath.startsWith('/admin') ||
-          currentPath.startsWith('/reoti-studio-manage') ||
-          currentPath.startsWith('/login') ||
-          currentPath.startsWith('/checkout') ||
-          currentPath.startsWith('/wholesale') ||
-          currentPath.startsWith('/contact') ||
-          currentPath.startsWith('/about') ||
-          currentSearch.includes('orderId=') ||
-          currentSearch.includes('payment=');
-
-        if (!isExempt) {
-          // Redirect to Home page on fresh app open!
-          router.replace('/');
-        }
-      }
-    } catch (e) {}
-  }, []);
-
   // Dynamic categories from database / admin panel with periodic refresh & focus re-sync
   const [dbCategories, setDbCategories] = useState<any[]>([]);
 
@@ -458,6 +424,7 @@ const NavbarContent = () => {
   const isSuitsActive = pathname === '/products' && categoryParam !== null && (categoryParam.includes('suit') || categoryParam.includes('unstitched'));
   const isOtherActive = pathname === '/products' && categoryParam !== null && (categoryParam.includes('dupatta') || categoryParam.includes('bagh-print') || categoryParam.includes('premium'));
   const isSareesActive = pathname === '/products' && !isNewArrivalsActive && !isSuitsActive && !isOtherActive && !isSemiMaheshwariActive;
+  const isBlogsActive = pathname.startsWith('/blogs');
   const isAboutActive = pathname === '/about';
   const isContactActive = pathname === '/contact';
   const isWholesaleActive = pathname === '/wholesale';
@@ -961,6 +928,8 @@ const NavbarContent = () => {
             >
               Handcrafted Dupattas
             </Link>
+
+
 
             <Link
               href="/about"

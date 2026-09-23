@@ -21,17 +21,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <div className="group relative bg-[#FAF7F2] border border-[#E5DAC3] hover:border-[#8B263E] rounded-xl overflow-hidden flex flex-col justify-between shadow-2xs hover:shadow-lg transition-all duration-300">
       
       {/* Image Container with Soft Warm Craft Frame & Aspect Ratio 3/4 */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-amber-50/50 p-1 cursor-pointer border-b border-[#E8DFC8]">
-        <Link href={`/products/${product.slug}`}>
+      <div
+        className="relative aspect-[3/4] w-full overflow-hidden bg-amber-50/50 p-1 cursor-pointer border-b border-[#E8DFC8] select-none"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <Link href={`/products/${product.slug}`} draggable="false" className="block w-full h-full select-none">
           <img
             src={primaryImg}
             alt={product.title}
-            className="w-full h-full object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-500"
+            draggable="false"
+            onContextMenu={(e) => e.preventDefault()}
+            className="w-full h-full object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
           />
         </Link>
 
         {/* Automatic Diagonal Watermark Overlay */}
-        <WatermarkOverlay variant="card" />
+        <WatermarkOverlay variant="card" imageUrl={primaryImg} />
 
         {/* Status Badges Container (Top-Left Corner - Authentic Heritage Pills) */}
         <div className="absolute top-2 left-2 flex flex-col gap-1 items-start z-10 pointer-events-none">
@@ -49,6 +54,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.isTrending && (
                 <span className="bg-amber-700 text-amber-50 text-[8px] sm:text-[9px] font-serif font-bold uppercase px-2 py-0.5 rounded shadow-xs flex items-center gap-0.5 border border-amber-800 tracking-wider">
                   🔥 TRENDING
+                </span>
+              )}
+              {product.videoUrl && (
+                <span className="bg-neutral-900/90 text-amber-300 text-[8px] sm:text-[9px] font-bold uppercase px-1.5 py-0.5 rounded shadow-xs flex items-center gap-0.5 border border-amber-500/40 tracking-wider">
+                  ▶ Video
                 </span>
               )}
             </>

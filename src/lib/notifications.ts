@@ -1,16 +1,8 @@
+import { getMailTransporter } from './mailService';
 import nodemailer from 'nodemailer';
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'reotihandloom@hotmail.com';
 const ADMIN_PHONE = '9617444445';
-
-// Create Nodemailer Transporter (uses Gmail or custom SMTP if configured in .env)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
-  },
-});
 
 export interface NotificationPayload {
   title: string;
@@ -77,18 +69,18 @@ export async function sendAdminEmail(payload: NotificationPayload) {
 
   console.log(`[ADMIN NOTIFICATION] Event: ${type} | ${title} | Details: ${details}`);
 
-  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      await transporter.sendMail({
-        from: `"Reoti Handloom" <${process.env.SMTP_USER}>`,
-        to: ADMIN_EMAIL,
-        subject,
-        html: htmlContent,
-      });
-      console.log(`[EMAIL SENT] Notification successfully sent to ${ADMIN_EMAIL}`);
-    } catch (err: any) {
-      console.error('[EMAIL ERROR] Failed to send email via SMTP:', err.message);
-    }
+  try {
+    const transporter = getMailTransporter();
+    const sender = process.env.SMTP_FROM || process.env.SMTP_USER || 'info@reotihandloom.com';
+    await transporter.sendMail({
+      from: `"Reoti Handloom Alert" <${sender}>`,
+      to: ADMIN_EMAIL,
+      subject,
+      html: htmlContent,
+    });
+    console.log(`[EMAIL SENT] Notification successfully sent to ${ADMIN_EMAIL}`);
+  } catch (err: any) {
+    console.error('[EMAIL ERROR] Failed to send email:', err.message);
   }
 }
 

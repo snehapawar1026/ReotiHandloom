@@ -9,6 +9,7 @@ export interface StoreData {
   banners: any[];
   instaPosts: any[];
   reviews: any[];
+  blogs?: any[];
   orders?: any[];
   activities?: any[];
   users?: any[];
@@ -17,6 +18,7 @@ export interface StoreData {
 
 let inMemoryStore: StoreData = {
   ...initialStoreData,
+  blogs: (initialStoreData as any).blogs || [],
   orders: (initialStoreData as any).orders || [],
   activities: (initialStoreData as any).activities || [],
   users: (initialStoreData as any).users || [],
@@ -60,6 +62,7 @@ export function getStoreData(): StoreData {
         banners: Array.isArray(parsed.banners) ? parsed.banners : inMemoryStore.banners || [],
         instaPosts: Array.isArray(parsed.instaPosts) ? parsed.instaPosts : inMemoryStore.instaPosts || [],
         reviews: Array.isArray(parsed.reviews) ? parsed.reviews : inMemoryStore.reviews || [],
+        blogs: Array.isArray(parsed.blogs) ? parsed.blogs : inMemoryStore.blogs || [],
         orders: Array.isArray(parsed.orders) ? parsed.orders : inMemoryStore.orders || [],
         activities: Array.isArray(parsed.activities) ? parsed.activities : inMemoryStore.activities || [],
         users: Array.isArray(parsed.users) ? parsed.users : inMemoryStore.users || [],
@@ -113,24 +116,54 @@ export function getAllProducts() {
 }
 
 export function getProductBySlugOrId(slugOrId: string) {
+  if (!slugOrId) return null;
   const data = getStoreData();
-  const decoded = decodeURIComponent(slugOrId || '').trim().toLowerCase();
+  const raw = String(slugOrId).trim();
+  const decoded = decodeURIComponent(raw).trim().toLowerCase();
+  const normalizedSearch = decoded
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
 
-  let product = data.products.find(
-    (p) =>
-      p.id === slugOrId ||
-      p.slug?.toLowerCase().trim() === decoded ||
-      p.slug === slugOrId ||
-      p.title?.toLowerCase().trim() === decoded.replace(/-/g, ' ') ||
-      p.title?.toLowerCase().includes(decoded.replace(/-/g, ' '))
+  // 1. Exact ID match
+  let product = data.products.find((p) => p.id === raw || p.id === decoded);
+  if (product) return product;
+
+  // 2. Exact Slug match
+  product = data.products.find((p) => (p.slug || '').trim().toLowerCase() === decoded);
+  if (product) return product;
+
+  // 3. Normalized Slug match
+  product = data.products.find((p) => {
+    const pSlugNorm = (p.slug || '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+    return pSlugNorm === normalizedSearch;
+  });
+  if (product) return product;
+
+  // 4. Exact title match
+  product = data.products.find(
+    (p) => (p.title || '').trim().toLowerCase() === decoded.replace(/-/g, ' ')
   );
+  if (product) return product;
 
-  if (!product) {
-    product = data.products.find(
-      (p) =>
-        decoded.includes(p.slug?.toLowerCase().trim() || '') ||
-        p.slug?.toLowerCase().includes(decoded)
-    );
+  // 5. Partial / Substring Slug match
+  product = data.products.find((p) => {
+    const pSlug = (p.slug || '').toLowerCase().trim();
+    return pSlug && (decoded.includes(pSlug) || pSlug.includes(decoded));
+  });
+  if (product) return product;
+
+  // 6. Partial title match
+  const searchWords = decoded.replace(/-/g, ' ').split(/\s+/).filter((w) => w.length > 2);
+  if (searchWords.length > 0) {
+    product = data.products.find((p) => {
+      const pTitle = (p.title || '').toLowerCase();
+      const matchCount = searchWords.filter((w) => pTitle.includes(w)).length;
+      return matchCount >= Math.min(3, searchWords.length);
+    });
   }
 
   return product || null;
@@ -187,7 +220,14 @@ export function isSuitProduct(product: any, allCategories?: any[]): boolean {
 
   const catSlug = (product.category?.slug || '').toLowerCase();
   const catName = (product.category?.name || '').toLowerCase();
-  if (catSlug.includes('suit') || catName.includes('suit') || catSlug.includes('unstitched') || catName.includes('unstitched')) {
+  if (
+    catSlug.includes('suit') ||
+    catName.includes('suit') ||
+    catSlug.includes('unstitched') ||
+    catName.includes('unstitched') ||
+    catSlug.includes('dress-material') ||
+    catName.includes('dress material')
+  ) {
     return true;
   }
 
@@ -196,7 +236,14 @@ export function isSuitProduct(product: any, allCategories?: any[]): boolean {
     if (matchedCat) {
       const mcSlug = (matchedCat.slug || '').toLowerCase();
       const mcName = (matchedCat.name || '').toLowerCase();
-      if (mcSlug.includes('suit') || mcName.includes('suit') || mcSlug.includes('unstitched') || mcName.includes('unstitched')) {
+      if (
+        mcSlug.includes('suit') ||
+        mcName.includes('suit') ||
+        mcSlug.includes('unstitched') ||
+        mcName.includes('unstitched') ||
+        mcSlug.includes('dress-material') ||
+        mcName.includes('dress material')
+      ) {
         return true;
       }
       if (matchedCat.parentId) {
@@ -204,7 +251,14 @@ export function isSuitProduct(product: any, allCategories?: any[]): boolean {
         if (parentCat) {
           const pSlug = (parentCat.slug || '').toLowerCase();
           const pName = (parentCat.name || '').toLowerCase();
-          if (pSlug.includes('suit') || pName.includes('suit')) {
+          if (
+            pSlug.includes('suit') ||
+            pName.includes('suit') ||
+            pSlug.includes('unstitched') ||
+            pName.includes('unstitched') ||
+            pSlug.includes('dress-material') ||
+            pName.includes('dress material')
+          ) {
             return true;
           }
         }
@@ -214,7 +268,24 @@ export function isSuitProduct(product: any, allCategories?: any[]): boolean {
 
   const title = (product.title || '').toLowerCase();
   const slug = (product.slug || '').toLowerCase();
-  if (title.includes('suit') || title.includes('kurta') || title.includes('dress material') || slug.includes('suit')) {
+  const desc = (product.description || '').toLowerCase();
+  const length = (product.lengthWithBlouse || '').toLowerCase();
+  if (
+    title.includes('suit') ||
+    title.includes('kurta') ||
+    title.includes('dress material') ||
+    title.includes('top dupatta') ||
+    title.includes('top-dupatta') ||
+    slug.includes('suit') ||
+    slug.includes('top-dupatta') ||
+    desc.includes('suit') ||
+    desc.includes('top dupatta') ||
+    desc.includes('2-piece') ||
+    desc.includes('3-piece') ||
+    length.includes('top') ||
+    length.includes('dupatta') ||
+    length.includes('piece set')
+  ) {
     return true;
   }
 
@@ -287,6 +358,7 @@ export function createProductInStore(productInput: any) {
     stock,
     isOutOfStock,
     images,
+    videoUrl: productInput.videoUrl || productInput.video || null,
     categoryId: productInput.categoryId || (data.categories[0]?.id ?? ''),
     category: category
       ? { id: category.id, name: category.name, slug: category.slug, parentId: category.parentId }
@@ -329,6 +401,8 @@ export function updateProductInStore(id: string, updateInput: any) {
     images = JSON.stringify(images);
   }
 
+  const videoUrl = updateInput.videoUrl !== undefined ? (updateInput.videoUrl || null) : existing.videoUrl;
+
   const categoryId = updateInput.categoryId || existing.categoryId;
   const category = data.categories.find((c) => c.id === categoryId) || existing.category;
 
@@ -351,6 +425,7 @@ export function updateProductInStore(id: string, updateInput: any) {
     originalPrice,
     discountPercent,
     images,
+    videoUrl,
     categoryId,
     category: category
       ? { id: category.id, name: category.name, slug: category.slug, parentId: category.parentId }
@@ -755,5 +830,190 @@ export function addReviewToStore(reviewInput: any) {
   saveStoreData({ reviews: updatedReviews, products: updatedProducts });
   return newReview;
 }
+
+// ---------------- BLOGS & HANDLOOM STORIES ----------------
+
+const DEFAULT_BLOGS = [
+  {
+    id: 'blog-maheshwari-history-01',
+    title: 'The Living Heritage of Maheshwari Sarees: From Ahilyabai Holkar to Modern Runways',
+    slug: 'the-living-heritage-of-maheshwari-sarees-ahilyabai-holkar',
+    category: 'Weaving Heritage',
+    excerpt: 'Discover how Queen Ahilyabai Holkar invited master weavers from Surat and Malwa in the 18th century to create the iconic lightweight Maheshwari saree featuring royal fort motifs.',
+    content: `## A Royal Legacy Woven in Gold & Silk
+
+The story of the Maheshwari saree is intrinsically tied to the visionary Maratha Queen, **Rajmata Ahilyabai Holkar** of Malwa. In the late 18th century, Queen Ahilyabai sought to design special royal garments and presents for dignitaries and royal guests visiting the historic capital of Maheshwar along the sacred Narmada River.
+
+She personally invited traditional master weavers from Surat, Malwa, and South India to establish looms in the fort complex. Ahilyabai herself designed the earliest motifs, inspired by the intricate stone carvings on the walls of the Maheshwar Fort and the gentle ripples of the sacred Narmada river.
+
+### The Iconic Characteristics of Maheshwari Craft:
+1. **The Reversible Border (Bugdi / Karvat)**: A hallmark feature of genuine Maheshwari sarees is the reversible border, allowing the saree to be worn from either side with flawless finishing.
+2. **Feather-Light Silk Cotton Blend**: Unlike heavy traditional silks, Maheshwari handlooms are celebrated for their airy lightness and regal shimmer, keeping the wearer cool in summers and regal in winters.
+3. **Architectural Motifs**: Famous motifs such as *Chatai* (mat pattern), *Chameli* (jasmine flower), *Eent* (brick pattern), and *Heera* (diamond) continue to be handwoven with pure Zari threads.
+
+Today, Reoti Handloom continues this royal tradition directly working with authentic third-generation weaver families in Maheshwar.`,
+    author: 'Reoti Handloom Craft Studio',
+    mediaType: 'image',
+    mediaUrl: '/uploads/saree_1789923479221_mexzs.jpeg',
+    readingTime: '4 min read',
+    isFeatured: true,
+    publishedAt: '2026-09-18T10:00:00.000Z',
+    createdAt: '2026-09-18T10:00:00.000Z',
+    updatedAt: '2026-09-18T10:00:00.000Z',
+  },
+  {
+    id: 'blog-handloom-vs-powerloom-02',
+    title: 'How to Identify 100% Genuine Maheshwari Handloom vs Fake Powerloom Sarees',
+    slug: 'how-to-identify-genuine-maheshwari-handloom-vs-powerloom',
+    category: 'Buyer Guide',
+    excerpt: 'Learn the essential tactile and visual tests to verify authentic handloom weave, selvedge pin marks, reversible border density, and natural silk-cotton texture.',
+    content: `## Protect Yourself from Powerloom Imitations
+
+With the rising popularity of Maheshwari sarees across India and worldwide, machine-made synthetic imitations have flooded commercial markets. Here is the expert buyer guide from Reoti Handloom weavers on how to verify 100% authentic handloom:
+
+### 1. The Selvedge & Loom Pin Marks (Kanni)
+On a genuine handloom saree, look closely at the edges (selvedge). You will notice subtle pin marks where the fabric was held taut on the wooden loom frame during hand weaving. Powerloom synthetic copies have razor-straight, mechanically cut edges without pin marks.
+
+### 2. The Reversible Zari Border
+A genuine Maheshwari border is handwoven with balanced warp and weft tension. The reverse side looks nearly as clean and beautiful as the front side, without loose hanging floats or machine loop tangles.
+
+### 3. Natural Silk-Cotton Breathability
+Pure Maheshwari uses natural Mulberry silk in warp and combed cotton in weft. It has a natural organic drape, subtle matte-to-sheen glow, and never feels sticky or synthetic against sensitive skin.
+
+### 4. Direct Weavers Guarantee
+Always buy directly from authentic Maheshwar workshops like Reoti Handloom where every single piece is handcrafted on wooden pit looms with generational skill.`,
+    author: 'Master Weaver Shivam',
+    mediaType: 'image',
+    mediaUrl: '/uploads/saree_1789240597301_iy1ww.jpeg',
+    readingTime: '3 min read',
+    isFeatured: true,
+    publishedAt: '2026-09-15T12:00:00.000Z',
+    createdAt: '2026-09-15T12:00:00.000Z',
+    updatedAt: '2026-09-15T12:00:00.000Z',
+  },
+  {
+    id: 'blog-saree-care-maintenance-03',
+    title: 'Complete Handloom Care Guide: Washing, Ironing & Storing Your Silk Cotton Sarees',
+    slug: 'handloom-saree-care-guide-washing-ironing-storing',
+    category: 'Care & Maintenance',
+    excerpt: 'Step-by-step master guide to keep your precious Maheshwari Zari borders shimmering and silk threads lustrous for decades without color bleeding.',
+    content: `## Preserve Your Handloom Heirloom
+
+A handcrafted Maheshwari saree is not just clothing; it is a timeless heirloom designed to last generations when cared for properly.
+
+### Washing Best Practices
+- **First Wash**: We always recommend dry cleaning for the very first wash, especially for dark shades like Crimson, Peacock Blue, and Wine.
+- **Subsequent Washes**: Gently hand wash in cold water using a mild silk-friendly liquid detergent or soap nuts (Reetha). Never use harsh bleaching agents or fabric softeners.
+- **Never Soak**: Do not leave your handloom saree soaked in soapy water for more than 3-5 minutes.
+
+### Drying & Ironing
+- Always dry in shade on a clean flat surface or padded hanger. Direct harsh sunlight can fade natural dyes and weaken silk threads.
+- Iron on the reverse side on medium silk heat settings while the saree is slightly damp, or use a thin cotton press cloth over Zari borders.
+
+### Safe Wardrobe Storage
+- Wrap your sarees in breathable muslin or pure cotton saree covers.
+- Avoid plastic storage bags which trap moisture and can tarnish metallic Zari.
+- Refold your sarees every 3-4 months along different crease lines to prevent fiber stress.`,
+    author: 'Sneha Ambekar',
+    mediaType: 'image',
+    mediaUrl: '/uploads/saree_1789240597301_iy1ww.jpeg',
+    readingTime: '5 min read',
+    isFeatured: false,
+    publishedAt: '2026-09-10T14:30:00.000Z',
+    createdAt: '2026-09-10T14:30:00.000Z',
+    updatedAt: '2026-09-10T14:30:00.000Z',
+  },
+];
+
+export function getAllBlogs() {
+  const data = getStoreData();
+  const blogs = Array.isArray(data.blogs) && data.blogs.length > 0 ? data.blogs : DEFAULT_BLOGS;
+  return [...blogs].sort((a: any, b: any) => new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime());
+}
+
+export function getBlogBySlugOrId(slugOrId: string) {
+  if (!slugOrId) return null;
+  const decoded = decodeURIComponent(slugOrId).trim().toLowerCase();
+  const all = getAllBlogs();
+
+  return (
+    all.find((b: any) => b.id === slugOrId || b.id === decoded) ||
+    all.find((b: any) => (b.slug || '').toLowerCase().trim() === decoded) ||
+    all.find((b: any) => (b.slug || '').toLowerCase().includes(decoded) || decoded.includes((b.slug || '').toLowerCase())) ||
+    all.find((b: any) => (b.title || '').toLowerCase().includes(decoded.replace(/-/g, ' '))) ||
+    null
+  );
+}
+
+export function createBlogInStore(blogInput: any) {
+  const data = getStoreData();
+  const currentBlogs = Array.isArray(data.blogs) && data.blogs.length > 0 ? data.blogs : DEFAULT_BLOGS;
+
+  const id = 'blog-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+  const title = (blogInput.title || 'Untitled Handloom Story').trim();
+  const slug = (blogInput.slug || title)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+  const newBlog = {
+    id,
+    title,
+    slug,
+    category: blogInput.category || 'Handloom Stories',
+    excerpt: blogInput.excerpt || (blogInput.content ? blogInput.content.substring(0, 160) + '...' : ''),
+    content: blogInput.content || '',
+    author: blogInput.author || 'Reoti Handloom Studio',
+    mediaType: blogInput.mediaType || (blogInput.mediaUrl && (blogInput.mediaUrl.endsWith('.mp4') || blogInput.mediaUrl.endsWith('.webm') || blogInput.mediaUrl.includes('youtube') || blogInput.mediaUrl.includes('instagram')) ? 'video' : 'image'),
+    mediaUrl: blogInput.mediaUrl || '/uploads/saree_1789923479221_mexzs.jpeg',
+    videoUrl: blogInput.videoUrl || null,
+    readingTime: blogInput.readingTime || '4 min read',
+    isFeatured: Boolean(blogInput.isFeatured),
+    tags: Array.isArray(blogInput.tags) ? blogInput.tags : (blogInput.tags ? blogInput.tags.split(',').map((t: string) => t.trim()) : ['Maheshwari', 'Handloom']),
+    publishedAt: blogInput.publishedAt || new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedBlogs = [newBlog, ...currentBlogs.filter((b: any) => b.id !== id)];
+  saveStoreData({ blogs: updatedBlogs });
+  return newBlog;
+}
+
+export function updateBlogInStore(id: string, updateInput: any) {
+  const data = getStoreData();
+  const currentBlogs = Array.isArray(data.blogs) && data.blogs.length > 0 ? data.blogs : DEFAULT_BLOGS;
+  const index = currentBlogs.findIndex((b: any) => b.id === id);
+  if (index === -1) return null;
+
+  const existing = currentBlogs[index];
+  const title = updateInput.title !== undefined ? updateInput.title.trim() : existing.title;
+  const slug = updateInput.slug !== undefined
+    ? updateInput.slug.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+    : existing.slug;
+
+  const updatedBlog = {
+    ...existing,
+    ...updateInput,
+    title,
+    slug,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedBlogs = [...currentBlogs];
+  updatedBlogs[index] = updatedBlog;
+  saveStoreData({ blogs: updatedBlogs });
+  return updatedBlog;
+}
+
+export function deleteBlogInStore(id: string) {
+  const data = getStoreData();
+  const currentBlogs = Array.isArray(data.blogs) && data.blogs.length > 0 ? data.blogs : DEFAULT_BLOGS;
+  const updatedBlogs = currentBlogs.filter((b: any) => b.id !== id);
+  saveStoreData({ blogs: updatedBlogs });
+  return true;
+}
+
 
 

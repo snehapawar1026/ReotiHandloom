@@ -43,15 +43,37 @@ if (fs.existsSync(publicDir)) {
   fs.cpSync(publicDir, path.join(tempDir, 'public'), { recursive: true });
 }
 
-// 6. Copy package.json (NOTE: We deliberately DO NOT copy storeData.json to ensure live products, orders & user data are never overwritten on cPanel)
+// 6. Copy package.json, .env, and .htaccess
 fs.copyFileSync(
   path.join(rootDir, 'package.json'),
   path.join(tempDir, 'package.json')
 );
+if (fs.existsSync(path.join(rootDir, '.env'))) {
+  fs.copyFileSync(
+    path.join(rootDir, '.env'),
+    path.join(tempDir, '.env')
+  );
+}
+if (fs.existsSync(path.join(rootDir, '.env.local'))) {
+  fs.copyFileSync(
+    path.join(rootDir, '.env.local'),
+    path.join(tempDir, '.env.local')
+  );
+}
+if (fs.existsSync(path.join(rootDir, 'public', '.htaccess'))) {
+  fs.copyFileSync(
+    path.join(rootDir, 'public', '.htaccess'),
+    path.join(tempDir, '.htaccess')
+  );
+}
 
 // 6. Create complete_update.zip
-if (fs.existsSync(zipFile)) {
-  fs.rmSync(zipFile, { force: true });
+try {
+  if (fs.existsSync(zipFile)) {
+    fs.rmSync(zipFile, { force: true });
+  }
+} catch (e) {
+  console.warn('Existing zip locked, overwriting directly...');
 }
 
 try {
