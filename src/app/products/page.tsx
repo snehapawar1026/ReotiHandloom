@@ -45,43 +45,43 @@ const CATEGORY_HERO_MAP: Record<string, { title: string; description: string; im
   'maheshwari-sarees': {
     title: 'Maheshwari Sarees',
     description:
-      'Explore authentic handcrafted Maheshwari Sarees woven direct from master artisans of Rewa & Maheshwar. Celebrated for iconic Narmada river borders, rich zari work, and timeless royal heritage.',
+      'Explore authentic handcrafted Maheshwari Sarees woven directly on 3rd generation heritage pit looms by master artisans of Reoti Handloom Maheshwar. Celebrated for iconic Narmada river borders, reversible zari craftsmanship, and timeless royal Holkar heritage.',
     image: '/uploads/maheshwari_legacy_banner.png',
   },
   'garbha-reshami-special': {
     title: 'Garbha Reshami Silk Sarees',
     description:
-      'Buy Garbha Reshami Silk Sarees online handcrafted by skilled weavers of Rewa situated in Maheshwar, Madhya Pradesh. Garbha Reshami from the name itself 75 percent Mulberry Silk in Garbha (in the womb) and 25 percent Mercerised Cotton, Shop online for authentic Maheshwari Garbha Reshami Sarees made from naturally dyed and pure natural threads on Handloom certified by India Handloom Brand ~ Rewa.',
+      'Discover authentic Garbha Reshami Silk Sarees handcrafted by master weavers of Reoti Handloom in Maheshwar. Crafted with 75% pure Mulberry Silk in warp and 25% mercerised fine cotton in weft, delivering exceptional gossamer drape, natural luster, and certified handloom purity.',
     image: '/uploads/saree_1789221965397_lf0kg.jpeg',
   },
   'silk-cotton-maheshwari': {
     title: 'Silk Cotton Maheshwari Sarees',
     description:
-      'Explore lightweight & comfortable Silk Cotton Maheshwari Sarees woven with pure mulberry silk warp and fine mercerised cotton weft. Handcrafted by master weavers in Maheshwar with traditional Bugdi, Zari, and Narmada river border motifs.',
+      'Explore lightweight & comfortable Silk Cotton Maheshwari Sarees woven with pure mulberry silk warp and fine mercerised cotton weft. Handcrafted by master weavers at Reoti Handloom Maheshwar with traditional Bugdi, Zari, and Narmada river border motifs.',
     image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
   },
   'pure-silk-maheshwari': {
     title: 'Pure Silk Maheshwari Sarees',
     description:
-      'Indulge in luxurious 100% Pure Silk Maheshwari Sarees adorned with rich golden zari borders and intricate woven butis. Perfect for royal weddings, grand celebrations, and festive occasions.',
+      'Indulge in luxurious 100% Pure Silk Maheshwari Sarees adorned with rich golden zari borders and intricate woven butis. Handcrafted by Reoti Handloom for royal weddings, grand celebrations, and festive occasions.',
     image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
   },
   'tissue-zari-maheshwari': {
     title: 'Tissue Zari Maheshwari Sarees',
     description:
-      'Experience shimmering elegance with Tissue Zari Maheshwari Sarees featuring silver and gold zari threads woven continuously with pure silk. Delicate, lightweight, and radiant for evening celebrations.',
+      'Experience shimmering elegance with Tissue Zari Maheshwari Sarees featuring silver and gold zari threads woven continuously with pure silk. Handcrafted by Reoti Handloom for radiant celebrations.',
     image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
   },
   'katan-silk': {
     title: 'Katan Silk Maheshwari Sarees',
     description:
-      'Experience the timeless elegance of authentic Maheshwari handloom in luxurious Katan Silk. Lightweight, graceful and beautifully woven with big traditional butas, reflecting the rich heritage of Maheshwar.',
+      'Experience the timeless elegance of authentic Maheshwari handloom in luxurious Katan Silk. Lightweight, graceful and beautifully woven with big traditional butas by Reoti Handloom master artisans.',
     image: '/uploads/saree_1789221965397_lf0kg.jpeg',
   },
   'nayantara-maheshwari-handloom-sarees': {
     title: 'Nayantara Maheshwari Handloom Sarees',
     description:
-      'Discover the timeless elegance of Nayantara Maheshwari Handloom Sarees, beautifully crafted to bring together traditional artistry and contemporary style. Woven by skilled artisans with Chokha border & detailed butis.',
+      'Discover the timeless elegance of Nayantara Maheshwari Handloom Sarees by Reoti Handloom, beautifully crafted with Chokha borders & detailed butis to blend traditional artistry with modern flair.',
     image: '/uploads/saree_1789233209397_zszzb.jpeg',
   },
   'semi-maheshwari-sarees': {
@@ -251,7 +251,7 @@ function getHeroContent(
     if (matchingKey) return CATEGORY_HERO_MAP[matchingKey];
     return {
       title: `${selectedFabric} Maheshwari Sarees`,
-      description: `Handcrafted ${selectedFabric} Maheshwari sarees woven by skilled artisans in Rewa & Maheshwar.`,
+      description: `Handcrafted ${selectedFabric} Maheshwari sarees woven with generational mastery by skilled master weavers at Reoti Handloom Maheshwar.`,
       image: '/uploads/saree_1789221965397_lf0kg.jpeg',
     };
   }
@@ -285,7 +285,7 @@ function getHeroContent(
   return {
     title: 'Authentic Maheshwari Handloom Sarees',
     description:
-      'Shop handcrafted Maheshwari Sarees directly from Rewa & Maheshwar artisans. Featuring authentic Silk Cotton, Pure Silk, Katan Silk, Garbha Reshami, and Tissue Zari with traditional Narmada and Bugdi borders.',
+      'Explore authentic handcrafted Maheshwari Sarees woven directly on 3rd generation heritage pit looms by master artisans of Reoti Handloom Maheshwar. Celebrated for iconic Narmada river borders, reversible zari craftsmanship, and timeless royal Holkar heritage.',
     image: '/uploads/maheshwari_legacy_banner.png',
   };
 }
@@ -868,7 +868,7 @@ function ProductsContent() {
       )}
 
       <div className="w-full">
-        {/* Main Content Area (Full-Width Rewa Handloom Style Layout) */}
+        {/* Main Content Area (Full-Width Reoti Handloom Style Layout) */}
         <main className="w-full space-y-4">
 
           {/* Active Filter Chips Pill Bar (Nykaa Screenshot Style) */}
@@ -945,7 +945,7 @@ function ProductsContent() {
             </div>
           )}
 
-          {/* Rewa Handloom Style Horizontal Filter Bar (Matching media_1789234404852.png) */}
+          {/* Reoti Handloom Style Horizontal Filter Bar */}
           <div className="w-full bg-[#FAF7F2]/90 border border-[#E8DFC8] rounded-xl p-3 shadow-2xs font-sans flex flex-col md:flex-row items-center justify-between gap-3">
             <div className="text-xs font-serif font-extrabold text-[#581C1C] tracking-wide">
               <span>{products.length} {isSemiMaheshwariView ? 'Semi Maheshwari' : 'Maheshwari'} {products.length === 1 ? 'Saree' : 'Sarees'}</span>
@@ -1102,7 +1102,7 @@ function ProductsContent() {
                 )}
               </div>
 
-              {/* SHOW ALL / RESET Button (Exact Rewa style) */}
+              {/* SHOW ALL / RESET Button (Exact Reoti style) */}
               <button
                 type="button"
                 onClick={clearAllFilters}

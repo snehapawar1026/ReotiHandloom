@@ -119,28 +119,171 @@ export default function AboutPage() {
           />
         </div>
 
-        {/* Story Text Paragraphs (Centered Layout) */}
+        {/* Story Text Paragraphs (Centered / Editorial Layout) */}
         <div className="space-y-6 text-gray-800 text-sm sm:text-base sm:leading-relaxed font-medium max-w-4xl mx-auto text-center">
-          <p>
-            Rooted in the timeless temple town of <strong className="font-semibold text-amber-950">Maheshwar on the sacred banks of Maa Narmada</strong>, <strong className="font-semibold text-amber-950">Reoti Handloom</strong> represents generations of master craftsmanship and devotion to the royal Holkar weaving heritage. Carrying forward a celebrated multi-generational artisan legacy, every weave is a living tribute to the historic artistry envisioned by Devi Ahilyabai Holkar.
+          <p className="text-base sm:text-lg font-serif text-amber-950 font-semibold leading-relaxed">
+            Welcome to Reoti Handloom, where tradition, craftsmanship, and heritage come together in every weave.
           </p>
 
           <p>
-            Unlike mass-manufactured powerloom fabrics, each authentic Reoti creation is meticulously hand-crafted on <strong className="font-semibold text-amber-950">traditional wooden pit looms</strong>. From the rhythmic shuttle movement to the delicate interlocking of our signature <em className="italic text-rose-950 font-serif">reversible zari borders (Bugdi)</em> and intricate temple motifs, every saree takes days of dedicated artisan precision.
+            Our journey began in 1960 with a simple vision—to preserve the rich tradition of authentic Maheshwari Handloom Sarees while delivering exceptional quality and craftsmanship. What started as a family tradition has grown into a legacy that has been proudly carried forward for three generations.
           </p>
 
           <p>
-            Recognized with prestigious state honors including the <strong className="font-semibold text-amber-950">M.P. State Textile Corporation Award</strong> and cherished by distinguished dignitaries across India, our looms weave only pure mulberry silk, fine hand-spun cotton, and tested zari—delivering featherlight comfort and royal grace.
+            The foundation of Reoti Handloom was laid by <strong className="font-semibold text-amber-950">Shri Lakshminarayan Ambekar</strong>, whose dedication to the art of Maheshwari weaving established a reputation for authenticity, honesty, and excellence. His passion for handloom and commitment to quality became the guiding principles of our family business.
           </p>
 
           <p>
-            Our commitment is pure and transparent: <strong className="font-semibold text-amber-950">direct loom-to-wardrobe authenticity</strong>. By connecting our weaver families directly with saree connoisseurs, we preserve fair artisan livelihood while guaranteeing you 100% genuine Maheshwari craftsmanship without middlemen markups.
+            The legacy was then strengthened by the second generation, <strong className="font-semibold text-amber-950">Shri Ashok Ambekar</strong>, who continued to uphold these values while expanding the family&apos;s reach and earning the trust of customers across India. His dedication ensured that every saree represented the finest craftsmanship and timeless elegance that Maheshwari handloom is known for.
           </p>
 
           <p>
-            When you drape a <strong className="font-semibold text-amber-950">Reoti Handloom</strong> saree, you embrace timeless Narmada ghat culture, sustainable slow fashion, and authentic royal elegance. Thank you for celebrating handloom heritage with us.
+            Today, the third generation, <strong className="font-semibold text-amber-950">Shivam Ambekar</strong>, proudly carries this heritage forward with a vision of connecting the beauty of traditional Maheshwari sarees with modern customers around the world. While staying true to our roots, we embrace contemporary styles, making our collections suitable for weddings, festive celebrations, special occasions, and everyday elegance.
+          </p>
+
+          <p>
+            Every saree at Reoti Handloom is a celebration of Indian craftsmanship. Woven by skilled artisans using traditional techniques passed down through generations, our Maheshwari sarees are known for their lightweight comfort, elegant borders, distinctive motifs, and luxurious silk-cotton texture. Each piece reflects countless hours of dedication, precision, and artistic excellence.
+          </p>
+
+          <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-6 text-amber-950 text-left my-4">
+            <h4 className="font-serif font-bold text-base sm:text-lg text-[#8B263E] mb-2 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-600" />
+              <span>Our Authentic Weaving Collections</span>
+            </h4>
+            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-normal">
+              Our collection includes a wide range of authentic Maheshwari Sarees, including Silk Cotton Maheshwari Sarees, Pure Silk Maheshwari Sarees, Resham Maheshwari Sarees, Tissue Maheshwari Sarees, Buti Sarees, Karvat Border Sarees, Diamond Border Sarees, festive collections, and exclusive handcrafted designs. Every creation is carefully selected to ensure unmatched quality, elegance, and authenticity.
+            </p>
+          </div>
+
+          <p>
+            At Reoti Handloom, we believe that a saree is more than just a garment—it is a story, an emotion, and a symbol of India&apos;s rich cultural heritage. Every weave carries the dedication of artisans and the legacy of a family that has devoted more than six decades to preserving the timeless beauty of Maheshwari handloom.
+          </p>
+
+          <p>
+            Our commitment goes beyond selling sarees. We strive to support traditional weaving communities, promote authentic handloom craftsmanship, and deliver an exceptional shopping experience built on trust, quality, and customer satisfaction.
+          </p>
+
+          <p>
+            Today, Reoti Handloom proudly serves customers across India and around the world, bringing the elegance of Maheshwari handloom to every wardrobe while preserving the traditions that began in 1960.
+          </p>
+
+          <p className="font-serif italic text-base sm:text-lg text-[#8B263E] font-semibold pt-2">
+            “For us, every saree is not just handcrafted—it is woven with history, heritage, and generations of passion.”
           </p>
         </div>
+
+        {/* Our Legacy: Three Generations */}
+        <section className="pt-6">
+          <div className="text-center space-y-2 mb-8">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#8B263E] bg-rose-50 px-4 py-1 rounded-full border border-rose-200">
+              6 Decades of Excellence
+            </span>
+            <h3 className="font-serif font-extrabold text-2xl sm:text-4xl text-[#2D1214]">
+              Our Legacy: Three Generations of Master Weavers
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 1st Generation */}
+            <div className="bg-white border-2 border-amber-200/90 rounded-2xl p-6 sm:p-7 shadow-md hover:shadow-lg transition-all space-y-3 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-amber-900 text-amber-200 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+                1st Gen • Est. 1960
+              </div>
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center border border-amber-300 font-serif font-bold text-lg">
+                1
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-widest text-amber-800 font-bold">First Generation</p>
+                <h4 className="font-serif font-extrabold text-xl text-amber-950 mt-0.5">Shri Lakshminarayan Ambekar</h4>
+                <p className="text-xs text-rose-800 font-semibold">Founder (1960)</p>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed font-medium pt-1">
+                Laid the foundation of Reoti Handloom with dedication to authentic Maheshwari weaving, establishing a reputation for honesty and craftsmanship.
+              </p>
+            </div>
+
+            {/* 2nd Generation */}
+            <div className="bg-white border-2 border-amber-200/90 rounded-2xl p-6 sm:p-7 shadow-md hover:shadow-lg transition-all space-y-3 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-rose-900 text-rose-100 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+                2nd Gen • Awarded
+              </div>
+              <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-900 flex items-center justify-center border border-rose-300 font-serif font-bold text-lg">
+                2
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-widest text-rose-800 font-bold">Second Generation</p>
+                <h4 className="font-serif font-extrabold text-xl text-amber-950 mt-0.5">Shri Ashok Ambekar</h4>
+                <p className="text-xs text-rose-800 font-semibold">Master Weaver & Custodian</p>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed font-medium pt-1">
+                Carried the family legacy forward with dedication, quality, and trust—earning state government awards and expanding trust across India.
+              </p>
+            </div>
+
+            {/* 3rd Generation */}
+            <div className="bg-white border-2 border-amber-200/90 rounded-2xl p-6 sm:p-7 shadow-md hover:shadow-lg transition-all space-y-3 relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-amber-950 text-amber-300 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+                3rd Gen • Present
+              </div>
+              <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-900 flex items-center justify-center border border-amber-300 font-serif font-bold text-lg">
+                3
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-widest text-amber-800 font-bold">Third Generation</p>
+                <h4 className="font-serif font-extrabold text-xl text-amber-950 mt-0.5">Shivam Ambekar</h4>
+                <p className="text-xs text-rose-800 font-semibold">Global Vision & Innovation</p>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed font-medium pt-1">
+                Continuing the tradition by blending timeless craftsmanship with modern elegance for patrons across India and across the globe.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Our Promise & Mission Banner */}
+        <section className="bg-gradient-to-br from-amber-950 via-rose-950 to-neutral-950 text-amber-100 rounded-3xl p-8 sm:p-12 shadow-xl border border-amber-700/60 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px]"></div>
+          
+          <div className="relative z-10 max-w-4xl mx-auto text-center space-y-6">
+            <div className="inline-flex items-center gap-2 bg-amber-900/80 border border-amber-600 px-4 py-1 rounded-full text-xs font-bold text-amber-300 uppercase tracking-widest">
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
+              <span>Our Heritage Commitment</span>
+            </div>
+
+            <h3 className="font-serif font-extrabold text-2xl sm:text-4xl text-amber-50">
+              Our Promise to You
+            </h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left pt-2">
+              <div className="flex items-start gap-3 bg-amber-900/40 border border-amber-700/50 p-4 rounded-xl">
+                <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <span className="text-xs sm:text-sm font-semibold text-amber-100">Authentic Maheshwari Handloom Sarees</span>
+              </div>
+              <div className="flex items-start gap-3 bg-amber-900/40 border border-amber-700/50 p-4 rounded-xl">
+                <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <span className="text-xs sm:text-sm font-semibold text-amber-100">Three Generations of Experience</span>
+              </div>
+              <div className="flex items-start gap-3 bg-amber-900/40 border border-amber-700/50 p-4 rounded-xl">
+                <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <span className="text-xs sm:text-sm font-semibold text-amber-100">Premium Quality Craftsmanship</span>
+              </div>
+              <div className="flex items-start gap-3 bg-amber-900/40 border border-amber-700/50 p-4 rounded-xl">
+                <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <span className="text-xs sm:text-sm font-semibold text-amber-100">Trusted by Customers Since 1960</span>
+              </div>
+              <div className="flex items-start gap-3 bg-amber-900/40 border border-amber-700/50 p-4 rounded-xl sm:col-span-2 lg:col-span-2">
+                <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <span className="text-xs sm:text-sm font-semibold text-amber-100">Timeless Designs with Modern Elegance</span>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-amber-700/50">
+              <p className="font-serif font-bold text-base sm:text-xl text-amber-200">
+                Reoti Handloom – Three Generations of Trust, Tradition & Timeless Maheshwari Sarees. Since 1960.
+              </p>
+            </div>
+          </div>
+        </section>
 
         {/* 5. Historical Heritage, VIP Visits & Govt Recognitions Gallery */}
         <section className="pt-8 space-y-8 border-t border-amber-200/80">
