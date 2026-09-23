@@ -175,6 +175,53 @@ export default async function Page({ params }: Props) {
       }
     : null;
 
+  const jsonLdFaq = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'Is this an authentic handloom Maheshwari saree?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, this saree is authentic handwoven on traditional wooden pit looms by 3rd generation master weavers in Maheshwar, Madhya Pradesh, crafted with pure Mulberry Silk and Mercerised Cotton natural threads.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is a matching blouse piece included with this saree?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes, every saree comes with an authentic matching 80cm unstitched blouse piece attached.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What are the wash care instructions for this saree?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Dry clean is recommended for the first wash to preserve the natural silk luster and metallic zari border. For subsequent maintenance, gently hand wash in cold water using mild silk-friendly detergent.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is the delivery timeline and shipping fee?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'We provide 100% Free Express Delivery across India. Orders are dispatched within 24 to 48 hours and typically reach your doorstep within 3 to 6 working days.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is your return and exchange policy?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'We offer a 7-day hassle-free return and exchange policy from the date of delivery for complete customer satisfaction.',
+        },
+      },
+    ],
+  };
+
   return (
     <>
       {jsonLdProduct && (
@@ -189,6 +236,10 @@ export default async function Page({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
       <ProductDetailClient initialProduct={product} slug={slug} />
     </>
   );

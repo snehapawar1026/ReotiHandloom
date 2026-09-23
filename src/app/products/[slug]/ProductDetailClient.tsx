@@ -40,6 +40,8 @@ import {
   Zap,
   Play,
   Video,
+  HelpCircle,
+  MessageCircle,
 } from 'lucide-react';
 
 const WhatsAppIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -202,6 +204,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
     returns: false,
     iron: false,
     details: true,
+    faqs: false,
     tags: false,
   });
 
@@ -421,6 +424,23 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
 
   const isLiked = isInWishlist(product.id);
   const parsedImages: string[] = JSON.parse(product.images || '[]');
+
+  const handleWhatsAppOrder = () => {
+    if (!product) return;
+    const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://reotihandloom.com/products/${product.slug || slug}`;
+    const mainImg = selectedImage || (parsedImages.length > 0 ? parsedImages[0] : '');
+    const fullImgUrl = mainImg.startsWith('http')
+      ? mainImg
+      : (typeof window !== 'undefined' ? `${window.location.origin}${mainImg}` : `https://reotihandloom.com${mainImg}`);
+
+    const fallPicoMsg = hasFallPico ? '\n✂️ *Fall & Pico Bidding*: Included (+₹200)' : '';
+    const finalPrice = product.price + (hasFallPico ? 200 : 0);
+
+    const message = `Namaste Reoti Handloom! 🙏\n\nI want to place an order for this authentic Maheshwari saree:\n\n📌 *Product Name*: ${product.title}\n💰 *Price*: ₹${finalPrice.toLocaleString()}${fallPicoMsg} (FREE Delivery)\n🎨 *Color*: ${product.color || 'As Shown'}\n🧵 *Fabric*: ${product.fabric || 'Maheshwari Handloom'}\n\n🔗 *Product Link*: ${pageUrl}\n🖼️ *Picture*: ${fullImgUrl}\n\nPlease confirm availability and share payment & dispatch details!`;
+
+    const whatsappUrl = `https://wa.me/919617444445?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   const handleWhatsAppInquiry = () => {
     if (!product) return;
@@ -905,7 +925,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
               </button>
             </div>
 
-            {/* Row 2: BUY IT NOW Button (Deep Luxury Royal Maroon / Crimson Button matching Reference Image) */}
+            {/* Row 2: BUY IT NOW Button (Deep Luxury Royal Maroon / Crimson Button) */}
             {!product.isOutOfStock && (
               <button
                 onClick={() => {
@@ -920,14 +940,26 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
               </button>
             )}
 
-            {/* Row 3: Direct WhatsApp Wholesale Inquiry Button */}
+            {/* Row 3: Direct 1-Click Order on WhatsApp Button */}
             <button
-              onClick={handleWhatsAppInquiry}
-              className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 border border-emerald-600/30 cursor-pointer"
+              onClick={handleWhatsAppOrder}
+              className="w-full py-3.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md hover:shadow-lg transition-all active:scale-98 flex items-center justify-center gap-2 border border-emerald-600/30 cursor-pointer"
             >
               <WhatsAppIcon className="w-5 h-5 fill-white text-white" />
-              <span>Wholesale Inquiry on WhatsApp</span>
+              <span>Order Directly on WhatsApp</span>
             </button>
+
+            {/* Row 4: Wholesale & Custom Inquiry Link */}
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={handleWhatsAppInquiry}
+                className="text-[11px] font-bold text-gray-600 hover:text-emerald-700 underline transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Looking for Bulk Wholesale or Custom Weaving? Inquire Here</span>
+              </button>
+            </div>
           </div>
 
           {/* Delivery Pincode Checker */}
@@ -1187,7 +1219,46 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
                 )}
               </div>
 
-              {/* Accordion 6: Tags */}
+              {/* Accordion 6: Frequently Asked Questions (Handloom FAQs) */}
+              <div className="border-b border-dotted border-amber-900/30 py-3.5">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('faqs')}
+                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                >
+                  <span className="flex items-center gap-3">
+                    <HelpCircle className="w-5 h-5 text-amber-800 shrink-0" />
+                    <span>Frequently Asked Questions</span>
+                  </span>
+                  {openSections.faqs ? (
+                    <ChevronUp className="w-5 h-5 text-gray-600" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-600" />
+                  )}
+                </button>
+                {openSections.faqs && (
+                  <div className="mt-3.5 pl-8 space-y-3 text-xs sm:text-sm text-gray-900 font-semibold leading-relaxed">
+                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
+                      <p className="font-extrabold text-amber-950">Q: Is this 100% authentic handloom?</p>
+                      <p className="text-gray-700 font-medium">Yes, authentically handwoven on traditional pit looms by master weavers in Maheshwar, Madhya Pradesh (Estd. 1960).</p>
+                    </div>
+                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
+                      <p className="font-extrabold text-amber-950">Q: Is a blouse piece included?</p>
+                      <p className="text-gray-700 font-medium">Yes, every saree includes a matching 80cm unstitched blouse piece attached.</p>
+                    </div>
+                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
+                      <p className="font-extrabold text-amber-950">Q: What are the shipping charges and timeline?</p>
+                      <p className="text-gray-700 font-medium">We offer 100% Free Express Delivery across India. Orders are delivered in 3 to 6 working days.</p>
+                    </div>
+                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
+                      <p className="font-extrabold text-amber-950">Q: What is your return & exchange policy?</p>
+                      <p className="text-gray-700 font-medium">We provide a 7-day hassle-free return and exchange guarantee for complete peace of mind.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Accordion 7: Tags */}
               <div className="pt-3">
                 <button
                   type="button"
@@ -1631,6 +1702,39 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
                 <span>Inquire on WhatsApp</span>
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Sticky Quick-Action Bottom Bar */}
+      {!product.isOutOfStock && (
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-amber-900/10 p-2.5 px-4 shadow-2xl lg:hidden flex items-center justify-between gap-3 font-sans">
+          <div className="flex flex-col shrink-0 min-w-0">
+            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Total Price</span>
+            <span className="text-base font-black text-amber-950">
+              ₹{product.price.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-1 justify-end">
+            <button
+              onClick={() => {
+                addToCart(product, { hasFallPico, fallPicoPrice: 200 });
+                setIsCartOpen(true);
+              }}
+              className="flex-1 max-w-[130px] py-2.5 bg-[#E11D48] hover:bg-[#BE123C] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <ShoppingBag className="w-3.5 h-3.5" />
+              <span>Add Bag</span>
+            </button>
+
+            <button
+              onClick={handleWhatsAppOrder}
+              className="flex-1 max-w-[150px] py-2.5 bg-[#25D366] hover:bg-[#20ba5a] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <WhatsAppIcon className="w-4 h-4 fill-white text-white" />
+              <span>WhatsApp</span>
+            </button>
           </div>
         </div>
       )}

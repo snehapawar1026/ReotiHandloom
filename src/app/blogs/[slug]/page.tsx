@@ -94,8 +94,73 @@ export default async function SingleBlogPage({ params }: Props) {
   const blogShareUrl = `https://reotihandloom.com/blogs/${blog.slug || slug}`;
   const whatsappShareText = encodeURIComponent(`📖 *${blog.title}*\n${blogShareUrl}\n\nRead this fascinating handloom story from Reoti Handloom Maheshwar! ✨`);
 
+  const primaryImage = blog.mediaUrl || '/uploads/saree_1789923479221_mexzs.jpeg';
+  const absoluteImageUrl = primaryImage.startsWith('http')
+    ? primaryImage
+    : `https://reotihandloom.com${primaryImage.startsWith('/') ? '' : '/'}${primaryImage}`;
+
+  const jsonLdArticle = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: blog.title,
+    description: blog.excerpt || blog.title,
+    image: [absoluteImageUrl],
+    datePublished: blog.publishedAt || blog.createdAt,
+    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt,
+    author: {
+      '@type': 'Person',
+      name: blog.author || 'Reoti Handloom Master Weavers',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Reoti Handloom',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://reotihandloom.com/logo.png',
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': blogShareUrl,
+    },
+    articleSection: blog.category || 'Handloom Heritage',
+  };
+
+  const jsonLdBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://reotihandloom.com',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'The Maheshwar Journal',
+        item: 'https://reotihandloom.com/blogs',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: blog.title,
+        item: blogShareUrl,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
       {/* Breadcrumbs */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-4">
         <nav className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
