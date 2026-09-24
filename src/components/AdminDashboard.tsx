@@ -141,6 +141,7 @@ export default function AdminDashboard() {
   const [activityRoleFilter, setActivityRoleFilter] = useState<'CUSTOMERS' | 'ADMIN' | 'ALL'>('CUSTOMERS');
   const [handloomFilter, setHandloomFilter] = useState<'sarees' | 'suits' | 'all'>('sarees');
   const [catFilter, setCatFilter] = useState<'all' | 'sarees' | 'suits' | 'semi'>('all');
+  const [semiSubcategoryFilter, setSemiSubcategoryFilter] = useState<string>('ALL');
 
   // Activity role segregation logic (Hooks must be at top-level before any early returns)
   const knownAdminIps = React.useMemo(() => new Set(
@@ -1600,6 +1601,23 @@ export default function AdminDashboard() {
 
   const isSareeCategory = (c: any) => {
     return !isSuitCategory(c) && !isSemiCategory(c);
+  };
+
+  const getCategoryDisplayName = (catIdOrSlug?: string, productCategory?: any) => {
+    if (!catIdOrSlug && !productCategory) return 'General';
+    const found = categories.find(
+      (c) =>
+        c.id === catIdOrSlug ||
+        c.slug === catIdOrSlug ||
+        c.id === productCategory?.id ||
+        c.slug === productCategory?.slug ||
+        c.name?.toLowerCase() === catIdOrSlug?.toLowerCase()
+    );
+    if (found) {
+      return found.name;
+    }
+    if (productCategory?.name) return productCategory.name;
+    return catIdOrSlug || 'General';
   };
 
   // Dynamically extract all unique Border Types
@@ -3496,10 +3514,14 @@ export default function AdminDashboard() {
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] text-amber-800 font-medium">
-                            {p.fabric} • {isSuit ? 'Suit Set' : 'Handloom Saree'}
+                          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                              📁 {getCategoryDisplayName(p.categoryId, p.category)}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-gray-500 truncate mt-1">
+                            {p.fabric} • Border: {p.borderType || 'Zari'} • Color: {p.color || 'Multi'}
                           </p>
-                          <p className="text-[10px] text-gray-500 truncate">Border: {p.borderType || 'Zari'} • Color: {p.color || 'Multi'}</p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="font-extrabold text-rose-700 text-sm">₹{p.price.toLocaleString()}</span>
                             {p.originalPrice && p.originalPrice > p.price && (
@@ -3875,9 +3897,22 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">
-                    {productType === 'suit' ? 'Suit Category *' : 'Saree Category *'}
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-gray-700 font-bold">
+                      {productType === 'suit' ? 'Suit Category *' : 'Saree Category *'}
+                    </label>
+                    {(() => {
+                      const activeCat = categories.find((c) => c.id === categoryId || c.slug === categoryId);
+                      if (activeCat) {
+                        return (
+                          <span className="text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full">
+                            Selected: 📁 {activeCat.name}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                   <select
                     value={categoryId}
                     onChange={(e) => setCategoryId(e.target.value)}
@@ -4217,6 +4252,52 @@ export default function AdminDashboard() {
             </button>
           </div>
 
+          {/* Sub-category Filter Tabs */}
+          {(() => {
+            const semiSubs = categories.filter(
+              (c) =>
+                c.parentId === 'semi-maheshwari-sarees-id' ||
+                (isSemiCategory(c) && !c.isParent && c.id !== 'semi-maheshwari-sarees-id')
+            );
+
+            return (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+                <button
+                  onClick={() => setSemiSubcategoryFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    semiSubcategoryFilter === 'ALL'
+                      ? 'bg-rose-900 text-white shadow-xs'
+                      : 'bg-white text-gray-700 border border-gray-200 hover:bg-rose-50'
+                  }`}
+                >
+                  All Semi ({semiMaheshwariProducts.length})
+                </button>
+                {semiSubs.map((sub) => {
+                  const count = semiMaheshwariProducts.filter(
+                    (p) =>
+                      p.categoryId === sub.id ||
+                      p.categoryId === sub.slug ||
+                      p.category?.id === sub.id ||
+                      p.category?.slug === sub.slug
+                  ).length;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => setSemiSubcategoryFilter(sub.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        semiSubcategoryFilter === sub.id
+                          ? 'bg-rose-900 text-white shadow-xs'
+                          : 'bg-white text-gray-700 border border-gray-200 hover:bg-rose-50'
+                      }`}
+                    >
+                      {sub.name} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           {semiMaheshwariProducts.length === 0 ? (
             <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl text-gray-500 text-xs font-semibold space-y-3">
               <p>Abhi tak koi Semi Maheshwari Saree inventory me add nahi ki gayi hai.</p>
@@ -4238,71 +4319,95 @@ export default function AdminDashboard() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {semiMaheshwariProducts.map((p) => {
-                const imgs = JSON.parse(p.images || '[]');
+            (() => {
+              const displayedSemiProducts =
+                semiSubcategoryFilter === 'ALL'
+                  ? semiMaheshwariProducts
+                  : semiMaheshwariProducts.filter(
+                      (p) =>
+                        p.categoryId === semiSubcategoryFilter ||
+                        p.categoryId === categories.find((c) => c.id === semiSubcategoryFilter)?.slug ||
+                        p.category?.id === semiSubcategoryFilter ||
+                        p.category?.slug === categories.find((c) => c.id === semiSubcategoryFilter)?.slug
+                    );
+
+              if (displayedSemiProducts.length === 0) {
                 return (
-                  <div key={p.id} className="p-3.5 border border-rose-200/80 rounded-xl flex gap-3.5 bg-white shadow-xs hover:border-rose-400 transition-all relative group">
-                    <div className="relative w-20 h-28 shrink-0 overflow-hidden rounded-lg bg-rose-50 border border-rose-100">
-                      <img
-                        src={imgs[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c'}
-                        alt={p.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <WatermarkOverlay variant="card" className="scale-75" />
-                    </div>
-                    <div className="flex-1 text-xs space-y-1.5 flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <h4 className="font-bold text-gray-900 line-clamp-1 text-sm">{p.title}</h4>
-                          <span className="bg-rose-100 text-rose-800 text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">
-                            SEMI MAHESHWARI
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-rose-900 font-semibold">{p.fabric || 'Semi Maheshwari'}</p>
-                        <p className="text-[10px] text-gray-500">Border: {p.borderType || 'Zari'} • Color: {p.color}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="font-extrabold text-rose-700 text-sm">₹{p.price.toLocaleString()}</span>
-                          {p.originalPrice && p.originalPrice > p.price && (
-                            <span className="line-through text-gray-400 text-[11px]">₹{p.originalPrice.toLocaleString()}</span>
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                          {p.isOutOfStock ? (
-                            <span className="text-[10px] text-rose-700 font-extrabold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
-                              OUT OF STOCK
-                            </span>
-                          ) : p.stock !== undefined && p.stock !== null && p.stock !== '' && Number(p.stock) > 0 ? (
-                            <span className="text-[10px] text-amber-900 font-extrabold bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                              📦 Stock: {p.stock} units
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                        <button
-                          onClick={() => openEditModal(p)}
-                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-900 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-rose-800" />
-                          <span>Edit Saree</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteProduct(p.id, p.title)}
-                          className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </div>
+                  <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl text-gray-500 text-xs font-semibold space-y-3">
+                    <p>Is subcategory me koi Semi Maheshwari Saree nahi mili.</p>
                   </div>
                 );
-              })}
-            </div>
+              }
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayedSemiProducts.map((p) => {
+                    const imgs = JSON.parse(p.images || '[]');
+                    return (
+                      <div key={p.id} className="p-3.5 border border-rose-200/80 rounded-xl flex gap-3.5 bg-white shadow-xs hover:border-rose-400 transition-all relative group">
+                        <div className="relative w-20 h-28 shrink-0 overflow-hidden rounded-lg bg-rose-50 border border-rose-100">
+                          <img
+                            src={imgs[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c'}
+                            alt={p.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <WatermarkOverlay variant="card" className="scale-75" />
+                        </div>
+                        <div className="flex-1 text-xs space-y-1.5 flex flex-col justify-between">
+                          <div>
+                            <h4 className="font-bold text-gray-900 line-clamp-1 text-sm">{p.title}</h4>
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-200 px-2 py-0.5 rounded inline-flex items-center gap-1">
+                                📁 {getCategoryDisplayName(p.categoryId, p.category)}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-1 truncate">
+                              Border: {p.borderType || 'Zari'} • Color: {p.color}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="font-extrabold text-rose-700 text-sm">₹{p.price.toLocaleString()}</span>
+                              {p.originalPrice && p.originalPrice > p.price && (
+                                <span className="line-through text-gray-400 text-[11px]">₹{p.originalPrice.toLocaleString()}</span>
+                              )}
+                            </div>
+                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                              {p.isOutOfStock ? (
+                                <span className="text-[10px] text-rose-700 font-extrabold bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+                                  OUT OF STOCK
+                                </span>
+                              ) : p.stock !== undefined && p.stock !== null && p.stock !== '' && Number(p.stock) > 0 ? (
+                                <span className="text-[10px] text-amber-900 font-extrabold bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                  📦 Stock: {p.stock} units
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                            <button
+                              onClick={() => openEditModal(p)}
+                              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-900 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-rose-800" />
+                              <span>Edit Saree</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteProduct(p.id, p.title)}
+                              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()
           )}
         </div>
       )}
@@ -4565,9 +4670,22 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 font-bold mb-1">
-                    <span>Category / Sub-Category *</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-gray-700 font-bold">
+                      <span>Category / Sub-Category *</span>
+                    </label>
+                    {(() => {
+                      const activeCat = categories.find((c) => c.id === semiCategoryId || c.slug === semiCategoryId);
+                      if (activeCat) {
+                        return (
+                          <span className="text-[10px] font-bold bg-rose-100 text-rose-900 border border-rose-300 px-2 py-0.5 rounded-full">
+                            Selected: 📁 {activeCat.name}
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
                   {(() => {
                     const semiParents = categories.filter(
                       (c) => (c.isParent || !c.parentId || c.id === 'semi-maheshwari-sarees-id') && isSemiCategory(c)
@@ -5173,7 +5291,20 @@ export default function AdminDashboard() {
                     })()}
 
                     <div>
-                      <label className="block text-gray-700 font-bold mb-1">Category *</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-gray-700 font-bold">Category *</label>
+                        {(() => {
+                          const activeCat = categories.find((c) => c.id === editCategoryId || c.slug === editCategoryId);
+                          if (activeCat) {
+                            return (
+                              <span className="text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full">
+                                Selected: 📁 {activeCat.name}
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
                       <select
                         value={editCategoryId}
                         onChange={(e) => setEditCategoryId(e.target.value)}

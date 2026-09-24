@@ -6,7 +6,7 @@ const ADMIN_PHONE = '9617444445';
 
 export interface NotificationPayload {
   title: string;
-  type: 'VISIT' | 'REGISTER' | 'LOGIN' | 'ORDER' | 'INQUIRY';
+  type: 'VISIT' | 'REGISTER' | 'LOGIN' | 'ORDER' | 'INQUIRY' | 'SUSPICIOUS' | 'SECURITY_ALERT';
   details: string;
   userEmail?: string;
   userPhone?: string;
@@ -18,17 +18,25 @@ export interface NotificationPayload {
  */
 export async function sendAdminEmail(payload: NotificationPayload) {
   const { title, type, details, userEmail, userPhone, amount } = payload;
+  const isSecurity = type === 'SUSPICIOUS' || type === 'SECURITY_ALERT';
 
-  const subject = `[Reoti Handloom Alert] ${title}`;
+  const subject = isSecurity ? `🚨 [SECURITY CRITICAL] ${title}` : `[Reoti Handloom Alert] ${title}`;
+  const headerBg = isSecurity ? '#991b1b' : '#450a0a';
+  const bannerBg = isSecurity ? '#fef2f2' : '#fff7ed';
+  const bannerBorder = isSecurity ? '#dc2626' : '#d97706';
+  const bannerText = isSecurity ? '#991b1b' : '#78350f';
+
   const htmlContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded: 8px;">
-      <div style="background-color: #450a0a; color: #fef3c7; padding: 16px; text-align: center; border-radius: 6px;">
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+      <div style="background-color: ${headerBg}; color: #fef3c7; padding: 16px; text-align: center; border-radius: 6px;">
         <h2 style="margin: 0; font-family: Georgia, serif;">Reoti Handloom Maheshwar</h2>
-        <p style="margin: 4px 0 0 0; font-size: 12px; color: #fde68a;">Admin Activity & Event Alert</p>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: ${isSecurity ? '#fca5a5' : '#fde68a'};">
+          ${isSecurity ? '⚠️ HIGH-PRIORITY SECURITY MONITORING SYSTEM' : 'Admin Activity & Event Alert'}
+        </p>
       </div>
 
       <div style="padding: 20px 0; color: #1e293b;">
-        <h3 style="color: #881337; margin-top: 0;">${title}</h3>
+        <h3 style="color: ${isSecurity ? '#dc2626' : '#881337'}; margin-top: 0;">${title}</h3>
         <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #334155;">
           <tr>
             <td style="padding: 8px; font-weight: bold; width: 30%; border-bottom: 1px solid #f1f5f9;">Event Type:</td>
