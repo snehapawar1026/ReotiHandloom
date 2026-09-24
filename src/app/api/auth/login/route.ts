@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
             id: adminUser?.id || 'admin-1',
             name: adminUser?.name || 'Reoti Admin',
             email: 'admin@reotihandloom.com',
-            phone: adminUser?.phone || '9826000000',
+            phone: adminUser?.phone || '9617444445',
             role: 'admin',
           },
         });

@@ -132,7 +132,7 @@ const jsonLdOrganization = {
     addressCountry: 'IN',
   },
   priceRange: '₹₹',
-  telephone: '+919179991226',
+  telephone: '+919617444445',
   email: 'reotihandloom@hotmail.com',
   sameAs: [
     'https://www.instagram.com/reoti_handloom',

@@ -81,6 +81,11 @@ export async function GET() {
       <g:product_type>${escapeXml(`Apparel &gt; Sarees &gt; ${categoryName}`)}</g:product_type>
       <g:material>Mulberry Silk &amp; Mercerised Cotton</g:material>
       <g:identifier_exists>no</g:identifier_exists>
+      <g:shipping>
+        <g:country>IN</g:country>
+        <g:service>Express Delivery</g:service>
+        <g:price>0.00 INR</g:price>
+      </g:shipping>
     </item>`;
     })
     .join('\n');
