@@ -6,6 +6,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useShop } from '@/context/ShopContext';
 import { WholesaleModal } from '@/components/WholesaleModal';
 import { TrackOrderModal } from '@/components/TrackOrderModal';
+import { DeliveryLocationModal } from '@/components/DeliveryLocationModal';
 import {
   Search,
   Heart,
@@ -36,6 +37,7 @@ const NavbarContent = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isWholesaleModalOpen, setIsWholesaleModalOpen] = useState(false);
   const [isTrackOrderModalOpen, setIsTrackOrderModalOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [userLocText, setUserLocText] = useState<string>('');
 
   React.useEffect(() => {
@@ -457,14 +459,19 @@ const NavbarContent = () => {
               <span>@reoti_handloom</span>
             </a>
 
-            {/* Auto Detected Delivery Location Pill */}
-            <div
-              className="flex items-center gap-1 text-amber-300 font-bold shrink-0 bg-amber-900/40 px-2.5 py-0.5 rounded border border-amber-500/30 select-none"
-              title="Delivery Location"
+            {/* Clickable Delivery Location Pill (Amazon/Myntra/Flipkart style) */}
+            <button
+              type="button"
+              onClick={() => setIsLocationModalOpen(true)}
+              className="flex items-center gap-1.5 text-amber-300 hover:text-white font-bold shrink-0 bg-amber-900/50 hover:bg-amber-800/80 px-2.5 py-0.5 rounded border border-amber-500/40 hover:border-amber-300 transition-all cursor-pointer shadow-xs group select-none"
+              title="Click to choose delivery location / enter pincode"
             >
-              <MapPin className="w-3 h-3 text-rose-400" />
-              <span>{userLocText ? `Deliver to: ${userLocText}` : 'Deliver to: India'}</span>
-            </div>
+              <MapPin className="w-3 h-3 text-rose-400 group-hover:scale-110 transition-transform" />
+              <span className="truncate max-w-[140px] sm:max-w-[220px]">
+                {userLocText ? `Deliver to: ${userLocText}` : 'Deliver to: Select Pincode'}
+              </span>
+              <ChevronDown className="w-2.5 h-2.5 text-amber-400 group-hover:text-white transition-transform" />
+            </button>
 
             <Link
               href="/contact"
@@ -821,6 +828,31 @@ const NavbarContent = () => {
         {isMobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-amber-200 px-4 sm:px-5 py-4 space-y-3 font-bold text-xs uppercase tracking-wider text-amber-950 animate-in slide-in-from-top-2 duration-200 max-h-[85vh] overflow-y-auto">
             
+            {/* Mobile Delivery Location Selector */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsLocationModalOpen(true);
+              }}
+              className="w-full py-2.5 px-3 bg-gradient-to-r from-amber-50 to-rose-50 border border-amber-300 rounded-xl flex items-center justify-between text-left text-amber-950 font-bold text-xs shadow-2xs active:scale-98 transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-2 truncate">
+                <MapPin className="w-4 h-4 text-rose-600 shrink-0" />
+                <div className="truncate">
+                  <span className="text-[9px] uppercase tracking-wider text-amber-800 font-extrabold block">
+                    📍 Delivery Location
+                  </span>
+                  <span className="text-xs truncate block font-serif normal-case">
+                    {userLocText ? userLocText : 'Set Pincode / Current Location'}
+                  </span>
+                </div>
+              </div>
+              <span className="text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-lg bg-amber-950 text-white shrink-0 shadow-2xs">
+                Change
+              </span>
+            </button>
+
             {/* Mobile Visual Categories Carousel */}
             {mobileVisualCategoryList.length > 0 && (
               <div className="pb-3 border-b border-amber-100">
@@ -991,6 +1023,11 @@ const NavbarContent = () => {
       <TrackOrderModal
         isOpen={isTrackOrderModalOpen}
         onClose={() => setIsTrackOrderModalOpen(false)}
+      />
+
+      <DeliveryLocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
       />
     </>
   );

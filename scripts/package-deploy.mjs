@@ -37,10 +37,15 @@ fs.cpSync(path.join(nextDir, 'static'), path.join(tempDir, '.next', 'static'), {
 // 4. Map static into public/_next/static for LiteSpeed/cPanel Web Server
 fs.cpSync(path.join(nextDir, 'static'), path.join(tempDir, 'public', '_next', 'static'), { recursive: true });
 
-// 5. Copy all public assets (uploads, images, heritage, studio, logos, favicons, etc.)
+// 5. Copy all public assets (EXCLUDING uploads to protect live user photos)
 const publicDir = path.join(rootDir, 'public');
 if (fs.existsSync(publicDir)) {
   fs.cpSync(publicDir, path.join(tempDir, 'public'), { recursive: true });
+  // CRITICAL SAFETY: Remove public/uploads so live server uploads are 100% protected and never overwritten
+  const tempUploads = path.join(tempDir, 'public', 'uploads');
+  if (fs.existsSync(tempUploads)) {
+    fs.rmSync(tempUploads, { recursive: true, force: true });
+  }
 }
 
 // 6. Copy package.json, .env, and .htaccess
@@ -67,7 +72,7 @@ if (fs.existsSync(path.join(rootDir, 'public', '.htaccess'))) {
   );
 }
 
-// 6. Create complete_update.zip
+// 6. Create complete_update.zip using Python zipfile
 try {
   if (fs.existsSync(zipFile)) {
     fs.rmSync(zipFile, { force: true });
@@ -76,11 +81,28 @@ try {
   console.warn('Existing zip locked, overwriting directly...');
 }
 
+const pyZipFile = path.join(parentDir, 'temp_packer.py');
+const pyZipScript = `import zipfile, os
+
+temp_dir = r"${tempDir}"
+zip_path = r"${zipFile}"
+
+with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as z:
+    for root, dirs, files in os.walk(temp_dir):
+        for file in files:
+            full_p = os.path.join(root, file)
+            arc_name = os.path.relpath(full_p, temp_dir).replace('\\\\', '/')
+            z.write(full_p, arc_name)
+print(f"Zip successfully created with {len(z.namelist())} entries.")
+`;
+
+fs.writeFileSync(pyZipFile, pyZipScript, 'utf-8');
 try {
-  execSync(`tar.exe -a -cf "${zipFile}" -C "${tempDir}" .`, { stdio: 'inherit' });
-} catch (e) {
-  // Fallback to powershell Compress-Archive
-  execSync(`powershell -Command "Compress-Archive -Path '${tempDir}\\*' -DestinationPath '${zipFile}' -Force"`, { stdio: 'inherit' });
+  execSync(`python "${pyZipFile}"`, { stdio: 'inherit' });
+} finally {
+  try {
+    fs.unlinkSync(pyZipFile);
+  } catch (e) {}
 }
 
 // Cleanup tempDir

@@ -142,6 +142,32 @@ export default function AdminDashboard() {
   const [handloomFilter, setHandloomFilter] = useState<'sarees' | 'suits' | 'all'>('sarees');
   const [catFilter, setCatFilter] = useState<'all' | 'sarees' | 'suits' | 'semi'>('all');
 
+  // Activity role segregation logic (Hooks must be at top-level before any early returns)
+  const knownAdminIps = React.useMemo(() => new Set(
+    customerData.activities
+      .filter((a) => a.userEmail === 'reotihandloom@gmail.com' || a.pageUrl?.includes('manage') || a.isAdmin)
+      .map((a) => a.userIp)
+      .filter(Boolean)
+  ), [customerData.activities]);
+
+  const isActAdmin = React.useCallback((a: any) =>
+    Boolean(
+      a.isAdmin === true ||
+      a.userRole === 'ADMIN' ||
+      a.type === 'ADMIN_VISIT' ||
+      a.type === 'ADMIN_ACTION' ||
+      a.userEmail === 'reotihandloom@gmail.com' ||
+      a.userEmail?.toLowerCase().includes('admin') ||
+      a.userName?.toUpperCase() === 'REOTI' ||
+      a.pageUrl?.startsWith('/admin') ||
+      a.pageUrl?.startsWith('/reoti-studio-manage') ||
+      a.title?.toLowerCase().includes('admin') ||
+      (a.userIp && knownAdminIps.has(a.userIp))
+    ), [knownAdminIps]);
+
+  const customerActs = React.useMemo(() => customerData.activities.filter((a) => !isActAdmin(a)), [customerData.activities, isActAdmin]);
+  const adminActs = React.useMemo(() => customerData.activities.filter((a) => isActAdmin(a)), [customerData.activities, isActAdmin]);
+
   // Instagram Feed Manager state
   const [instaPosts, setInstaPosts] = useState<any[]>([]);
   const [instaImage, setInstaImage] = useState('');
@@ -1010,8 +1036,8 @@ export default function AdminDashboard() {
     const isSuit = Boolean(
       (p.title && /suit|kurta|dress material/i.test(p.title)) ||
       (p.lengthWithBlouse && /top|dupatta|duppta|pant|salwar/i.test(p.lengthWithBlouse)) ||
-      (categories.find((c) => c.id === p.categoryId)?.slug?.includes('suit')) ||
-      (categories.find((c) => c.id === p.categoryId)?.name?.toLowerCase().includes('suit'))
+      (categories.find((c) => c.id === p.categoryId || c.slug === p.categoryId)?.slug?.includes('suit')) ||
+      (categories.find((c) => c.id === p.categoryId || c.slug === p.categoryId)?.name?.toLowerCase().includes('suit'))
     );
     setEditProductType(isSuit ? 'suit' : 'saree');
     setEditTitle(p.title || '');
@@ -1025,7 +1051,18 @@ export default function AdminDashboard() {
     setEditBlouseColor(p.blouseColor || '');
     setEditLengthWithBlouse(p.lengthWithBlouse || (isSuit ? 'Top 2.5 Meters, Dupatta 2.5 Meters (2-Piece Set)' : '6.3 Meters (With Blouse Piece)'));
     setEditDesignCode(p.designCode || '');
-    setEditCategoryId(p.categoryId || categories[0]?.id || '');
+
+    const matchingCat = categories.find(
+      (c) =>
+        c.id === p.categoryId ||
+        c.slug === p.categoryId ||
+        c.id === p.category?.id ||
+        c.slug === p.category?.slug ||
+        (p.category?.name && c.name?.trim().toLowerCase() === p.category.name.trim().toLowerCase()) ||
+        (p.categoryName && c.name?.trim().toLowerCase() === p.categoryName.trim().toLowerCase())
+    );
+    setEditCategoryId(matchingCat ? matchingCat.id : (p.categoryId || categories[0]?.id || ''));
+
     setEditIsOutOfStock(Boolean(p.isOutOfStock));
     setEditStock(p.stock !== undefined && p.stock !== null ? p.stock.toString() : '');
     setEditIsFeatured(p.isFeatured || false);
@@ -1758,25 +1795,45 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Card 3: Real-Time Visitors */}
-            <div
-              onClick={() => navigateTo('customers')}
-              className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col justify-between group hover:-translate-y-0.5"
-            >
+            {/* Card 3: Real-Time Visitors & Admin Breakdown */}
+            <div className="p-5 rounded-2xl border border-amber-200/80 bg-white hover:border-amber-500 hover:shadow-md transition-all duration-200 flex flex-col justify-between group hover:-translate-y-0.5">
               <div className="flex items-center justify-between w-full">
-                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900 group-hover:bg-amber-950 group-hover:text-white transition-colors">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-900">
                   <Users className="w-5 h-5" />
                 </div>
-                <span className="text-[11px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
-                  {customerData.activities.length} Visits
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-950 border border-emerald-300">
+                    👤 {customerActs.length} Customers
+                  </span>
+                  <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-900 border border-slate-300">
+                    🛡️ {adminActs.length} Admin
+                  </span>
+                </div>
               </div>
               <div className="mt-4">
-                <h4 className="font-serif font-extrabold text-base text-gray-900 group-hover:text-amber-900">Live Visitors</h4>
+                <h4 className="font-serif font-extrabold text-base text-gray-900">Live Visitors</h4>
                 <p className="text-xs text-gray-500 mt-1">Real-time IP, device & city analytics</p>
-                <div className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-amber-800 group-hover:text-amber-950">
-                  <span>View Real-Time Logs</span>
-                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                <div className="grid grid-cols-2 gap-2 mt-3.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivityRoleFilter('CUSTOMERS');
+                      navigateTo('customers');
+                    }}
+                    className="py-2 px-2 rounded-xl text-xs font-bold bg-emerald-800 text-white hover:bg-emerald-950 text-center transition-all cursor-pointer shadow-xs"
+                  >
+                    👤 Customer Logs
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivityRoleFilter('ADMIN');
+                      navigateTo('customers');
+                    }}
+                    className="py-2 px-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-black text-center transition-all cursor-pointer shadow-xs"
+                  >
+                    🛡️ Admin Logs
+                  </button>
                 </div>
               </div>
             </div>
@@ -1852,9 +1909,9 @@ export default function AdminDashboard() {
                       setWeaveType('Modern Weave Zari Border');
                       setProductType('saree');
                       const semiCat = categories.find(
-                        (c) => c.slug === 'semi-maheshwari-sarees' || c.id === 'semi-maheshwari-sarees-id' || c.name?.toLowerCase().includes('semi maheshwari')
+                        (c) => c.slug === 'semi-maheshwari-sarees' || c.id === 'semi-maheshwari-sarees-id' || isSemiCategory(c)
                       );
-                      if (semiCat) setCategoryId(semiCat.id);
+                      if (semiCat) setSemiCategoryId(semiCat.id);
                       setFormMsg('');
                       navigateTo('add_semi');
                     }}
@@ -2521,32 +2578,6 @@ export default function AdminDashboard() {
 
             {/* 2. Top-Level Role Segregation Tabs (Customers vs Admin vs All) */}
             {(() => {
-              // Find known admin IP addresses from admin actions
-              const knownAdminIps = new Set(
-                customerData.activities
-                  .filter((a) => a.userEmail === 'reotihandloom@gmail.com' || a.pageUrl?.includes('manage') || a.isAdmin)
-                  .map((a) => a.userIp)
-                  .filter(Boolean)
-              );
-
-              const isActAdmin = (a: any) =>
-                Boolean(
-                  a.isAdmin === true ||
-                  a.userRole === 'ADMIN' ||
-                  a.type === 'ADMIN_VISIT' ||
-                  a.type === 'ADMIN_ACTION' ||
-                  a.userEmail === 'reotihandloom@gmail.com' ||
-                  a.userEmail?.toLowerCase().includes('admin') ||
-                  a.userName?.toUpperCase() === 'REOTI' ||
-                  a.pageUrl?.startsWith('/admin') ||
-                  a.pageUrl?.startsWith('/reoti-studio-manage') ||
-                  a.title?.toLowerCase().includes('admin') ||
-                  (a.userIp && knownAdminIps.has(a.userIp))
-                );
-
-              const customerActs = customerData.activities.filter((a) => !isActAdmin(a));
-              const adminActs = customerData.activities.filter((a) => isActAdmin(a));
-
               const customerVisits = customerActs.filter((a) => a.type === 'VISIT' || a.type === 'VIEW_PRODUCT').length;
               const customerLeads = customerActs.filter((a) => a.type === 'LEAD').length;
               const customerOrders = customerActs.filter((a) => a.type === 'ORDER').length;
@@ -4538,32 +4569,44 @@ export default function AdminDashboard() {
                     <span>Category / Sub-Category *</span>
                   </label>
                   {(() => {
-                    const semiParent = categories.find(
-                      (c) =>
-                        c.slug === 'semi-maheshwari-sarees' ||
-                        c.id === 'semi-maheshwari-sarees-id' ||
-                        c.name?.toLowerCase().includes('semi maheshwari')
+                    const semiParents = categories.filter(
+                      (c) => (c.isParent || !c.parentId || c.id === 'semi-maheshwari-sarees-id') && isSemiCategory(c)
                     );
-                    const semiChildren = semiParent
-                      ? categories.filter((c) => c.parentId === semiParent.id)
-                      : [];
+                    const semiParentIds = new Set(semiParents.map((p) => p.id));
+                    semiParentIds.add('semi-maheshwari-sarees-id');
+
+                    const semiChildren = categories.filter(
+                      (c) => (c.parentId && semiParentIds.has(c.parentId)) || (!c.isParent && isSemiCategory(c) && !semiParentIds.has(c.id))
+                    );
 
                     return (
                       <select
-                        value={semiCategoryId || semiParent?.id || 'semi-maheshwari-sarees-id'}
+                        value={semiCategoryId || semiParents[0]?.id || 'semi-maheshwari-sarees-id'}
                         onChange={(e) => setSemiCategoryId(e.target.value)}
                         className="w-full border border-rose-300 rounded p-2 text-xs bg-white font-bold text-rose-950 focus:ring-1 focus:ring-rose-800"
                       >
-                        {semiParent && (
-                          <option value={semiParent.id}>
-                            📁 {semiParent.name} (Parent Category)
-                          </option>
-                        )}
-                        {semiChildren.map((child) => (
-                          <option key={child.id} value={child.id}>
-                            &nbsp;&nbsp;↳ {child.name} (Sub-Category)
-                          </option>
-                        ))}
+                        {semiParents.map((parent) => {
+                          const children = categories.filter((c) => c.parentId === parent.id);
+                          return (
+                            <optgroup key={parent.id} label={`✨ PARENT: ${parent.name}`}>
+                              <option value={parent.id}>
+                                📁 {parent.name} (Parent Category)
+                              </option>
+                              {children.map((child) => (
+                                <option key={child.id} value={child.id}>
+                                  &nbsp;&nbsp;↳ {child.name} (Sub-Category)
+                                </option>
+                              ))}
+                            </optgroup>
+                          );
+                        })}
+                        {semiChildren
+                          .filter((child) => !semiParents.some((p) => categories.some((c) => c.parentId === p.id && c.id === child.id)))
+                          .map((child) => (
+                            <option key={child.id} value={child.id}>
+                              ↳ {child.name} (Sub-Category)
+                            </option>
+                          ))}
                       </select>
                     );
                   })()}
@@ -5150,28 +5193,50 @@ export default function AdminDashboard() {
                           );
 
                           if (isSemiEdit) {
-                            const semiParent = categories.find(
-                              (c) =>
-                                c.slug === 'semi-maheshwari-sarees' ||
-                                c.slug === 'semi-maheshwari' ||
-                                c.id === 'semi-maheshwari-sarees-id' ||
-                                c.name?.toLowerCase().includes('semi maheshwari')
+                            const semiParents = categories.filter(
+                              (c) => (c.isParent || !c.parentId || c.id === 'semi-maheshwari-sarees-id') && isSemiCategory(c)
                             );
-                            const semiChildren = semiParent
-                              ? categories.filter((c) => c.parentId === semiParent.id || c.slug?.startsWith('semi-maheshwari-'))
-                              : [];
+                            const semiParentIds = new Set(semiParents.map((p) => p.id));
+                            semiParentIds.add('semi-maheshwari-sarees-id');
+
+                            const semiChildren = categories.filter(
+                              (c) => (c.parentId && semiParentIds.has(c.parentId)) || (!c.isParent && isSemiCategory(c) && !semiParentIds.has(c.id))
+                            );
+
                             return (
                               <>
-                                {semiParent && (
-                                  <option value={semiParent.id}>
-                                    📁 {semiParent.name} (Parent Category)
-                                  </option>
-                                )}
-                                {semiChildren.map((child) => (
-                                  <option key={child.id} value={child.id}>
-                                    &nbsp;&nbsp;↳ {child.name} (Sub-Category)
-                                  </option>
-                                ))}
+                                <optgroup label="✨ SEMI MAHESHWARI CATEGORIES">
+                                  {semiParents.map((parent) => {
+                                    const children = categories.filter((c) => c.parentId === parent.id);
+                                    return (
+                                      <React.Fragment key={parent.id}>
+                                        <option value={parent.id}>
+                                          📁 {parent.name} (Parent Category)
+                                        </option>
+                                        {children.map((child) => (
+                                          <option key={child.id} value={child.id}>
+                                            &nbsp;&nbsp;↳ {child.name} (Sub-Category)
+                                          </option>
+                                        ))}
+                                      </React.Fragment>
+                                    );
+                                  })}
+                                  {semiChildren
+                                    .filter((child) => !semiParents.some((p) => categories.some((c) => c.parentId === p.id && c.id === child.id)))
+                                    .map((child) => (
+                                      <option key={child.id} value={child.id}>
+                                        ↳ {child.name} (Sub-Category)
+                                      </option>
+                                    ))}
+                                </optgroup>
+
+                                <optgroup label="📁 OTHER STORE CATEGORIES">
+                                  {categories.filter((c) => !isSemiCategory(c)).map((c) => (
+                                    <option key={c.id} value={c.id}>
+                                      {c.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
                               </>
                             );
                           }

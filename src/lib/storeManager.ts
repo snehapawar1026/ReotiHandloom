@@ -318,7 +318,8 @@ export function createProductInStore(productInput: any) {
       ? Math.round(((originalPrice - price) / originalPrice) * 100)
       : 0;
 
-  const category = data.categories.find((c) => c.id === productInput.categoryId);
+  const category = data.categories.find((c) => c.id === productInput.categoryId || c.slug === productInput.categoryId);
+  const resolvedCategoryId = category ? category.id : (productInput.categoryId || (data.categories[0]?.id ?? ''));
 
   let images = productInput.images;
   if (typeof images !== 'string') {
@@ -359,7 +360,7 @@ export function createProductInStore(productInput: any) {
     isOutOfStock,
     images,
     videoUrl: productInput.videoUrl || productInput.video || null,
-    categoryId: productInput.categoryId || (data.categories[0]?.id ?? ''),
+    categoryId: resolvedCategoryId,
     category: category
       ? { id: category.id, name: category.name, slug: category.slug, parentId: category.parentId }
       : undefined,
@@ -403,8 +404,9 @@ export function updateProductInStore(id: string, updateInput: any) {
 
   const videoUrl = updateInput.videoUrl !== undefined ? (updateInput.videoUrl || null) : existing.videoUrl;
 
-  const categoryId = updateInput.categoryId || existing.categoryId;
-  const category = data.categories.find((c) => c.id === categoryId) || existing.category;
+  const targetCategoryId = updateInput.categoryId !== undefined ? updateInput.categoryId : existing.categoryId;
+  const category = data.categories.find((c) => c.id === targetCategoryId || c.slug === targetCategoryId);
+  const resolvedCategoryId = category ? category.id : targetCategoryId;
 
   const isOutOfStock =
     updateInput.isOutOfStock !== undefined ? Boolean(updateInput.isOutOfStock) : existing.isOutOfStock;
@@ -426,7 +428,7 @@ export function updateProductInStore(id: string, updateInput: any) {
     discountPercent,
     images,
     videoUrl,
-    categoryId,
+    categoryId: resolvedCategoryId,
     category: category
       ? { id: category.id, name: category.name, slug: category.slug, parentId: category.parentId }
       : existing.category,
@@ -652,7 +654,7 @@ export function logActivityInStore(activityInput: any) {
     createdAt: new Date().toISOString(),
   };
 
-  const activities = [newActivity, ...(data.activities || [])].slice(0, 500);
+  const activities = [newActivity, ...(data.activities || [])].slice(0, 2000);
   saveStoreData({ activities });
   return newActivity;
 }
