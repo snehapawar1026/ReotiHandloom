@@ -67,4 +67,24 @@ input::-webkit-credentials-auto-fill-button {
   scrollbar-color: rgba(180, 83, 9, 0.35) rgba(254, 243, 199, 0.4);
 }
 
+/* ==========================================================================
+   Universal Image Protection (Prevents Save, Drag, Long-Press & Download)
+   ========================================================================== */
+img,
+picture,
+source,
+.protected-image,
+[data-protected="true"] {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-touch-callout: none !important;
+}
+
 

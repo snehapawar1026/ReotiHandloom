@@ -10,6 +10,7 @@ import { PushNotificationPrompt } from '@/components/PushNotificationPrompt';
 import { TrustQualityWidget } from '@/components/TrustQualityWidget';
 import { VisitorTracker } from '@/components/VisitorTracker';
 import { SmartLeadCaptureModal } from '@/components/SmartLeadCaptureModal';
+import { ImageProtection } from '@/components/ImageProtection';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -168,6 +169,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PushNotificationPrompt />
           <VisitorTracker />
           <SmartLeadCaptureModal />
+          <ImageProtection />
         </ShopProvider>
       </body>
     </html>
