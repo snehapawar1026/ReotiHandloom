@@ -118,7 +118,7 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addToCart = (product: ProductItem, options?: { hasFallPico?: boolean; fallPicoPrice?: number }) => {
     const hasFallPico = !!options?.hasFallPico;
-    const fallPicoPrice = hasFallPico ? (options?.fallPicoPrice ?? 200) : 0;
+    const fallPicoPrice = hasFallPico ? (options?.fallPicoPrice ?? 0) : 0;
 
     setCart((prev) => {
       const existingIdx = prev.findIndex(
@@ -179,12 +179,12 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
 
   const totalCartPrice = cart.reduce(
     (acc, item) =>
-      acc + (item.product.price + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0)) * item.quantity,
+      acc + (item.product.price + (item.hasFallPico ? (item.fallPicoPrice || 0) : 0)) * item.quantity,
     0
   );
   const totalOriginalPrice = cart.reduce(
     (acc, item) =>
-      acc + (item.product.originalPrice + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0)) * item.quantity,
+      acc + (item.product.originalPrice + (item.hasFallPico ? (item.fallPicoPrice || 0) : 0)) * item.quantity,
     0
   );
   const totalDiscount = totalOriginalPrice - totalCartPrice;

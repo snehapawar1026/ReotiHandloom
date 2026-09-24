@@ -236,13 +236,13 @@ export async function sendCustomerOrderConfirmationEmail(order: {
 
     const itemsHtml = order.items.map(item => {
       const prod = item.product || item;
-      const itemTotal = (prod.price || 0) * (item.quantity || 1) + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0);
+      const itemTotal = (prod.price || 0) * (item.quantity || 1) + (item.hasFallPico ? (item.fallPicoPrice || 0) : 0);
       return `
         <tr style="border-bottom: 1px solid #F1E9DA;">
           <td style="padding: 10px 6px; font-size: 13px;">
             <strong>${prod.title || 'Maheshwari Handloom Saree'}</strong><br>
             <span style="font-size: 11px; color: #786C5E;">
-              Qty: ${item.quantity || 1} ${item.hasFallPico ? '• Fall & Pico Included (+₹200)' : ''}
+              Qty: ${item.quantity || 1} ${item.hasFallPico ? '• Fall & Pico Included (FREE)' : ''}
             </span>
           </td>
           <td style="padding: 10px 6px; text-align: right; font-size: 13px; font-weight: bold; color: #581C1C;">
@@ -325,7 +325,7 @@ export async function sendAdminNewOrderAlertEmail(order: {
       const prod = item.product || item;
       const itemPrice = prod.price || 0;
       const qty = item.quantity || 1;
-      const itemTotal = itemPrice * qty + (item.hasFallPico ? (item.fallPicoPrice || 200) : 0);
+      const itemTotal = itemPrice * qty + (item.hasFallPico ? (item.fallPicoPrice || 0) : 0);
       const rawImg = prod.image || (Array.isArray(prod.images) ? prod.images[0] : (typeof prod.images === 'string' ? JSON.parse(prod.images || '[]')[0] : ''));
       const img = rawImg ? (rawImg.startsWith('http') ? rawImg : `https://reotihandloom.com${rawImg}`) : '';
 
@@ -338,7 +338,7 @@ export async function sendAdminNewOrderAlertEmail(order: {
             <strong>${prod.title || 'Handloom Saree / Suit'}</strong><br>
             <span style="font-size: 11px; color: #786C5E;">
               Quantity: <strong>${qty}</strong> | Unit Price: ₹${itemPrice.toLocaleString('en-IN')}
-              ${item.hasFallPico ? '<br><span style="color: #8B4513; font-weight: bold;">✔ Fall & Pico Included (+₹200)</span>' : ''}
+              ${item.hasFallPico ? '<br><span style="color: #059669; font-weight: bold;">✔ Fall & Pico Included (FREE)</span>' : ''}
             </span>
           </td>
           <td style="padding: 12px 8px; text-align: right; font-size: 14px; font-weight: bold; color: #581C1C;">

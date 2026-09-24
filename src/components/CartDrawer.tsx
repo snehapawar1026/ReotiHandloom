@@ -397,7 +397,7 @@ export const CartDrawer = () => {
                   {cart.map(({ product, quantity, hasFallPico, fallPicoPrice }) => {
                     const parsedImages = JSON.parse(product.images || '[]');
                     const imgUrl = parsedImages[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c';
-                    const unitPico = hasFallPico ? (fallPicoPrice || 200) : 0;
+                    const unitPico = hasFallPico ? (fallPicoPrice || 0) : 0;
                     const itemUnitPrice = product.price + unitPico;
                     const itemUnitOriginal = product.originalPrice + unitPico;
 
@@ -431,8 +431,8 @@ export const CartDrawer = () => {
                               {product.fabric} • {product.weaveType}
                             </p>
                             {hasFallPico && (
-                              <div className="mt-1 inline-flex items-center gap-1 bg-amber-100/90 text-amber-950 text-[10px] font-extrabold px-2 py-0.5 rounded border border-amber-300">
-                                <span>+ Fall & Pico Bidding (₹200)</span>
+                              <div className="mt-1 inline-flex items-center gap-1 bg-emerald-50 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-200">
+                                <span>🎁 Free Fall & Pico Included</span>
                               </div>
                             )}
                           </div>
