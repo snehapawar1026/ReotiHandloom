@@ -42,6 +42,7 @@ import {
   Video,
   HelpCircle,
   MessageCircle,
+  Crown,
 } from 'lucide-react';
 
 const WhatsAppIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -50,36 +51,69 @@ const WhatsAppIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 );
 
-// Rotating Trust Badges (91% Maximum Filled Bold Circular Icons)
-const OriginalHandwovenIcon = () => (
+// 4 Royal 3D Luxury Emblems for Pure Maheshwari Handloom
+const RoyalHandwovenBadge = () => (
   <img
-    src="/images/handmade_love_badge.gif"
-    alt="100% Original Handwoven"
-    className="w-full h-full object-contain p-0.5"
+    src="/images/badge_100_handwoven.png"
+    alt="100% Handwoven Maheshwar Craft"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
   />
 );
 
-const HandloomLoomIcon = () => (
+const RoyalSilkZariBadge = () => (
   <img
-    src="/images/handloom_loom_badge.gif"
-    alt="Handloom Made"
-    className="w-full h-full object-contain p-0.5"
+    src="/images/badge_pure_silk_zari.png"
+    alt="Pure Silk Cotton Metallic Zari"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
   />
 );
 
-const SustainableLeavesIcon = () => (
+const RoyalSustainableBadge = () => (
   <img
-    src="/images/sustainable_leaves_badge.gif"
-    alt="Highly Sustainable"
-    className="w-full h-full object-contain p-0.5"
+    src="/images/badge_100_sustainable.png"
+    alt="100% Sustainable Natural Dyes"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
   />
 );
 
-const NaturalThreadsIcon = () => (
+const RoyalWeaversBadge = () => (
   <img
-    src="/images/natural_threads_badge.gif"
-    alt="Made from Natural Threads"
-    className="w-full h-full object-contain p-0.5"
+    src="/images/badge_direct_weavers.png"
+    alt="Direct from Weavers Estd 1960"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
+  />
+);
+
+// 4 Dedicated 3D Luxury Emblems for Semi Maheshwari
+const SemiSilkBadge = () => (
+  <img
+    src="/images/badge_semi_silk.png"
+    alt="Premium Semi Silk Rich Blend"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
+  />
+);
+
+const SemiZariBadge = () => (
+  <img
+    src="/images/badge_semi_zari.png"
+    alt="Royal Zari Border & Rich Pallu"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
+  />
+);
+
+const SemiEasyCareBadge = () => (
+  <img
+    src="/images/badge_semi_easycare.png"
+    alt="Easy Care & Wrinkle-Free"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
+  />
+);
+
+const SemiHubBadge = () => (
+  <img
+    src="/images/badge_semi_hub.png"
+    alt="Direct from Maheshwar Hub"
+    className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
   />
 );
 
@@ -1053,45 +1087,126 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
             )}
           </div>
 
-          {/* Trust Badges & Accordion Product Details Section (Matching Reference Design) */}
-          <div className="pt-6 border-t border-amber-200/80 space-y-5 text-xs font-sans">
+          {/* Reoti Handloom Royal Craftsmanship & Trust Badges */}
+          <div className="pt-6 border-t border-amber-200/80 space-y-4 text-xs font-sans">
             
-            {/* Top 4 Circular Trust Badges (Matching Reference Screenshot - In Single Line) */}
-            <div className="bg-[#FAF7F2] py-4 sm:py-6 px-1.5 sm:px-3 rounded-2xl border-0 grid grid-cols-4 gap-1.5 sm:gap-4 text-center items-start">
-              <div className="flex flex-col items-center space-y-1">
-                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
-                  <OriginalHandwovenIcon />
+            {/* Top 4 3D Luxury Royal Handloom Animated Emblems Showcase */}
+            <div className="relative rounded-2xl bg-gradient-to-br from-[#FFFDF9] via-[#FAF6F0] to-[#FDF8F2] p-4 sm:p-5 border border-amber-200/80 shadow-xs overflow-hidden">
+              
+              {/* Subtle Luxury Ambient Glows */}
+              <div className="absolute -top-6 -right-6 w-24 h-24 bg-amber-400/10 rounded-full blur-xl pointer-events-none" />
+              <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-amber-600/10 rounded-full blur-xl pointer-events-none" />
+
+              {/* Luxury Royal Header Bar */}
+              <div className="flex items-center justify-between gap-2 mb-4 pb-2.5 border-b border-amber-200/70">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-[#8B2635] text-amber-200 flex items-center justify-center text-[10px] shadow-2xs font-serif font-bold">
+                    ★
+                  </div>
+                  <h4 className="font-serif font-extrabold text-xs sm:text-sm text-[#4A0E17] uppercase tracking-wider">
+                    {isSemiProduct(product) ? 'Premium Semi Maheshwari' : 'Authentic Maheshwari Heritage'}
+                  </h4>
                 </div>
-                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
-                  100% Original<br />Handwoven
+                <span className="text-[10px] font-black text-amber-900 bg-amber-100/90 px-2.5 py-0.5 rounded-full border border-amber-300 shrink-0 uppercase tracking-wider shadow-2xs">
+                  {isSemiProduct(product) ? 'Affordable Luxury • Maheshwar' : 'Est. 1960 • Maheshwar'}
                 </span>
               </div>
 
-              <div className="flex flex-col items-center space-y-1">
-                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
-                  <HandloomLoomIcon />
+              {/* 4 Seamless Animated Badges Row (Directly on Warm Ivory Background without Boxes) */}
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-4 text-center items-start">
+                
+                {/* Badge 1 */}
+                <div className="group flex flex-col items-center justify-start cursor-default">
+                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 shrink-0 animate-royal-float-1 group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute -inset-1 bg-amber-400/25 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+                    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md group-hover:drop-shadow-xl transition-all">
+                      {isSemiProduct(product) ? <SemiSilkBadge /> : <RoyalHandwovenBadge />}
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/40 to-transparent pointer-events-none animate-royal-shimmer-1" />
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:mt-2.5 space-y-0.5 sm:space-y-1">
+                    <h5 className="font-serif font-extrabold text-[10px] sm:text-xs text-gray-950 leading-tight group-hover:text-[#8B2635] transition-colors">
+                      {isSemiProduct(product) ? (
+                        <>Premium Semi Silk<br /> Rich Blend</>
+                      ) : (
+                        <>100% Pitloom<br /> Handwoven</>
+                      )}
+                    </h5>
+                    <p className="text-[9px] sm:text-[10px] text-amber-900/80 font-medium leading-tight">
+                      {isSemiProduct(product) ? 'Soft & Featherlight' : 'Maheshwar Craft'}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
-                  Handloom<br />Made
-                </span>
-              </div>
 
-              <div className="flex flex-col items-center space-y-1">
-                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
-                  <SustainableLeavesIcon />
+                {/* Badge 2 */}
+                <div className="group flex flex-col items-center justify-start cursor-default">
+                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 shrink-0 animate-royal-float-2 group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute -inset-1 bg-amber-400/25 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+                    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md group-hover:drop-shadow-xl transition-all">
+                      {isSemiProduct(product) ? <SemiZariBadge /> : <RoyalSilkZariBadge />}
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/40 to-transparent pointer-events-none animate-royal-shimmer-2" />
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:mt-2.5 space-y-0.5 sm:space-y-1">
+                    <h5 className="font-serif font-extrabold text-[10px] sm:text-xs text-gray-950 leading-tight group-hover:text-[#8B2635] transition-colors">
+                      {isSemiProduct(product) ? (
+                        <>Royal Zari Border<br /> & Rich Pallu</>
+                      ) : (
+                        <>Pure Silk Cotton<br /> & Real Zari</>
+                      )}
+                    </h5>
+                    <p className="text-[9px] sm:text-[10px] text-amber-900/80 font-medium leading-tight">
+                      {isSemiProduct(product) ? 'Lustrous Gold Finish' : 'Metallic Zari Sheen'}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
-                  Highly<br />Sustainable
-                </span>
-              </div>
 
-              <div className="flex flex-col items-center space-y-1">
-                <div className="w-13 h-13 sm:w-20 sm:h-20 rounded-full bg-[#E7E0D3] flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
-                  <NaturalThreadsIcon />
+                {/* Badge 3 */}
+                <div className="group flex flex-col items-center justify-start cursor-default">
+                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 shrink-0 animate-royal-float-3 group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute -inset-1 bg-emerald-400/25 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+                    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md group-hover:drop-shadow-xl transition-all">
+                      {isSemiProduct(product) ? <SemiEasyCareBadge /> : <RoyalSustainableBadge />}
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/40 to-transparent pointer-events-none animate-royal-shimmer-3" />
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:mt-2.5 space-y-0.5 sm:space-y-1">
+                    <h5 className="font-serif font-extrabold text-[10px] sm:text-xs text-gray-950 leading-tight group-hover:text-emerald-900 transition-colors">
+                      {isSemiProduct(product) ? (
+                        <>Easy Care &<br /> Wrinkle-Free</>
+                      ) : (
+                        <>100% Sustainable<br /> Natural Dyes</>
+                      )}
+                    </h5>
+                    <p className="text-[9px] sm:text-[10px] text-emerald-800 font-medium leading-tight">
+                      {isSemiProduct(product) ? 'All-Day Comfortable' : 'Skin-Friendly Colors'}
+                    </p>
+                  </div>
                 </div>
-                <span className="text-[10px] sm:text-xs md:text-sm font-sans font-bold sm:font-black text-[#0a0a0a] tracking-tight leading-tight max-w-[85px] sm:max-w-[130px] mt-1">
-                  Made from<br />Natural Threads
-                </span>
+
+                {/* Badge 4 */}
+                <div className="group flex flex-col items-center justify-start cursor-default">
+                  <div className="relative w-14 h-14 sm:w-20 sm:h-20 shrink-0 animate-royal-float-4 group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute -inset-1 bg-amber-400/25 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+                    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md group-hover:drop-shadow-xl transition-all">
+                      {isSemiProduct(product) ? <SemiHubBadge /> : <RoyalWeaversBadge />}
+                      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/40 to-transparent pointer-events-none animate-royal-shimmer-4" />
+                    </div>
+                  </div>
+                  <div className="mt-2 sm:mt-2.5 space-y-0.5 sm:space-y-1">
+                    <h5 className="font-serif font-extrabold text-[10px] sm:text-xs text-gray-950 leading-tight group-hover:text-[#8B2635] transition-colors">
+                      {isSemiProduct(product) ? (
+                        <>Direct from<br /> Maheshwar Hub</>
+                      ) : (
+                        <>Direct from<br /> Master Weavers</>
+                      )}
+                    </h5>
+                    <p className="text-[9px] sm:text-[10px] text-amber-900/80 font-medium leading-tight">
+                      {isSemiProduct(product) ? 'Estd. 1960 • Best Value' : 'Estd. 1960 • Zero Markup'}
+                    </p>
+                  </div>
+                </div>
+
               </div>
             </div>
 
@@ -1118,7 +1233,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
                 {openSections.wash && (
                   <div className="mt-3.5 pl-8 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed space-y-3">
                     <p>
-                      <strong className="text-black font-extrabold">Wash Care:</strong> Dry Wash Recommended. Do not Machine wash or soak in hard detergent. Please do a gentle wash if needed.
+                      <strong className="text-black font-extrabold">Wash Care:</strong> {isSemiProduct(product) ? 'Gentle Hand Wash or Dry Clean Recommended. Mild detergent recommended. Easy to maintain.' : 'Dry Wash Recommended. Do not Machine wash or soak in hard detergent. Please do a gentle wash if needed.'}
                     </p>
                     <p className="text-gray-700 italic text-xs sm:text-sm">
                       <strong className="text-gray-950 not-italic font-extrabold">Disclaimer:</strong> The pictures were taken in daylight. Colour may vary slightly from the image due to the screen brightness.
