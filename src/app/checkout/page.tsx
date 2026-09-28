@@ -1299,7 +1299,7 @@ export default function CheckoutPage() {
                 parsedImages = [];
               }
               const imgUrl = parsedImages[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c';
-              const unitPico = hasFallPico ? (fallPicoPrice || 200) : 0;
+              const unitPico = hasFallPico ? (fallPicoPrice || 0) : 0;
               const itemTotal = (product.price + unitPico) * quantity;
 
               return (
@@ -1323,8 +1323,8 @@ export default function CheckoutPage() {
                       {product.color} • {product.fabric}
                     </p>
                     {hasFallPico && (
-                      <span className="mt-1 inline-flex items-center gap-1 bg-amber-100 text-amber-950 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300">
-                        <Check className="w-3 h-3 text-[#4A0E17]" /> Fall & Pico (₹200)
+                      <span className="mt-1 inline-flex items-center gap-1 bg-emerald-50 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                        <Check className="w-3 h-3 text-emerald-700" /> Free Fall & Pico Included
                       </span>
                     )}
                   </div>

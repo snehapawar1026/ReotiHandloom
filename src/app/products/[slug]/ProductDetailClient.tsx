@@ -433,8 +433,8 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
       ? mainImg
       : (typeof window !== 'undefined' ? `${window.location.origin}${mainImg}` : `https://reotihandloom.com${mainImg}`);
 
-    const fallPicoMsg = hasFallPico ? '\n✂️ *Fall & Pico Bidding*: Included (+₹200)' : '';
-    const finalPrice = product.price + (hasFallPico ? 200 : 0);
+    const fallPicoMsg = hasFallPico ? '\n✂️ *Fall & Pico Binding*: Included (FREE)' : '';
+    const finalPrice = product.price;
 
     const message = `Namaste Reoti Handloom! 🙏\n\nI want to place an order for this authentic Maheshwari saree:\n\n📌 *Product Name*: ${product.title}\n💰 *Price*: ₹${finalPrice.toLocaleString()}${fallPicoMsg} (FREE Delivery)\n🎨 *Color*: ${product.color || 'As Shown'}\n🧵 *Fabric*: ${product.fabric || 'Maheshwari Handloom'}\n\n🔗 *Product Link*: ${pageUrl}\n🖼️ *Picture*: ${fullImgUrl}\n\nPlease confirm availability and share payment & dispatch details!`;
 
@@ -450,8 +450,8 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
       ? mainImg
       : (typeof window !== 'undefined' ? `${window.location.origin}${mainImg}` : mainImg);
 
-    const fallPicoMsg = hasFallPico ? '\n✂️ *Fall & Pico Bidding*: Included (+₹200)' : '';
-    const finalPrice = product.price + (hasFallPico ? 200 : 0);
+    const fallPicoMsg = hasFallPico ? '\n✂️ *Fall & Pico Binding*: Included (FREE)' : '';
+    const finalPrice = product.price;
 
     const message = `Hello Reoti Handloom! 🙏\n\nI want to make a Wholesale / Bulk Inquiry for this product:\n\n📌 *Product Name*: ${product.title}\n💰 *Price*: ₹${finalPrice.toLocaleString()}${fallPicoMsg}\n🎨 *Color*: ${product.color || 'As Shown'}\n🧵 *Fabric*: ${product.fabric || 'Maheshwari Handloom'}\n\n🔗 *Product Link*: ${pageUrl}\n🖼️ *Product Picture*: ${fullImgUrl}\n\nPlease share wholesale prices, MOQ & catalog details!`;
 
@@ -749,7 +749,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
           <div className="py-3.5 border-y border-gray-200 space-y-1 bg-white">
             <div className="flex items-baseline gap-3 flex-wrap">
               <span className="text-2xl font-extrabold text-gray-900 font-sans">
-                ₹{(product.price + (hasFallPico ? 200 : 0)).toLocaleString()}
+                ₹{product.price.toLocaleString()}
               </span>
               {product.discountPercent && product.discountPercent > 0 && product.originalPrice && product.originalPrice > product.price ? (
                 <span className="text-sm font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
@@ -757,14 +757,14 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
                 </span>
               ) : null}
               {hasFallPico && (
-                <span className="text-[11px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                  + ₹200 Fall & Pico
+                <span className="text-[11px] font-bold text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 inline-flex items-center gap-1">
+                  <span>🎁 Free Fall & Pico Included</span>
                 </span>
               )}
             </div>
             {product.originalPrice && product.originalPrice > product.price ? (
               <div className="text-xs text-gray-500 font-medium">
-                MRP <span className="line-through font-sans">₹{(product.originalPrice + (hasFallPico ? 200 : 0)).toLocaleString()}</span> <span className="text-[11px] text-gray-400">Inclusive of all taxes</span>
+                MRP <span className="line-through font-sans">₹{product.originalPrice.toLocaleString()}</span> <span className="text-[11px] text-gray-400">Inclusive of all taxes</span>
               </div>
             ) : (
               <div className="text-xs text-gray-400 font-medium">
@@ -790,23 +790,88 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
             </div>
           )}
 
-          {/* Fall and Pico Bidding Box (Matching Design Reference) */}
-          <div className="bg-[#FAF7F2] border border-dashed border-[#D5CBB9] rounded-xl p-4 space-y-1 font-sans">
-            <h4 className="font-bold text-sm text-gray-900">
-              Fall and Pico Bidding
-            </h4>
-            <label className="flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-semibold text-gray-900 select-none pt-1">
-              <input
-                type="checkbox"
-                checked={hasFallPico}
-                onChange={(e) => setHasFallPico(e.target.checked)}
-                className="w-4 h-4 text-rose-600 rounded border-gray-300 focus:ring-rose-500 cursor-pointer accent-rose-600"
-              />
-              <span>Fall & Pico Bidding (Rs. 200.00)</span>
+          {/* Fall and Pico Bidding Luxury Box */}
+          <div className={`relative overflow-hidden rounded-2xl transition-all duration-300 border ${
+            hasFallPico
+              ? 'bg-gradient-to-br from-[#FFFDF9] via-[#FAF6F0] to-[#FFF5F5] border-amber-300/90 shadow-sm'
+              : 'bg-[#FAF7F2] border-amber-200/70 hover:border-amber-300'
+          } p-3.5 sm:p-4 font-sans`}>
+            {/* Header with complimentary free tag */}
+            <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-amber-200/60">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-2xs ${
+                  hasFallPico ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100 text-amber-900'
+                }`}>
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-serif font-bold text-sm text-gray-900 leading-tight">
+                    Fall & Pico Binding
+                  </h4>
+                  <p className="text-[10px] text-gray-500 font-medium">
+                    Tailored ready-to-wear saree finishing
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="text-[11px] text-gray-400 line-through font-semibold">₹200</span>
+                <span className="text-[10px] sm:text-[11px] font-black text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                  FREE 🎁
+                </span>
+              </div>
+            </div>
+
+            {/* Checkbox Card Option */}
+            <label
+              className={`flex items-start gap-3 p-2.5 sm:p-3 rounded-xl cursor-pointer select-none transition-all ${
+                hasFallPico
+                  ? 'bg-white border-2 border-[#8B2635]/80 shadow-xs ring-2 ring-[#8B2635]/10'
+                  : 'bg-white/80 hover:bg-white border border-dashed border-gray-300 hover:border-amber-400'
+              }`}
+            >
+              <div className="pt-0.5">
+                <input
+                  type="checkbox"
+                  checked={hasFallPico}
+                  onChange={(e) => setHasFallPico(e.target.checked)}
+                  className="w-4 h-4 text-[#8B2635] rounded border-gray-300 focus:ring-[#8B2635] cursor-pointer accent-[#8B2635]"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-gray-900">
+                    Add Complimentary Fall & Pico (₹0 FREE)
+                  </span>
+                  {hasFallPico && (
+                    <span className="text-[10px] font-extrabold text-[#8B2635] bg-rose-50 px-1.5 py-0.5 border border-rose-200 rounded">
+                      Selected
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11px] text-gray-600 mt-0.5 leading-snug">
+                  Includes matching premium cotton fall stitching and precision border pico finishing.
+                </p>
+              </div>
             </label>
-            <p className="text-[11px] sm:text-xs text-gray-600 font-medium leading-relaxed italic pt-1">
-              Returns or exchanges cannot be accepted after Pico and Fall are completed.
-            </p>
+
+            {/* Conditional Return Notice Box */}
+            <div className="mt-2.5">
+              {hasFallPico ? (
+                <div className="flex items-start gap-2.5 p-3 bg-amber-50 border border-amber-300 rounded-xl text-amber-950 transition-all shadow-2xs">
+                  <span className="text-base shrink-0 leading-none mt-0.5">⚠️</span>
+                  <div className="text-[11px] sm:text-xs leading-relaxed">
+                    <span className="font-extrabold text-[#8B2635] uppercase tracking-wider block sm:inline mr-1">No Return / No Exchange:</span>
+                    <span className="font-medium text-gray-800">Returns or exchanges cannot be accepted after Pico and Fall work is completed on this customized saree.</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-gray-600 text-[11px] font-medium bg-gray-50/80 rounded-lg border border-gray-200/60">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span>Delivered in pure handloom raw condition. Standard 7-day return policy applies.</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Nykaa Fashion-Style Color Selector Swatches */}
@@ -904,7 +969,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
               ) : (
                 <button
                   onClick={() => {
-                    addToCart(product, { hasFallPico, fallPicoPrice: 200 });
+                    addToCart(product, { hasFallPico, fallPicoPrice: 0 });
                     setIsCartOpen(true);
                   }}
                   className="flex-1 py-3.5 bg-[#E11D48] hover:bg-[#BE123C] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
@@ -929,7 +994,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
             {!product.isOutOfStock && (
               <button
                 onClick={() => {
-                  addToCart(product, { hasFallPico, fallPicoPrice: 200 });
+                  addToCart(product, { hasFallPico, fallPicoPrice: 0 });
                   setIsCartOpen(false);
                   router.push('/checkout');
                 }}
@@ -1114,8 +1179,11 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
                 {openSections.returns && (
                   <div className="mt-3.5 pl-8 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed space-y-3">
                     <p>
-                      We accept hassle-free returns and exchanges within 7 days of delivery.
+                      We accept hassle-free returns and exchanges within 7 days of delivery for standard handloom sarees.
                     </p>
+                    <div className="text-xs text-[#8B2635] bg-rose-50/80 p-2.5 rounded-lg border border-rose-200">
+                      <strong>Customization Note:</strong> Sarees with Fall & Pico binding tailored upon customer request cannot be returned or exchanged once the work is completed.
+                    </div>
                     <button
                       onClick={() => router.push('/policies/return-policy')}
                       className="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs sm:text-sm uppercase rounded-lg border border-amber-300 cursor-pointer transition-colors shadow-2xs"
@@ -1252,7 +1320,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
                     </div>
                     <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
                       <p className="font-extrabold text-amber-950">Q: What is your return & exchange policy?</p>
-                      <p className="text-gray-700 font-medium">We provide a 7-day hassle-free return and exchange guarantee for complete peace of mind.</p>
+                      <p className="text-gray-700 font-medium">We provide a 7-day hassle-free return and exchange guarantee on standard handloom items. Please note that customized sarees with Fall & Pico binding cannot be returned or exchanged.</p>
                     </div>
                   </div>
                 )}
@@ -1719,7 +1787,7 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
           <div className="flex items-center gap-2 flex-1 justify-end">
             <button
               onClick={() => {
-                addToCart(product, { hasFallPico, fallPicoPrice: 200 });
+                addToCart(product, { hasFallPico, fallPicoPrice: 0 });
                 setIsCartOpen(true);
               }}
               className="flex-1 max-w-[130px] py-2.5 bg-[#E11D48] hover:bg-[#BE123C] text-white font-extrabold text-xs uppercase tracking-wider rounded-lg shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"

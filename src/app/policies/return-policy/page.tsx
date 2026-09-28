@@ -55,6 +55,10 @@ export default function ReturnPolicyPage() {
             </li>
             <li className="flex items-start gap-2.5">
               <span className="w-1.5 h-1.5 rounded-full bg-rose-600 mt-2 shrink-0" />
+              <span><strong className="text-[#8B2635] font-bold">Customization / Fall & Pico:</strong> Sarees tailored with complimentary Fall & Pico binding upon customer selection cannot be returned or exchanged once the work is completed.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-600 mt-2 shrink-0" />
               <span>The product should be securely and properly packed by the customer for return.</span>
             </li>
             <li className="flex items-start gap-2.5">
