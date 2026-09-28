@@ -84,48 +84,16 @@ export async function applyWatermarkToImageBuffer(inputBuffer: Buffer): Promise<
           }
         </style>
 
-        <!-- 1. Central Diagonal Luxury Watermark -->
-        <g transform="translate(${centerX}, ${centerY}) rotate(-24)">
-          <!-- Lotus Heritage Motif -->
-          <g transform="translate(0, -${fontSizeTitle * 1.35}) scale(${lotusScale})">
-            <path class="lotusIcon" d="M0 -35 C-12 -12 -30 10 -60 18 C-30 20 -12 10 0 35 C12 10 30 20 60 18 C30 10 12 -12 0 -35 Z" />
-            <circle cx="0" cy="-5" r="3.5" fill="rgba(255,255,255,0.7)" />
-          </g>
-
+        <!-- Central Clean Luxury White Watermark -->
+        <g transform="translate(${centerX}, ${centerY})">
           <!-- Main Brand Heading -->
-          <text y="0" font-size="${fontSizeTitle}px" class="titleText">
-            ✦ REOTI HANDLOOM ✦
+          <text y="0" font-size="${fontSizeTitle}px" class="titleText" fill="#ffffff">
+            Reoti Handloom
           </text>
 
           <!-- Subtitle / Authenticity Line -->
-          <text y="${fontSizeTitle * 0.85}" font-size="${fontSizeSub}px" class="subText">
-            AUTHENTIC MAHESHWARI HERITAGE
-          </text>
-
-          <!-- Divider with Traditional Flourish -->
-          <line x1="-${fontSizeTitle * 3.5}" y1="${fontSizeTitle * 1.25}" x2="-${fontSizeTitle * 0.5}" y2="${fontSizeTitle * 1.25}" class="accentLine" />
-          <circle cx="0" cy="${fontSizeTitle * 1.25}" r="3" fill="rgba(255,255,255,0.7)" />
-          <line x1="${fontSizeTitle * 0.5}" y1="${fontSizeTitle * 1.25}" x2="${fontSizeTitle * 3.5}" y2="${fontSizeTitle * 1.25}" class="accentLine" />
-
-          <!-- Tagline -->
-          <text y="${fontSizeTitle * 1.75}" font-size="${Math.round(fontSizeSub * 0.95)}px" class="taglineText">
-            Tradition Woven with Love • Direct From Maheshwar Looms
-          </text>
-        </g>
-
-        <!-- 2. Bottom-Right Security Copyright Badge -->
-        <g transform="translate(${width - 24}, ${height - 24})">
-          <rect x="-${fontSizeCorner * 18}" y="-${fontSizeCorner * 2.2}" width="${fontSizeCorner * 18}" height="${fontSizeCorner * 2.6}" rx="${fontSizeCorner * 0.5}" fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
-          <text x="-${fontSizeCorner * 9}" y="-${fontSizeCorner * 0.4}" font-size="${fontSizeCorner}px" text-anchor="middle" class="cornerText">
-            © REOTI HANDLOOM • MAHESHWAR
-          </text>
-        </g>
-
-        <!-- 3. Top-Left Handloom Trust Mark -->
-        <g transform="translate(24, 36)">
-          <rect x="0" y="-${fontSizeCorner * 1.4}" width="${fontSizeCorner * 16}" height="${fontSizeCorner * 2.2}" rx="${fontSizeCorner * 0.4}" fill="rgba(0,0,0,0.30)" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
-          <text x="${fontSizeCorner * 8}" y="${fontSizeCorner * 0.2}" font-size="${fontSizeCorner * 0.9}px" text-anchor="middle" class="cornerText">
-            ✦ 100% PURE HANDLOOM MARK ✦
+          <text y="${fontSizeTitle * 0.55}" font-size="${fontSizeSub}px" class="subText" fill="#ffffff">
+            Authentic Maheshwari Saree
           </text>
         </g>
       </svg>

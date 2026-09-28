@@ -51,7 +51,7 @@ export default function AboutPage() {
       tag: 'PATRON FELICITATIONS',
       headingMain: 'CRAFTING LIVING TRADITION',
       headingHighlight: 'FOR DISTINGUISHED PATRONS',
-      description: 'Felicitating distinguished guests with handmade Maheshwari sarees woven on 5th generation heritage looms straight from Narmada ghats.',
+      description: 'Felicitating distinguished guests with handmade Maheshwari sarees woven on 3rd generation heritage looms straight from Narmada ghats.',
       quote: 'Direct from weaver hands to royal wardrobes.',
       image: '/heritage/vip_visit_3.jpg',
       badge: 'VIP Showcase',
@@ -86,7 +86,7 @@ export default function AboutPage() {
           </h1>
           
           <p className="text-xs sm:text-sm text-amber-200/80 max-w-2xl mx-auto leading-relaxed font-medium">
-            Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 5th generation weaver craftsmanship.
+            Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 3rd generation weaver craftsmanship.
           </p>
         </div>
       </section>

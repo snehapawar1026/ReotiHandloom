@@ -28,7 +28,7 @@ const LATEST_FESTIVE_BANNERS = [
   {
     id: 'c2e7af2c-fcad-4545-9354-df7d35c64ba7',
     title: 'Maharani Ahilyabai Holkar Royal Maheshwar Weaves',
-    subtitle: 'Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 5th generation weaver craftsmanship.',
+    subtitle: 'Crafting authentic Maheshwari Sarees straight from Narmada ghat looms with 3rd generation weaver craftsmanship.',
     image: '/uploads/maheshwari_legacy_banner.png',
     link: '/products',
     tag: 'ROYAL MAHESHWAR HERITAGE',
