@@ -182,9 +182,7 @@ export async function GET(req: NextRequest) {
     { success: true, products: storeProducts, count: storeProducts.length },
     {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate',
-        Pragma: 'no-cache',
-        Expires: '0',
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
       },
     }
   );

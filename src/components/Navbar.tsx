@@ -181,7 +181,7 @@ const NavbarContent = () => {
 
   React.useEffect(() => {
     const fetchFreshCategories = () => {
-      fetch('/api/categories?t=' + Date.now(), { cache: 'no-store' })
+      fetch('/api/categories')
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.categories)) {
@@ -193,8 +193,8 @@ const NavbarContent = () => {
 
     fetchFreshCategories();
 
-    // Periodic auto-refresh every 30 seconds
-    const interval = setInterval(fetchFreshCategories, 30000);
+    // Periodic auto-refresh every 2 minutes
+    const interval = setInterval(fetchFreshCategories, 120000);
 
     // Refresh when user returns / focuses the tab
     const onVisibilityChange = () => {

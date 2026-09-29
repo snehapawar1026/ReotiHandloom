@@ -351,10 +351,9 @@ function ProductsContent() {
   };
 
   useEffect(() => {
-    const t = Date.now();
     Promise.all([
-      fetch(`/api/categories?parentOnly=true&_t=${t}`, { cache: 'no-store' }).then((res) => res.json()),
-      fetch(`/api/categories?_t=${t}`, { cache: 'no-store' }).then((res) => res.json()),
+      fetch('/api/categories?parentOnly=true').then((res) => res.json()),
+      fetch('/api/categories').then((res) => res.json()),
     ])
       .then(([parentData, allCatData]) => {
         if (parentData.success) setParentCategories(parentData.categories || []);
@@ -377,9 +376,8 @@ function ProductsContent() {
     if (isTrending) params.set('trending', 'true');
     if (isBestSeller) params.set('bestSeller', 'true');
     if (isFeatured) params.set('featured', 'true');
-    params.set('_t', String(Date.now()));
 
-    fetch(`/api/products?${params.toString()}`, { cache: 'no-store' })
+    fetch(`/api/products?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setProducts(data.products || []);
@@ -438,6 +436,41 @@ function ProductsContent() {
     isFeatured ? 'featured' : '',
   ].filter(Boolean).length;
 
+  const isSemiCategory = (c: any): boolean => {
+    if (!c) return false;
+    const id = (c.id || '').toLowerCase();
+    const parentId = (c.parentId || '').toLowerCase();
+    const slug = (c.slug || '').toLowerCase();
+    const name = (c.name || '').toLowerCase();
+
+    return (
+      id === 'semi-maheshwari-sarees-id' ||
+      parentId === 'semi-maheshwari-sarees-id' ||
+      parentId.includes('semi') ||
+      parentId.includes('sami') ||
+      slug.includes('semi') ||
+      slug.includes('sami') ||
+      name.includes('semi') ||
+      name.includes('sami')
+    );
+  };
+
+  const isSuitCategory = (c: any): boolean => {
+    if (!c) return false;
+    const id = (c.id || '').toLowerCase();
+    const parentId = (c.parentId || '').toLowerCase();
+    const slug = (c.slug || '').toLowerCase();
+    const name = (c.name || '').toLowerCase();
+
+    return (
+      id === '62c60ff6-1568-4753-8f73-652dd1efd355' ||
+      parentId === '62c60ff6-1568-4753-8f73-652dd1efd355' ||
+      parentId.includes('suit') ||
+      slug.includes('suit') ||
+      name.includes('suit')
+    );
+  };
+
   const currentCategoryObj = categories.find(
     (c) => c.slug === selectedCategory || c.id === selectedCategory
   );
@@ -446,12 +479,11 @@ function ProductsContent() {
     : currentCategoryObj;
 
   const isSemiMaheshwariView = Boolean(
+    isSemiCategory(currentCategoryObj) ||
+    isSemiCategory(effectiveParentCat) ||
     selectedCategory === 'semi-maheshwari-sarees' ||
-    selectedCategory === 'semi-maheshwari' ||
-    currentCategoryObj?.slug?.includes('semi-maheshwari') ||
-    currentCategoryObj?.name?.toLowerCase().includes('semi maheshwari') ||
-    effectiveParentCat?.slug?.includes('semi-maheshwari') ||
-    effectiveParentCat?.name?.toLowerCase().includes('semi maheshwari')
+    selectedCategory.includes('semi') ||
+    selectedCategory.includes('sami')
   );
 
   const semiParent = categories.find(
@@ -469,10 +501,7 @@ function ProductsContent() {
 
   const semiSubcategories = categories.filter(
     (c) =>
-      (c.parentId === semiParent.id ||
-        c.slug?.startsWith('semi-maheshwari-') ||
-        c.parentId === 'semi-maheshwari-sarees-id' ||
-        c.parentId === 'semi-maheshwari-sarees') &&
+      isSemiCategory(c) &&
       c.id !== semiParent.id &&
       c.slug !== 'semi-maheshwari-sarees' &&
       c.slug !== 'semi-maheshwari' &&
@@ -481,8 +510,8 @@ function ProductsContent() {
 
   const handloomParentCategories = parentCategories.filter(
     (c) =>
-      !c.slug?.includes('semi-maheshwari') &&
-      !c.name?.toLowerCase().includes('semi maheshwari') &&
+      !isSemiCategory(c) &&
+      !isSuitCategory(c) &&
       c.id !== semiParent.id
   );
 
@@ -668,7 +697,7 @@ function ProductsContent() {
                           : '/uploads/maheshwari_legacy_banner.png'
                       }
                       alt="All"
-                      className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                      className="w-full h-full object-cover rounded-full object-[70%_25%] scale-115 group-hover:scale-125 transition-transform duration-500"
                     />
                   </div>
                 </div>
@@ -690,15 +719,9 @@ function ProductsContent() {
                 let displayedCats: any[] = [];
                 if (isSemiMaheshwariView) {
                   displayedCats = semiSubcategories;
-                } else if (selectedCategory.includes('suit')) {
+                } else if (isSuitCategory(currentCategoryObj) || selectedCategory.includes('suit')) {
                   displayedCats = categories.filter(
-                    (c) =>
-                      (c.slug?.includes('suit') ||
-                        c.name?.toLowerCase().includes('suit') ||
-                        c.parentId?.includes('suit') ||
-                        c.parentId === '62c60ff6-1568-4753-8f73-652dd1efd355') &&
-                      c.slug !== 'maheshwari-suits' &&
-                      !c.isHidden
+                    (c) => isSuitCategory(c) && c.slug !== 'maheshwari-suits' && !c.isHidden
                   );
                   if (displayedCats.length === 0) {
                     displayedCats = [
@@ -723,12 +746,11 @@ function ProductsContent() {
                     ];
                   }
                 } else {
+                  // Pure Handloom Maheshwari Sarees view (strictly exclude all semi and suit categories)
                   displayedCats = categories.filter(
                     (c) =>
-                      !c.slug?.includes('semi-maheshwari') &&
-                      !c.name?.toLowerCase().includes('semi maheshwari') &&
-                      !c.slug?.includes('suit') &&
-                      !c.name?.toLowerCase().includes('suit') &&
+                      !isSemiCategory(c) &&
+                      !isSuitCategory(c) &&
                       c.slug !== 'maheshwari-sarees' &&
                       c.id !== 'maheshwari-sarees-id' &&
                       !c.isHidden
@@ -790,7 +812,7 @@ function ProductsContent() {
                           <img
                             src={imgUrl}
                             alt={cat.name}
-                            className="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform duration-500"
+                            className="w-full h-full object-cover rounded-full scale-140 object-[center_88%] group-hover:scale-150 transition-transform duration-500"
                           />
                         </div>
                       </div>
@@ -1204,19 +1226,25 @@ function ProductsContent() {
                       !selectedCategory ? 'bg-rose-600 text-white font-extrabold' : 'border-gray-200 text-gray-700'
                     }`}
                   >
-                    All Categories
+                    {isSemiMaheshwariView ? 'All Semi Maheshwari' : 'All Maheshwari Categories'}
                   </button>
-                  {categories.map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => updateFilter('category', selectedCategory === cat.slug ? '' : cat.slug)}
-                      className={`w-full text-left py-2 px-3 rounded-lg border font-semibold ${
-                        selectedCategory === cat.slug ? 'bg-rose-50 border-rose-300 text-rose-900 font-extrabold' : 'border-gray-200 text-gray-700'
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  ))}
+                  {categories
+                    .filter((cat) =>
+                      isSemiMaheshwariView
+                        ? isSemiCategory(cat) && cat.slug !== 'semi-maheshwari-sarees' && !cat.isHidden
+                        : !isSemiCategory(cat) && !isSuitCategory(cat) && cat.slug !== 'maheshwari-sarees' && !cat.isHidden
+                    )
+                    .map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => updateFilter('category', selectedCategory === cat.slug ? '' : cat.slug)}
+                        className={`w-full text-left py-2 px-3 rounded-lg border font-semibold ${
+                          selectedCategory === cat.slug ? 'bg-rose-50 border-rose-300 text-rose-900 font-extrabold' : 'border-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
                 </div>
               </div>
 

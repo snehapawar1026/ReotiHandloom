@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" width="100%" height="100%">
+  <defs>
+    <path id="arc-main" d="M 35,115 Q 320,32 605,115" fill="none" />
+    <path id="arc-sub1" d="M 75,142 Q 320,68 565,142" fill="none" />
+    <path id="arc-sub2" d="M 95,166 Q 320,98 545,166" fill="none" />
+    <filter id="text-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3.5" flood-color="#000000" flood-opacity="0.8" />
+    </filter>
+  </defs>
+  <g filter="url(#text-glow)">
+    <!-- Top Central Diamond / Maheshwari Emblem -->
+    <path d="M 320,10 L 327,27 L 344,34 L 327,41 L 320,58 L 313,41 L 296,34 L 313,27 Z" fill="#ffffff" />
+    <circle cx="320" cy="34" r="2.2" fill="#000000" opacity="0.35" />
+    
+    <!-- Left 4-Point Sparkle Star -->
+    <path d="M 40,98 L 44,110 L 56,114 L 44,118 L 40,130 L 36,118 L 24,114 L 36,110 Z" fill="#ffffff" />
+    
+    <!-- Right 4-Point Sparkle Star -->
+    <path d="M 600,98 L 604,110 L 616,114 L 604,118 L 600,130 L 596,118 L 584,114 L 596,110 Z" fill="#ffffff" />
+
+    <!-- Main Curved Brand Name: REOTI HANDLOOM -->
+    <text font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="34" font-weight="900" fill="#ffffff" letter-spacing="3.5">
+      <textPath href="#arc-main" startOffset="50%" text-anchor="middle">REOTI HANDLOOM</textPath>
+    </text>
+
+    <!-- Subtitle 1: AUTHENTIC MAHESHWARI HERITAGE -->
+    <text font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" fill="#ffffff" letter-spacing="3.2">
+      <textPath href="#arc-sub1" startOffset="50%" text-anchor="middle">AUTHENTIC MAHESHWARI HERITAGE</textPath>
+    </text>
+
+    <!-- Subtitle 2: Tradition Woven with Love • Direct From Maheshwar Looms -->
+    <text font-family="Georgia, serif" font-size="10.5" font-style="italic" font-weight="600" fill="#ffffff" letter-spacing="1.2" opacity="0.95">
+      <textPath href="#arc-sub2" startOffset="50%" text-anchor="middle">Tradition Woven with Love • Direct From Maheshwar Looms</textPath>
+    </text>
+  </g>
+</svg>

@@ -40,26 +40,30 @@ export function WatermarkOverlay({
     <div
       className={`absolute inset-0 pointer-events-none select-none overflow-hidden z-10 flex items-center justify-center ${className}`}
       aria-hidden="true"
-      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+      style={{ userSelect: 'none' }}
     >
       <div
-        className="pointer-events-none select-none flex items-center justify-center"
+        className="pointer-events-none select-none flex items-center justify-center transform -rotate-[28deg] opacity-50 transition-opacity"
         style={{
-          filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.75))',
+          transformOrigin: 'center center',
+          filter: 'drop-shadow(0 1px 5px rgba(0, 0, 0, 0.6))',
         }}
       >
         <img
-          src="/images/reoti_white_watermark.png"
-          alt="Reoti Handloom Watermark"
+          src="/images/reoti_exact_white_watermark_hd.png"
+          alt="Reoti Handloom Authentic Maheshwari Saree"
           draggable="false"
           className={`object-contain pointer-events-none select-none ${
             isPdp
-              ? 'w-56 sm:w-80 md:w-96 max-w-[75%]'
-              : 'w-32 sm:w-40 max-w-[65%]'
+              ? 'w-[280px] sm:w-[420px] md:w-[480px] max-w-[85%]'
+              : 'w-36 sm:w-48 md:w-56 max-w-[80%]'
           }`}
         />
       </div>
     </div>
   );
 }
+
+
+
 

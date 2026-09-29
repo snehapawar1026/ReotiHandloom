@@ -119,10 +119,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const t = Date.now();
     Promise.all([
-      fetch(`/api/categories?parentOnly=true&_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
-      fetch(`/api/products?includeAll=true&_t=${t}`, { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/api/categories?parentOnly=true').then((r) => r.json()),
+      fetch('/api/products?includeAll=true').then((r) => r.json()),
     ])
       .then(([catData, prodData]) => {
         if (catData.success) {

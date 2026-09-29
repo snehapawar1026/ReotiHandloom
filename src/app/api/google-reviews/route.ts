@@ -118,34 +118,55 @@ export async function GET() {
 
       const data = await googleRes.json();
       if (data.status === 'OK' && data.result) {
-        return NextResponse.json({
-          success: true,
-          source: 'google_live_api',
-          rating: data.result.rating || 4.8,
-          totalReviews: data.result.user_ratings_total || 331,
-          reviews: data.result.reviews || RECENT_10_GOOGLE_REVIEWS,
-        });
+        return NextResponse.json(
+          {
+            success: true,
+            source: 'google_live_api',
+            rating: data.result.rating || 4.8,
+            totalReviews: data.result.user_ratings_total || 331,
+            reviews: data.result.reviews || RECENT_10_GOOGLE_REVIEWS,
+          },
+          {
+            headers: {
+              'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            },
+          }
+        );
       }
     }
 
     // Return the 10 most recent Google Reviews for Reoti Handloom
-    return NextResponse.json({
-      success: true,
-      source: 'google_business_sync',
-      rating: 4.8,
-      totalReviews: 331,
-      placeName: 'Reoti Handloom Maheshwari sarees Manufacturers & wholesaler’s',
-      location: '73, Laxmibai Marg, Maheshwar, Madhya Pradesh 451224',
-      reviews: RECENT_10_GOOGLE_REVIEWS,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        source: 'google_business_sync',
+        rating: 4.8,
+        totalReviews: 331,
+        placeName: 'Reoti Handloom Maheshwari sarees Manufacturers & wholesaler’s',
+        location: '73, Laxmibai Marg, Maheshwar, Madhya Pradesh 451224',
+        reviews: RECENT_10_GOOGLE_REVIEWS,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        },
+      }
+    );
   } catch (error) {
     console.error('Google Reviews API Error:', error);
-    return NextResponse.json({
-      success: true,
-      source: 'fallback',
-      rating: 4.8,
-      totalReviews: 331,
-      reviews: RECENT_10_GOOGLE_REVIEWS,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        source: 'fallback',
+        rating: 4.8,
+        totalReviews: 331,
+        reviews: RECENT_10_GOOGLE_REVIEWS,
+      },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+        },
+      }
+    );
   }
 }

@@ -4,7 +4,14 @@ import storeData from '@/data/storeData.json';
 const DEFAULT_POSTS = storeData.instaPosts || [];
 
 export async function GET() {
-  return NextResponse.json({ success: true, posts: DEFAULT_POSTS, source: 'default' });
+  return NextResponse.json(
+    { success: true, posts: DEFAULT_POSTS, source: 'default' },
+    {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    }
+  );
 }
 
 import { getStoreData, saveStoreData } from '@/lib/storeManager';

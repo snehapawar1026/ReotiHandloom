@@ -50,24 +50,44 @@ function getStorageFilePath(): string {
   return defaultPath;
 }
 
+let lastLoadedTime = 0;
+let lastFileMtime = 0;
+
 export function getStoreData(): StoreData {
+  const now = Date.now();
+  // Fast Path: If in-memory cache is fresh (less than 2.5s old), return immediately without touching disk
+  if (inMemoryStore.products && inMemoryStore.products.length > 0 && now - lastLoadedTime < 2500) {
+    return inMemoryStore;
+  }
+
   const filePath = getStorageFilePath();
   try {
-    if (fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const parsed = JSON.parse(content);
-      inMemoryStore = {
-        categories: Array.isArray(parsed.categories) ? parsed.categories : inMemoryStore.categories || [],
-        products: Array.isArray(parsed.products) ? parsed.products : inMemoryStore.products || [],
-        banners: Array.isArray(parsed.banners) ? parsed.banners : inMemoryStore.banners || [],
-        instaPosts: Array.isArray(parsed.instaPosts) ? parsed.instaPosts : inMemoryStore.instaPosts || [],
-        reviews: Array.isArray(parsed.reviews) ? parsed.reviews : inMemoryStore.reviews || [],
-        blogs: Array.isArray(parsed.blogs) ? parsed.blogs : inMemoryStore.blogs || [],
-        orders: Array.isArray(parsed.orders) ? parsed.orders : inMemoryStore.orders || [],
-        activities: Array.isArray(parsed.activities) ? parsed.activities : inMemoryStore.activities || [],
-        users: Array.isArray(parsed.users) ? parsed.users : inMemoryStore.users || [],
-        leads: Array.isArray(parsed.leads) ? parsed.leads : inMemoryStore.leads || [],
-      };
+    if (fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
+      const stats = fs.statSync(/*turbopackIgnore: true*/ filePath);
+      // If file has not changed on disk, use in-memory store
+      if (stats.mtimeMs === lastFileMtime && inMemoryStore.products && inMemoryStore.products.length > 0) {
+        lastLoadedTime = now;
+        return inMemoryStore;
+      }
+
+      const content = fs.readFileSync(/*turbopackIgnore: true*/ filePath, 'utf-8');
+      if (content && !content.startsWith('\x00')) {
+        const parsed = JSON.parse(content);
+        inMemoryStore = {
+          categories: Array.isArray(parsed.categories) ? parsed.categories : inMemoryStore.categories || [],
+          products: Array.isArray(parsed.products) ? parsed.products : inMemoryStore.products || [],
+          banners: Array.isArray(parsed.banners) ? parsed.banners : inMemoryStore.banners || [],
+          instaPosts: Array.isArray(parsed.instaPosts) ? parsed.instaPosts : inMemoryStore.instaPosts || [],
+          reviews: Array.isArray(parsed.reviews) ? parsed.reviews : inMemoryStore.reviews || [],
+          blogs: Array.isArray(parsed.blogs) ? parsed.blogs : inMemoryStore.blogs || [],
+          orders: Array.isArray(parsed.orders) ? parsed.orders : inMemoryStore.orders || [],
+          activities: Array.isArray(parsed.activities) ? parsed.activities : inMemoryStore.activities || [],
+          users: Array.isArray(parsed.users) ? parsed.users : inMemoryStore.users || [],
+          leads: Array.isArray(parsed.leads) ? parsed.leads : inMemoryStore.leads || [],
+        };
+        lastFileMtime = stats.mtimeMs;
+        lastLoadedTime = now;
+      }
     }
   } catch (err) {
     console.warn('[StoreManager] Read file warning, using in-memory store:', err);
@@ -88,19 +108,33 @@ export function saveStoreData(data: Partial<StoreData>): StoreData {
   const primaryPath = getStorageFilePath();
   try {
     const dir = path.dirname(primaryPath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
     }
-    fs.writeFileSync(primaryPath, payload, 'utf-8');
+    const tempFile = primaryPath + `.${Date.now()}.tmp`;
+    fs.writeFileSync(/*turbopackIgnore: true*/ tempFile, payload, 'utf-8');
+    try {
+      if (fs.existsSync(/*turbopackIgnore: true*/ primaryPath)) {
+        fs.unlinkSync(/*turbopackIgnore: true*/ primaryPath);
+      }
+    } catch (e) {}
+    fs.renameSync(/*turbopackIgnore: true*/ tempFile, primaryPath);
+    try {
+      lastFileMtime = fs.statSync(/*turbopackIgnore: true*/ primaryPath).mtimeMs;
+      lastLoadedTime = Date.now();
+    } catch (e) {}
   } catch (err) {
     console.warn('[StoreManager] Write primary file warning:', err);
+    try {
+      fs.writeFileSync(/*turbopackIgnore: true*/ primaryPath, payload, 'utf-8');
+    } catch (e) {}
   }
 
   // Also write to any other existing paths to keep everything 100% in sync
   for (const p of paths) {
-    if (p !== primaryPath && fs.existsSync(p)) {
+    if (p !== primaryPath && fs.existsSync(/*turbopackIgnore: true*/ p)) {
       try {
-        fs.writeFileSync(p, payload, 'utf-8');
+        fs.writeFileSync(/*turbopackIgnore: true*/ p, payload, 'utf-8');
       } catch (e) {}
     }
   }
@@ -177,18 +211,30 @@ export function isSemiMaheshwari(product: any, allCategories?: any[]): boolean {
 
   const catSlug = (product.category?.slug || '').toLowerCase();
   const catName = (product.category?.name || '').toLowerCase();
-  if (catSlug.includes('semi-maheshwari') || catName.includes('semi maheshwari')) return true;
+  if (
+    catSlug.includes('semi') ||
+    catSlug.includes('sami') ||
+    catName.includes('semi') ||
+    catName.includes('sami')
+  ) {
+    return true;
+  }
 
   if (product.categoryId) {
     const matchedCat = cats.find((c: any) => c.id === product.categoryId);
     if (matchedCat) {
       const mcSlug = (matchedCat.slug || '').toLowerCase();
       const mcName = (matchedCat.name || '').toLowerCase();
+      const mcParentId = (matchedCat.parentId || '').toLowerCase();
       if (
-        mcSlug.includes('semi-maheshwari') ||
-        mcName.includes('semi maheshwari') ||
         matchedCat.id === 'semi-maheshwari-sarees-id' ||
-        matchedCat.parentId === 'semi-maheshwari-sarees-id'
+        mcParentId === 'semi-maheshwari-sarees-id' ||
+        mcParentId.includes('semi') ||
+        mcParentId.includes('sami') ||
+        mcSlug.includes('semi') ||
+        mcSlug.includes('sami') ||
+        mcName.includes('semi') ||
+        mcName.includes('sami')
       ) {
         return true;
       }
@@ -199,14 +245,19 @@ export function isSemiMaheshwari(product: any, allCategories?: any[]): boolean {
   const fabric = (product.fabric || '').toLowerCase();
   const designCode = (product.designCode || '').toLowerCase();
   const slug = (product.slug || '').toLowerCase();
+  const weaveType = (product.weaveType || '').toLowerCase();
 
   if (
-    title.includes('semi maheshwari') ||
-    title.includes('semi-maheshwari') ||
-    title.startsWith('semi ') ||
+    title.includes('semi') ||
+    title.includes('sami') ||
     fabric.includes('semi') ||
+    fabric.includes('sami') ||
     designCode.includes('semi') ||
-    slug.includes('semi-maheshwari')
+    designCode.includes('sami') ||
+    slug.includes('semi') ||
+    slug.includes('sami') ||
+    weaveType.includes('semi') ||
+    weaveType.includes('sami')
   ) {
     return true;
   }

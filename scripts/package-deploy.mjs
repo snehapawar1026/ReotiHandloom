@@ -48,7 +48,16 @@ if (fs.existsSync(publicDir)) {
   }
 }
 
-// 6. Copy package.json, .env, and .htaccess
+// 6. Copy store data file
+if (fs.existsSync(path.join(rootDir, 'src', 'data', 'storeData.json'))) {
+  fs.mkdirSync(path.join(tempDir, 'src', 'data'), { recursive: true });
+  fs.copyFileSync(
+    path.join(rootDir, 'src', 'data', 'storeData.json'),
+    path.join(tempDir, 'src', 'data', 'storeData.json')
+  );
+}
+
+// 7. Copy package.json, .env, and .htaccess
 fs.copyFileSync(
   path.join(rootDir, 'package.json'),
   path.join(tempDir, 'package.json')
