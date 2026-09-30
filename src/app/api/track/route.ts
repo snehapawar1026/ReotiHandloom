@@ -35,7 +35,7 @@ function parseUserAgent(ua: string) {
   return { device, browser, deviceString: `${device} (${browser})` };
 }
 
-async function getIpGeoLocation(ip: string) {
+function getIpGeoLocationFast(ip: string) {
   if (!ip || ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
     return { city: 'Local / Store Admin', region: 'Maheshwar', country: 'India', postal: '451224' };
   }
@@ -44,58 +44,26 @@ async function getIpGeoLocation(ip: string) {
     return geoCache.get(ip)!;
   }
 
-  // 1. Try ipwho.is for high accuracy Indian city & postal code
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1200);
+  // Fast Default
+  const fallback = { city: 'Online Visitor', region: '', country: 'India', postal: '' };
+  geoCache.set(ip, fallback);
 
-    const res = await fetch(`https://ipwho.is/${ip}`, { signal: controller.signal });
-    clearTimeout(timeout);
-
-    if (res.ok) {
-      const data = await res.json();
+  // Background async resolve without holding up the request response
+  fetch(`https://ipwho.is/${ip}`)
+    .then((r) => r.json())
+    .then((data) => {
       if (data && data.success) {
-        const geo = {
+        geoCache.set(ip, {
           city: data.city || '',
           region: data.region || data.region_code || '',
           country: data.country || 'India',
           postal: data.postal || '',
           isp: data.connection?.isp || '',
-        };
-        geoCache.set(ip, geo);
-        return geo;
+        });
       }
-    }
-  } catch (e) {}
+    })
+    .catch(() => {});
 
-  // 2. Fallback to ip-api.com
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 1200);
-
-    const res = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,district,zip,isp`, {
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.status === 'success') {
-        const geo = {
-          city: data.district ? `${data.district}, ${data.city}` : data.city || 'Unknown City',
-          region: data.regionName || '',
-          country: data.country || 'India',
-          postal: data.zip || '',
-          isp: data.isp || '',
-        };
-        geoCache.set(ip, geo);
-        return geo;
-      }
-    }
-  } catch (e) {}
-
-  const fallback = { city: 'Online Visitor', region: '', country: 'India', postal: '' };
-  geoCache.set(ip, fallback);
   return fallback;
 }
 
@@ -123,7 +91,7 @@ export async function POST(req: NextRequest) {
       region = body.clientLocation.region || '';
       country = body.clientLocation.country || 'India';
     } else {
-      const geo = await getIpGeoLocation(rawIp);
+      const geo = getIpGeoLocationFast(rawIp);
       city = geo.city;
       region = geo.region;
       country = geo.country;

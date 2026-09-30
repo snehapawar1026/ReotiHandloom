@@ -203,6 +203,11 @@ export default function AdminDashboard() {
   const [isEditCatBannerUploading, setIsEditCatBannerUploading] = useState(false);
   const [editCatMsg, setEditCatMsg] = useState('');
 
+  // Admin Search & Filter states
+  const [catSearchQuery, setCatSearchQuery] = useState('');
+  const [handloomSearchQuery, setHandloomSearchQuery] = useState('');
+  const [semiSearchQuery, setSemiSearchQuery] = useState('');
+
   // Broadcast Push Notification state
   const [pushTitle, setPushTitle] = useState('🎉 Royal Maheshwari Festive Collection!');
   const [pushMessage, setPushMessage] = useState('Shop authentic Maheshwari sarees directly from Maheshwar looms. Limited stock!');
@@ -3442,33 +3447,92 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Instant Handloom Product Search Bar */}
+          <div className="bg-amber-50/60 border border-amber-200 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-amber-800 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="🔍 Search handloom product by title, design code, fabric, color, or price..."
+                value={handloomSearchQuery}
+                onChange={(e) => setHandloomSearchQuery(e.target.value)}
+                className="w-full bg-white border border-amber-300 rounded-xl pl-10 pr-10 py-2.5 text-xs font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-800/40 shadow-2xs"
+              />
+              {handloomSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setHandloomSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {handloomSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setHandloomSearchQuery('')}
+                className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-xs rounded-xl border border-amber-300 transition-colors cursor-pointer shrink-0"
+              >
+                Reset Search
+              </button>
+            )}
+          </div>
+
           {/* Filtered Product Listing Grid */}
           {(() => {
-            const displayed = handloomFilter === 'sarees'
+            let displayed = handloomFilter === 'sarees'
               ? maheshwariSarees
               : handloomFilter === 'suits'
               ? maheshwariSuits
               : maheshwariProducts;
 
+            if (handloomSearchQuery.trim()) {
+              const q = handloomSearchQuery.toLowerCase().trim();
+              displayed = displayed.filter(
+                (p) =>
+                  p.title?.toLowerCase().includes(q) ||
+                  p.slug?.toLowerCase().includes(q) ||
+                  p.designCode?.toLowerCase().includes(q) ||
+                  p.fabric?.toLowerCase().includes(q) ||
+                  p.color?.toLowerCase().includes(q) ||
+                  p.category?.name?.toLowerCase().includes(q) ||
+                  String(p.price).includes(q)
+              );
+            }
+
             if (displayed.length === 0) {
               return (
                 <div className="text-center py-16 bg-amber-50/40 border border-amber-200 rounded-2xl text-gray-500 text-xs font-semibold space-y-3">
                   <p>
-                    No {handloomFilter === 'suits' ? 'Maheshwari Suits' : 'Maheshwari Sarees'} found in this catalog view.
+                    {handloomSearchQuery
+                      ? `No products found matching "${handloomSearchQuery}".`
+                      : `No ${handloomFilter === 'suits' ? 'Maheshwari Suits' : 'Maheshwari Sarees'} found in this catalog view.`}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('add');
-                      setProductType(handloomFilter === 'suits' ? 'suit' : 'saree');
-                      setFabric('Silk Cotton');
-                      setFormMsg('');
-                    }}
-                    className="px-4 py-2 bg-amber-950 hover:bg-black text-white text-xs font-bold rounded-xl shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <PlusCircle className="w-4 h-4 text-amber-300" />
-                    <span>Add {handloomFilter === 'suits' ? 'Suit' : 'Saree'} Now</span>
-                  </button>
+                  {handloomSearchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => setHandloomSearchQuery('')}
+                      className="px-4 py-2 bg-amber-900 text-white text-xs font-bold rounded-xl cursor-pointer"
+                    >
+                      Clear Search
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('add');
+                        setProductType(handloomFilter === 'suits' ? 'suit' : 'saree');
+                        setFabric('Silk Cotton');
+                        setFormMsg('');
+                      }}
+                      className="px-4 py-2 bg-amber-950 hover:bg-black text-white text-xs font-bold rounded-xl shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <PlusCircle className="w-4 h-4 text-amber-300" />
+                      <span>Add {handloomFilter === 'suits' ? 'Suit' : 'Saree'} Now</span>
+                    </button>
+                  )}
                 </div>
               );
             }
@@ -4298,6 +4362,39 @@ export default function AdminDashboard() {
             );
           })()}
 
+          {/* Instant Semi Product Search Bar */}
+          <div className="bg-rose-50/60 border border-rose-200 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-2xs">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-rose-800 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="🔍 Search semi maheshwari by title, design code, fabric, or color..."
+                value={semiSearchQuery}
+                onChange={(e) => setSemiSearchQuery(e.target.value)}
+                className="w-full bg-white border border-rose-300 rounded-xl pl-10 pr-10 py-2.5 text-xs font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-rose-800/40 shadow-2xs"
+              />
+              {semiSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSemiSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {semiSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setSemiSearchQuery('')}
+                className="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-950 font-bold text-xs rounded-xl border border-rose-300 transition-colors cursor-pointer shrink-0"
+              >
+                Reset Search
+              </button>
+            )}
+          </div>
+
           {semiMaheshwariProducts.length === 0 ? (
             <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl text-gray-500 text-xs font-semibold space-y-3">
               <p>Abhi tak koi Semi Maheshwari Saree inventory me add nahi ki gayi hai.</p>
@@ -4320,7 +4417,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             (() => {
-              const displayedSemiProducts =
+              let displayedSemiProducts =
                 semiSubcategoryFilter === 'ALL'
                   ? semiMaheshwariProducts
                   : semiMaheshwariProducts.filter(
@@ -4331,10 +4428,37 @@ export default function AdminDashboard() {
                         p.category?.slug === categories.find((c) => c.id === semiSubcategoryFilter)?.slug
                     );
 
+              if (semiSearchQuery.trim()) {
+                const q = semiSearchQuery.toLowerCase().trim();
+                displayedSemiProducts = displayedSemiProducts.filter(
+                  (p) =>
+                    p.title?.toLowerCase().includes(q) ||
+                    p.slug?.toLowerCase().includes(q) ||
+                    p.designCode?.toLowerCase().includes(q) ||
+                    p.fabric?.toLowerCase().includes(q) ||
+                    p.color?.toLowerCase().includes(q) ||
+                    p.category?.name?.toLowerCase().includes(q) ||
+                    String(p.price).includes(q)
+                );
+              }
+
               if (displayedSemiProducts.length === 0) {
                 return (
                   <div className="text-center py-12 bg-slate-50 border border-slate-200 rounded-xl text-gray-500 text-xs font-semibold space-y-3">
-                    <p>Is subcategory me koi Semi Maheshwari Saree nahi mili.</p>
+                    <p>
+                      {semiSearchQuery
+                        ? `No semi products found matching "${semiSearchQuery}".`
+                        : 'Is subcategory me koi Semi Maheshwari Saree nahi mili.'}
+                    </p>
+                    {semiSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSemiSearchQuery('')}
+                        className="px-4 py-2 bg-rose-900 text-white text-xs font-bold rounded-xl cursor-pointer"
+                      >
+                        Clear Search
+                      </button>
+                    )}
                   </div>
                 );
               }
@@ -5681,6 +5805,298 @@ export default function AdminDashboard() {
       {/* Tab: Category Manager */}
       {activeTab === 'categories' && (
         <div className="mt-6 space-y-6">
+          {/* Active Categories List */}
+          <div className="space-y-4">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Folder className="w-5 h-5 text-amber-800 shrink-0" />
+                <h3 className="font-serif font-bold text-amber-950 text-lg whitespace-nowrap">
+                  {catFilter === 'sarees' && `Maheshwari Saree Categories (${categories.filter(isSareeCategory).length})`}
+                  {catFilter === 'suits' && `Maheshwari Suit Categories (${categories.filter(isSuitCategory).length})`}
+                  {catFilter === 'semi' && `Semi Maheshwari Categories (${categories.filter(isSemiCategory).length})`}
+                  {catFilter === 'all' && `All Categories (${categories.length})`}
+                </h3>
+              </div>
+
+              {/* Instant Category Search Bar in Header */}
+              <div className="relative flex-1 max-w-lg min-w-[240px]">
+                <Search className="w-4 h-4 text-amber-800 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="🔍 Search category by name or slug (e.g. Maheshwari, Silk Cotton, Tissue, Bagh)..."
+                  value={catSearchQuery}
+                  onChange={(e) => setCatSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-amber-300 rounded-xl pl-10 pr-10 py-2 text-xs font-semibold text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-800/40 shadow-xs"
+                />
+                {catSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setCatSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 cursor-pointer p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Category Filter Tabs */}
+              <div className="flex items-center gap-1 bg-amber-50 p-1 rounded-xl border border-amber-200 flex-wrap shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    catFilter === 'all' ? 'bg-amber-950 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  All ({categories.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('sarees')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    catFilter === 'sarees' ? 'bg-amber-900 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  <span>🥻 Saree Categories ({categories.filter(isSareeCategory).length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('suits')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    catFilter === 'suits' ? 'bg-rose-900 text-white shadow-xs' : 'text-rose-900 hover:bg-rose-50'
+                  }`}
+                >
+                  <span>👗 Suit Categories ({categories.filter(isSuitCategory).length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatFilter('semi')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                    catFilter === 'semi' ? 'bg-amber-800 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
+                  }`}
+                >
+                  <span>✨ Semi ({categories.filter(isSemiCategory).length})</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Hero Banner Manager helper & Add Category Jump Button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-950 font-medium bg-amber-50/80 p-3 rounded-2xl border border-amber-200">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>
+                  <strong>🖼️ All Sarees Top Banner:</strong> Live store par <strong>&apos;All Sarees&apos; (/products)</strong> page ka main banner yahan se 1-click me change karein:
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                type="button"
+                onClick={() => {
+                  const parentSaree = categories.find((c) => c.slug === 'maheshwari-sarees' || c.name?.toLowerCase().includes('maheshwari saree'));
+                  if (parentSaree) {
+                    setEditingCategory(parentSaree);
+                  } else {
+                    alert('Maheshwari Sarees category not found');
+                  }
+                }}
+                className="px-3.5 py-1.5 bg-amber-900 hover:bg-amber-950 text-white rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <span>👑 Edit &apos;All Sarees&apos; Hero Banner</span>
+              </button>
+              <a
+                href="#add-category-form"
+                className="px-3.5 py-1.5 bg-amber-950 hover:bg-black text-amber-100 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 shadow-sm transition-all"
+              >
+                <FolderPlus className="w-3.5 h-3.5 text-amber-400" />
+                <span>➕ Add New Category</span>
+              </a>
+              </div>
+            </div>
+
+            {(() => {
+              let displayedCats = catFilter === 'sarees'
+                ? categories.filter(isSareeCategory)
+                : catFilter === 'suits'
+                ? categories.filter(isSuitCategory)
+                : catFilter === 'semi'
+                ? categories.filter(isSemiCategory)
+                : categories;
+
+              if (catSearchQuery.trim()) {
+                const q = catSearchQuery.toLowerCase().trim();
+                displayedCats = displayedCats.filter(
+                  (c) =>
+                    c.name?.toLowerCase().includes(q) ||
+                    c.slug?.toLowerCase().includes(q) ||
+                    c.description?.toLowerCase().includes(q) ||
+                    (c.parentId && categories.find((p) => p.id === c.parentId)?.name?.toLowerCase().includes(q))
+                );
+              }
+
+              if (displayedCats.length === 0) {
+                return (
+                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-gray-200 text-gray-500 text-xs font-semibold space-y-2">
+                    <p>No categories found matching &quot;{catSearchQuery}&quot;.</p>
+                    {catSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setCatSearchQuery('')}
+                        className="px-3 py-1.5 bg-amber-900 text-white rounded-lg text-xs font-bold cursor-pointer"
+                      >
+                        Clear Search
+                      </button>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {displayedCats.map((cat) => (
+                    <div key={cat.id} className={`p-4 border rounded-2xl bg-white shadow-xs hover:border-amber-400 transition-all flex flex-col justify-between space-y-3 ${cat.slug === 'maheshwari-sarees' ? 'ring-2 ring-amber-500/50 border-amber-500 bg-amber-50/10' : cat.isHidden ? 'border-rose-300 bg-rose-50/20' : 'border-gray-200'}`}>
+                      <div className="flex items-start gap-3">
+                        {/* Avatar & Banner Previews */}
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          {cat.image ? (
+                            <div className="w-12 h-12 rounded-full border-2 border-amber-600 overflow-hidden shadow-2xs relative" title="Circle Avatar Image">
+                              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-900 font-bold">
+                              <Folder className="w-5 h-5 text-amber-800" />
+                            </div>
+                          )}
+
+                          {cat.bannerImage && (
+                            <div className="w-14 h-8 rounded border border-amber-500 overflow-hidden shadow-2xs relative" title="Hero Banner Header Image">
+                              <img src={cat.bannerImage} alt={`${cat.name} Banner`} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <h4 className="font-bold text-gray-900 text-sm truncate">{cat.name}</h4>
+                            {(() => {
+                              let count = 0;
+                              if (products && products.length > 0) {
+                                const childIds = new Set<string>();
+                                childIds.add(cat.id);
+                                categories.forEach((c: any) => {
+                                  if (c.parentId === cat.id) childIds.add(c.id);
+                                });
+                                count = products.filter((p: any) => {
+                                  if (p.categoryId && childIds.has(p.categoryId)) return true;
+                                  if (p.category?.id && childIds.has(p.category.id)) return true;
+                                  if (p.category?.slug && p.category.slug === cat.slug) return true;
+                                  if (p.category?.name && p.category.name.trim().toLowerCase() === cat.name.trim().toLowerCase()) return true;
+                                  return false;
+                                }).length;
+                              } else {
+                                count = cat._count?.products || 0;
+                              }
+                              const isSuit = isSuitCategory(cat);
+                              const unitLabel = isSuit ? (count === 1 ? 'Suit' : 'Suits') : (count === 1 ? 'Saree' : 'Sarees');
+
+                              return (
+                                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shrink-0 ${
+                                  count > 0 ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900'
+                                }`}>
+                                  {count} {unitLabel}
+                                </span>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {cat.isParent || !cat.parentId ? (
+                              <span className="bg-amber-100 text-amber-950 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
+                                📁 PARENT CATEGORY
+                              </span>
+                            ) : (
+                              <span className="bg-indigo-50 text-indigo-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
+                                ↳ Sub of {cat.parent?.name || categories.find((p) => p.id === cat.parentId)?.name || 'Parent'}
+                              </span>
+                            )}
+
+                            {isSuitCategory(cat) ? (
+                              <span className="bg-rose-100 text-rose-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                👗 SUIT
+                              </span>
+                            ) : isSemiCategory(cat) ? (
+                              <span className="bg-purple-100 text-purple-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                ✨ SEMI
+                              </span>
+                            ) : (
+                              <span className="bg-amber-50 text-amber-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                🥻 SAREE
+                              </span>
+                            )}
+
+                            {cat.isHidden ? (
+                              <span className="bg-rose-100 text-rose-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-rose-300 flex items-center gap-1">
+                                <EyeOff className="w-3 h-3 text-rose-700" />
+                                <span>HIDDEN</span>
+                              </span>
+                            ) : (
+                              <span className="bg-emerald-50 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                <Eye className="w-3 h-3 text-emerald-600" />
+                                <span>VISIBLE</span>
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-[10px] font-mono text-gray-400">slug: {cat.slug}</p>
+                          {cat.description && <p className="text-[11px] text-gray-600 line-clamp-2">{cat.description}</p>}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                        <button
+                          onClick={() => openEditCatModal(cat)}
+                          className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-amber-800" />
+                          <span>Edit</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCategoryVisibility(cat)}
+                          className={`py-1.5 px-2.5 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer ${
+                            cat.isHidden
+                              ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300'
+                              : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300'
+                          }`}
+                        >
+                          {cat.isHidden ? (
+                            <>
+                              <Eye className="w-3.5 h-3.5 text-emerald-800" />
+                              <span>Show</span>
+                            </>
+                          ) : (
+                            <>
+                              <EyeOff className="w-3.5 h-3.5 text-amber-800" />
+                              <span>Hide</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                          className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
+          <div id="add-category-form" className="scroll-mt-6">
           {/* Add Category Form Card */}
           <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm max-w-2xl">
             <h3 className="text-lg font-serif font-bold text-amber-950 mb-4 pb-2 border-b border-gray-100 flex items-center justify-between">
@@ -5916,222 +6332,6 @@ export default function AdminDashboard() {
               </button>
             </form>
           </div>
-
-          {/* Active Categories List */}
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
-              <h3 className="font-serif font-bold text-amber-950 text-lg flex items-center gap-2">
-                <Folder className="w-5 h-5 text-amber-800" />
-                <span>
-                  {catFilter === 'sarees' && `Maheshwari Saree Categories (${categories.filter(isSareeCategory).length})`}
-                  {catFilter === 'suits' && `Maheshwari Suit Categories (${categories.filter(isSuitCategory).length})`}
-                  {catFilter === 'semi' && `Semi Maheshwari Categories (${categories.filter(isSemiCategory).length})`}
-                  {catFilter === 'all' && `All Categories (${categories.length})`}
-                </span>
-              </h3>
-
-              {/* Category Filter Tabs */}
-              <div className="flex items-center gap-1 bg-amber-50 p-1 rounded-xl border border-amber-200 flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => setCatFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    catFilter === 'all' ? 'bg-amber-950 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
-                  }`}
-                >
-                  All ({categories.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCatFilter('sarees')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                    catFilter === 'sarees' ? 'bg-amber-900 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
-                  }`}
-                >
-                  <span>🥻 Saree Categories ({categories.filter(isSareeCategory).length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCatFilter('suits')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                    catFilter === 'suits' ? 'bg-rose-900 text-white shadow-xs' : 'text-rose-900 hover:bg-rose-50'
-                  }`}
-                >
-                  <span>👗 Suit Categories ({categories.filter(isSuitCategory).length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCatFilter('semi')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                    catFilter === 'semi' ? 'bg-amber-800 text-white shadow-xs' : 'text-amber-900 hover:bg-amber-100/70'
-                  }`}
-                >
-                  <span>✨ Semi ({categories.filter(isSemiCategory).length})</span>
-                </button>
-              </div>
-            </div>
-
-            {(() => {
-              const displayedCats = catFilter === 'sarees'
-                ? categories.filter(isSareeCategory)
-                : catFilter === 'suits'
-                ? categories.filter(isSuitCategory)
-                : catFilter === 'semi'
-                ? categories.filter(isSemiCategory)
-                : categories;
-
-              if (displayedCats.length === 0) {
-                return (
-                  <div className="text-center py-12 bg-slate-50 rounded-2xl border border-gray-200 text-gray-500 text-xs font-semibold">
-                    No categories found in this filter view.
-                  </div>
-                );
-              }
-
-              return (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {displayedCats.map((cat) => (
-                    <div key={cat.id} className={`p-4 border rounded-2xl bg-white shadow-xs hover:border-amber-400 transition-all flex flex-col justify-between space-y-3 ${cat.isHidden ? 'border-rose-300 bg-rose-50/20' : 'border-gray-200'}`}>
-                      <div className="flex items-start gap-3">
-                        {/* Avatar & Banner Previews */}
-                        <div className="flex flex-col gap-1.5 shrink-0">
-                          {cat.image ? (
-                            <div className="w-12 h-12 rounded-full border-2 border-amber-600 overflow-hidden shadow-2xs relative" title="Circle Avatar Image">
-                              <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                            </div>
-                          ) : (
-                            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-900 font-bold">
-                              <Folder className="w-5 h-5 text-amber-800" />
-                            </div>
-                          )}
-
-                          {cat.bannerImage && (
-                            <div className="w-14 h-8 rounded border border-amber-500 overflow-hidden shadow-2xs relative" title="Hero Banner Header Image">
-                              <img src={cat.bannerImage} alt={`${cat.name} Banner`} className="w-full h-full object-cover" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 space-y-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <h4 className="font-bold text-gray-900 text-sm truncate">{cat.name}</h4>
-                            {(() => {
-                              let count = 0;
-                              if (products && products.length > 0) {
-                                const childIds = new Set<string>();
-                                childIds.add(cat.id);
-                                categories.forEach((c: any) => {
-                                  if (c.parentId === cat.id) childIds.add(c.id);
-                                });
-                                count = products.filter((p: any) => {
-                                  if (p.categoryId && childIds.has(p.categoryId)) return true;
-                                  if (p.category?.id && childIds.has(p.category.id)) return true;
-                                  if (p.category?.slug && p.category.slug === cat.slug) return true;
-                                  if (p.category?.name && p.category.name.trim().toLowerCase() === cat.name.trim().toLowerCase()) return true;
-                                  return false;
-                                }).length;
-                              } else {
-                                count = cat._count?.products || 0;
-                              }
-                              const isSuit = isSuitCategory(cat);
-                              const unitLabel = isSuit ? (count === 1 ? 'Suit' : 'Suits') : (count === 1 ? 'Saree' : 'Sarees');
-
-                              return (
-                                <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shrink-0 ${
-                                  count > 0 ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-amber-100 text-amber-900'
-                                }`}>
-                                  {count} {unitLabel}
-                                </span>
-                              );
-                            })()}
-                          </div>
-
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {cat.isParent || !cat.parentId ? (
-                              <span className="bg-amber-100 text-amber-950 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-amber-300">
-                                📁 PARENT CATEGORY
-                              </span>
-                            ) : (
-                              <span className="bg-indigo-50 text-indigo-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-indigo-200">
-                                ↳ Sub of {cat.parent?.name || categories.find((p) => p.id === cat.parentId)?.name || 'Parent'}
-                              </span>
-                            )}
-
-                            {isSuitCategory(cat) ? (
-                              <span className="bg-rose-100 text-rose-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
-                                👗 SUIT
-                              </span>
-                            ) : isSemiCategory(cat) ? (
-                              <span className="bg-purple-100 text-purple-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
-                                ✨ SEMI
-                              </span>
-                            ) : (
-                              <span className="bg-amber-50 text-amber-950 text-[9px] font-bold px-1.5 py-0.5 rounded">
-                                🥻 SAREE
-                              </span>
-                            )}
-
-                            {cat.isHidden ? (
-                              <span className="bg-rose-100 text-rose-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-rose-300 flex items-center gap-1">
-                                <EyeOff className="w-3 h-3 text-rose-700" />
-                                <span>HIDDEN</span>
-                              </span>
-                            ) : (
-                              <span className="bg-emerald-50 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                <Eye className="w-3 h-3 text-emerald-600" />
-                                <span>VISIBLE</span>
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-[10px] font-mono text-gray-400">slug: {cat.slug}</p>
-                          {cat.description && <p className="text-[11px] text-gray-600 line-clamp-2">{cat.description}</p>}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-                        <button
-                          onClick={() => openEditCatModal(cat)}
-                          className="flex-1 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-950 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1 transition-all cursor-pointer"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-amber-800" />
-                          <span>Edit</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleToggleCategoryVisibility(cat)}
-                          className={`py-1.5 px-2.5 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer ${
-                            cat.isHidden
-                              ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300'
-                              : 'bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300'
-                          }`}
-                        >
-                          {cat.isHidden ? (
-                            <>
-                              <Eye className="w-3.5 h-3.5 text-emerald-800" />
-                              <span>Show</span>
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff className="w-3.5 h-3.5 text-amber-800" />
-                              <span>Hide</span>
-                            </>
-                          )}
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                          className="py-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg font-bold text-[11px] flex items-center gap-1 transition-all cursor-pointer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
           </div>
         </div>
       )}

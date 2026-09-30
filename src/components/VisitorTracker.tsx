@@ -56,67 +56,11 @@ export function VisitorTracker() {
             }
           }
         } catch (e) {}
-
-        // 2. High-precision HTML5 GPS Geolocation (When allowed, gives 100% pinpoint exact town)
-        if (typeof window !== 'undefined' && navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            async (pos) => {
-              try {
-                const lat = pos.coords.latitude;
-                const lng = pos.coords.longitude;
-                const revRes = await fetch(
-                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
-                );
-                if (revRes.ok) {
-                  const revData = await revRes.json();
-                  const exactLocality = revData.locality || revData.city || '';
-                  const exactCity = revData.city || revData.principalSubdivision || '';
-                  const exactState = revData.principalSubdivision || '';
-                  const postcode = revData.postcode || '';
-
-                  const locationText = postcode
-                    ? `${exactLocality ? `${exactLocality}, ` : ''}${exactCity}, ${exactState} (Pin: ${postcode})`
-                    : `${exactLocality ? `${exactLocality}, ` : ''}${exactCity}, ${exactState}`;
-
-                  const exactGpsLoc = {
-                    city: exactLocality || exactCity,
-                    region: exactState,
-                    country: revData.countryName || 'India',
-                    postal: postcode,
-                    latitude: lat,
-                    longitude: lng,
-                    locationText,
-                    isGps: true,
-                  };
-
-                  clientLocationRef.current = exactGpsLoc;
-                  sessionStorage.setItem('rh_exact_loc', JSON.stringify(exactGpsLoc));
-                  localStorage.setItem('rh_exact_loc', JSON.stringify(exactGpsLoc));
-                  window.dispatchEvent(new Event('rh_location_updated'));
-
-                  // Immediately report exact GPS location to Admin Activity Log
-                  fetch('/api/track', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      pageUrl: window.location.pathname,
-                      pageTitle: document.title || 'Reoti Handloom',
-                      type: 'VISIT',
-                      title: `🎯 Exact GPS: ${locationText}`,
-                      clientLocation: exactGpsLoc,
-                    }),
-                    keepalive: true,
-                  }).catch(() => {});
-                }
-              } catch (e) {}
-            },
-            () => {},
-            { timeout: 10000, maximumAge: 30000, enableHighAccuracy: true }
-          );
-        }
       };
 
-      detectLocation();
+      // Defer background detection so it never blocks page load or mobile UI
+      const timer = setTimeout(detectLocation, 4000);
+      return () => clearTimeout(timer);
     }
 
     // 3. Global Auto-Resolver: When user inputs a 6-digit Pincode anywhere on the site

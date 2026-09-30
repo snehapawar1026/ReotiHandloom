@@ -118,10 +118,19 @@ const SemiHubBadge = () => (
 
 interface ProductDetailClientProps {
   initialProduct?: ProductItem | null;
+  initialRelatedProducts?: ProductItem[];
+  initialColorVariants?: ProductItem[];
+  initialCandidatePool?: ProductItem[];
   slug: string;
 }
 
-export default function ProductDetailClient({ initialProduct, slug: propSlug }: ProductDetailClientProps) {
+export default function ProductDetailClient({
+  initialProduct,
+  initialRelatedProducts = [],
+  initialColorVariants = [],
+  initialCandidatePool = [],
+  slug: propSlug,
+}: ProductDetailClientProps) {
   const params = useParams();
   const router = useRouter();
   const slug = propSlug || (params?.slug as string) || '';
@@ -129,9 +138,16 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
   const { user, addToCart, buyNow, toggleWishlist, isInWishlist, setIsCartOpen } = useShop();
 
   const [product, setProduct] = useState<ProductItem | null>(initialProduct || null);
-  const [relatedProducts, setRelatedProducts] = useState<ProductItem[]>([]);
-  const [recommendedProducts, setRecommendedProducts] = useState<ProductItem[]>([]);
-  const [colorVariants, setColorVariants] = useState<ProductItem[]>([]);
+  const [relatedProducts, setRelatedProducts] = useState<ProductItem[]>(initialRelatedProducts || []);
+  const [colorVariants, setColorVariants] = useState<ProductItem[]>(initialColorVariants || []);
+  const [allStoreProducts, setAllStoreProducts] = useState<ProductItem[]>(initialCandidatePool || []);
+  const [recommendedProducts, setRecommendedProducts] = useState<ProductItem[]>(() => {
+    if (initialCandidatePool && initialCandidatePool.length > 0) {
+      const others = initialCandidatePool.filter((p: any) => p.slug !== slug && p.id !== initialProduct?.id);
+      return [...others].sort(() => 0.5 - Math.random()).slice(0, 4);
+    }
+    return [];
+  });
   const [reviews, setReviews] = useState<any[]>((initialProduct as any)?.reviews || []);
   const [loading, setLoading] = useState(!initialProduct);
   const [selectedImage, setSelectedImage] = useState<string>(() => {
@@ -260,7 +276,6 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
     }
   }, [user, reviewerName]);
 
-  const [allStoreProducts, setAllStoreProducts] = useState<ProductItem[]>([]);
   const [isRecRotating, setIsRecRotating] = useState(false);
 
   const isSemiProduct = (prod: any) => {
@@ -299,6 +314,13 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
 
   useEffect(() => {
     if (!slug) return;
+
+    // Instant SSR Hydration: if product matches slug already, skip blocking network requests!
+    if (product && (product.slug === slug || product.id === slug)) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     fetch(`/api/products/${slug}`)
       .then((res) => res.json())
@@ -312,39 +334,14 @@ export default function ProductDetailClient({ initialProduct, slug: propSlug }: 
           const parsedImages = JSON.parse(currentProd.images || '[]');
           if (parsedImages.length > 0) setSelectedImage(parsedImages[0]);
 
-          const currentIsSemi = isSemiProduct(currentProd);
-
-          // Fetch recommended products matching exact craft category (Strictly never mixing Semi & Handloom)
-          fetch('/api/products?includeAll=true')
-            .then((res) => res.json())
-            .then((prodData) => {
-              if (prodData.success && prodData.products) {
-                const filtered = prodData.products.filter((p: any) => {
-                  if (p.slug === slug || p.id === currentProd.id) return false;
-                  const pIsSemi = isSemiProduct(p);
-                  return currentIsSemi ? pIsSemi : !pIsSemi;
-                });
-                setAllStoreProducts(filtered);
-                const shuffled = [...filtered].sort(() => 0.5 - Math.random());
-                setRecommendedProducts(shuffled.slice(0, 4));
-              }
-            })
-            .catch(console.error);
+          if (data.relatedProducts && data.relatedProducts.length > 0) {
+            setRecommendedProducts(data.relatedProducts.slice(0, 4));
+          }
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [slug]);
-
-  // Auto-rotate PDP recommended products every 8 seconds
-  useEffect(() => {
-    if (allStoreProducts.length === 0) return;
-    const interval = setInterval(() => {
-      shufflePdpRecommended(allStoreProducts);
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, [allStoreProducts, slug]);
 
   const handleReviewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -76,6 +76,16 @@ export const ShopProvider = ({ children }: { children: React.ReactNode }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
+  // Initialize session state on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      if (!sessionStorage.getItem('reoti_session_active')) {
+        sessionStorage.setItem('reoti_session_active', '1');
+      }
+    } catch (e) {}
+  }, []);
+
   // Load state from localStorage on mount
   useEffect(() => {
     try {

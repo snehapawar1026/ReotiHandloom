@@ -51,25 +51,14 @@ export function ImageProtection() {
       }
     };
 
-    // 4. Prevent mobile touch-hold context menu
-    const handleTouchStart = (e: TouchEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && target.tagName === 'IMG') {
-        target.style.setProperty('-webkit-touch-callout', 'none');
-        target.style.setProperty('user-select', 'none');
-      }
-    };
-
     document.addEventListener('contextmenu', handleContextMenu, { capture: true });
     document.addEventListener('dragstart', handleDragStart, { capture: true });
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('touchstart', handleTouchStart, { passive: true, capture: true });
 
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu, { capture: true });
       document.removeEventListener('dragstart', handleDragStart, { capture: true });
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('touchstart', handleTouchStart, { capture: true });
     };
   }, []);
 

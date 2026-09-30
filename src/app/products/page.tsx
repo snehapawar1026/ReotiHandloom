@@ -282,11 +282,20 @@ function getHeroContent(
     };
   }
 
+  // Default view (All Sarees / Catalog overview) -> Dynamically fetch the main Maheshwari Sarees parent category banner & details
+  const mainParentCat = categories.find(
+    (c) =>
+      c.slug === 'maheshwari-sarees' ||
+      c.id === 'maheshwari-sarees-id' ||
+      c.name?.toLowerCase().includes('maheshwari sarees')
+  );
+
   return {
-    title: 'Authentic Maheshwari Handloom Sarees',
+    title: mainParentCat?.name || 'Authentic Maheshwari Handloom Sarees',
     description:
+      mainParentCat?.description ||
       'Explore authentic handcrafted Maheshwari Sarees woven directly on 3rd generation heritage pit looms by master artisans of Reoti Handloom Maheshwar. Celebrated for iconic Narmada river borders, reversible zari craftsmanship, and timeless royal Holkar heritage.',
-    image: '/uploads/maheshwari_legacy_banner.png',
+    image: mainParentCat?.bannerImage || mainParentCat?.image || '/uploads/maheshwari_legacy_banner.png',
   };
 }
 
@@ -691,10 +700,22 @@ function ProductsContent() {
                     <img
                       src={
                         isSemiMaheshwariView
-                          ? '/uploads/semi_maheshwari_banner.jpg'
+                          ? semiParent?.image || '/uploads/semi_maheshwari_banner.jpg'
                           : selectedCategory.includes('suit')
-                          ? '/uploads/saree_1789231637552_ggljq.jpeg'
-                          : '/uploads/maheshwari_legacy_banner.png'
+                          ? categories.find((c) => isSuitCategory(c))?.image || '/uploads/saree_1789231637552_ggljq.jpeg'
+                          : categories.find(
+                              (c) =>
+                                c.slug === 'maheshwari-sarees' ||
+                                c.id === 'maheshwari-sarees-id' ||
+                                c.name?.toLowerCase().includes('maheshwari sarees')
+                            )?.image ||
+                            categories.find(
+                              (c) =>
+                                c.slug === 'maheshwari-sarees' ||
+                                c.id === 'maheshwari-sarees-id' ||
+                                c.name?.toLowerCase().includes('maheshwari sarees')
+                            )?.bannerImage ||
+                            '/uploads/maheshwari_legacy_banner.png'
                       }
                       alt="All"
                       className="w-full h-full object-cover rounded-full object-[70%_25%] scale-115 group-hover:scale-125 transition-transform duration-500"

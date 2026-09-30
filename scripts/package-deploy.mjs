@@ -48,14 +48,9 @@ if (fs.existsSync(publicDir)) {
   }
 }
 
-// 6. Copy store data file
-if (fs.existsSync(path.join(rootDir, 'src', 'data', 'storeData.json'))) {
-  fs.mkdirSync(path.join(tempDir, 'src', 'data'), { recursive: true });
-  fs.copyFileSync(
-    path.join(rootDir, 'src', 'data', 'storeData.json'),
-    path.join(tempDir, 'src', 'data', 'storeData.json')
-  );
-}
+// 6. CRITICAL DATA SAFETY:
+// Do NOT include src/data/storeData.json or public/uploads in the deploy package.
+// This guarantees that all live products, orders, reviews, and uploaded photos on production are 100% preserved.
 
 // 7. Copy package.json, .env, and .htaccess
 fs.copyFileSync(
