@@ -171,6 +171,7 @@ export default function ProductDetailClient({
   const [shareCopied, setShareCopied] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [activeMediaType, setActiveMediaType] = useState<'image' | 'video'>('image');
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
 
   // Nykaa Fashion-style Hover Magnifying Lens Zoom state
@@ -194,9 +195,16 @@ export default function ProductDetailClient({
     if (!product) return;
     const parsed: string[] = JSON.parse(product.images || '[]');
     if (parsed.length === 0) return;
+    if (activeMediaType === 'video') {
+      setActiveMediaType('image');
+      setCurrentImageIdx(0);
+      setSelectedImage(parsed[0]);
+      return;
+    }
     const nextIdx = (currentImageIdx + 1) % parsed.length;
     setCurrentImageIdx(nextIdx);
     setSelectedImage(parsed[nextIdx]);
+    setActiveMediaType('image');
   };
 
   const handlePrevImage = (e?: React.MouseEvent) => {
@@ -204,9 +212,16 @@ export default function ProductDetailClient({
     if (!product) return;
     const parsed: string[] = JSON.parse(product.images || '[]');
     if (parsed.length === 0) return;
+    if (activeMediaType === 'video') {
+      setActiveMediaType('image');
+      setCurrentImageIdx(parsed.length - 1);
+      setSelectedImage(parsed[parsed.length - 1]);
+      return;
+    }
     const prevIdx = (currentImageIdx - 1 + parsed.length) % parsed.length;
     setCurrentImageIdx(prevIdx);
     setSelectedImage(parsed[prevIdx]);
+    setActiveMediaType('image');
   };
 
   const handleShare = async () => {
@@ -521,101 +536,115 @@ export default function ProductDetailClient({
             {/* Desktop Vertical Thumbnail Strip (Left Side) */}
             {(parsedImages.length > 0 || product.videoUrl) && (
               <div className="hidden sm:flex sm:flex-col gap-3 overflow-y-auto shrink-0 max-h-[580px] no-scrollbar">
-                {product.videoUrl && (
-                  <button
-                    onClick={() => setIsVideoModalOpen(true)}
-                    className="w-16 h-20 rounded-lg border-2 border-amber-600 bg-neutral-950 text-amber-300 flex flex-col items-center justify-center gap-1 shrink-0 cursor-pointer shadow-md hover:scale-105 transition-all group/vid"
-                    title="Watch Saree Draping Video"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-amber-500/20 group-hover/vid:bg-amber-500/40 flex items-center justify-center text-amber-300">
-                      <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
-                    </div>
-                    <span className="text-[9px] font-extrabold uppercase tracking-wider">Video</span>
-                  </button>
-                )}
+                {/* 1. All Product Photos First */}
                 {parsedImages.map((imgUrl, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setSelectedImage(imgUrl);
                       setCurrentImageIdx(idx);
+                      setActiveMediaType('image');
                     }}
                     className={`w-16 h-20 rounded-lg border-2 overflow-hidden bg-slate-100 transition-all shrink-0 cursor-pointer ${
-                      selectedImage === imgUrl ? 'border-rose-600 shadow-md ring-2 ring-rose-200' : 'border-transparent opacity-80 hover:opacity-100'
+                      activeMediaType === 'image' && selectedImage === imgUrl ? 'border-rose-600 shadow-md ring-2 ring-rose-200' : 'border-transparent opacity-80 hover:opacity-100'
                     }`}
                   >
                     <img src={imgUrl} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
+
+                {/* 2. Product Video Thumbnail Last (Live Looping Preview) */}
+                {product.videoUrl && (
+                  <button
+                    onClick={() => setActiveMediaType('video')}
+                    className={`w-16 h-20 rounded-lg border-2 overflow-hidden relative bg-neutral-950 transition-all shrink-0 cursor-pointer shadow-md group/vid ${
+                      activeMediaType === 'video'
+                        ? 'border-amber-500 ring-2 ring-amber-300 scale-105 shadow-amber-900/20'
+                        : 'border-neutral-800 opacity-85 hover:opacity-100'
+                    }`}
+                    title="Watch Saree Draping Video"
+                  >
+                    {/* Live Looping Video in Thumbnail */}
+                    <video
+                      src={product.videoUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                    <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5 pointer-events-none">
+                      <div className="w-6 h-6 rounded-full bg-black/70 backdrop-blur-xs flex items-center justify-center text-amber-300 border border-amber-400/70 shadow-sm group-hover/vid:scale-110 transition-transform">
+                        <Play className="w-3 h-3 fill-current ml-0.5" />
+                      </div>
+                      <span className="text-[8px] font-black uppercase text-amber-200 tracking-wider drop-shadow-sm bg-black/60 px-1 py-0.2 rounded">
+                        Video
+                      </span>
+                    </div>
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Main Large Image Container */}
+            {/* Main Large Media Container */}
             <div className="flex-1 flex flex-col gap-3">
-              {/* Main Large Image Area with Nykaa Hover Magnifying Lens & Click Zoom */}
-              <div
-                onMouseMove={handleMouseMove}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => setIsLightboxOpen(true)}
-                onContextMenu={(e) => e.preventDefault()}
-                className="w-full relative cursor-zoom-in select-none group"
-              >
-                {/* Inner Clipped Image Container */}
-                <div
-                  onContextMenu={(e) => e.preventDefault()}
-                  className="w-full h-[460px] sm:h-[560px] max-h-[580px] rounded-xl overflow-hidden bg-slate-100/80 relative border border-slate-200 shadow-sm flex items-center justify-center select-none"
-                >
-                  <img
-                    src={selectedImage || parsedImages[0]}
-                    alt={product.title}
-                    draggable="false"
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-300 select-none pointer-events-none"
-                  />
-
-                  {/* Automatic Diagonal Heritage Watermark Overlay */}
-                  <WatermarkOverlay variant="pdp" imageUrl={selectedImage || parsedImages[0]} />
-
-                  {/* Nykaa-style Translucent Hover Lens Box over Image */}
-                  {isHoverZooming && (
-                    <div
-                      className="absolute w-44 h-44 border-2 border-white/90 bg-white/30 backdrop-blur-[1px] pointer-events-none rounded shadow-md z-20 hidden lg:block"
-                      style={{
-                        left: `calc(${zoomPos.percentX}% - 88px)`,
-                        top: `calc(${zoomPos.percentY}% - 88px)`,
-                      }}
-                    />
-                  )}
-
-                  {/* Top Right Zoom Plus Button (Matching Reference Design) */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsLightboxOpen(true);
-                    }}
-                    className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-lg shadow-md border border-gray-300 transition-transform active:scale-95 cursor-pointer z-10 flex items-center justify-center"
-                    title="Zoom Full Screen"
+              {activeMediaType === 'video' && product.videoUrl ? (
+                /* Inline Video Player (Filled, Muted, AutoPlay, Loop, Watermarked, Click to Expand) */
+                <div className="w-full h-[460px] sm:h-[560px] max-h-[580px] rounded-xl overflow-hidden bg-neutral-950 relative border border-amber-950/20 shadow-md flex items-center justify-center select-none group">
+                  <video
+                    key={product.videoUrl}
+                    src={product.videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover object-center bg-black cursor-zoom-in select-none"
+                    onClick={() => setIsLightboxOpen(true)}
                   >
-                    <ZoomIn className="w-5 h-5 text-gray-800" />
-                  </button>
+                    Your browser does not support video playback.
+                  </video>
 
-                  {/* Watch Video Button Badge Overlay on Main Image */}
-                  {product.videoUrl && (
+                  {/* Diagonal Heritage Watermark Overlay directly on Video */}
+                  <WatermarkOverlay variant="pdp" imageUrl={product.videoUrl} />
+
+                  {/* Top Right Controls: Big Screen Zoom & Switch to Photos */}
+                  <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setIsVideoModalOpen(true);
+                        setIsLightboxOpen(true);
                       }}
-                      className="absolute top-3 left-3 bg-neutral-950/85 hover:bg-neutral-950 text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-full border border-amber-500/50 shadow-md backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer z-20"
+                      className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-lg shadow-md border border-gray-300 transition-transform active:scale-95 cursor-pointer flex items-center justify-center"
+                      title="Full Screen / Big Screen Video"
                     >
-                      <Play className="w-3 h-3 fill-current" />
-                      <span>Watch Saree Video</span>
+                      <ZoomIn className="w-5 h-5 text-gray-800" />
                     </button>
-                  )}
 
-                  {/* Navigation Arrow Buttons on Image Sides */}
-                  {parsedImages.length > 1 && (
+                    <button
+                      onClick={() => {
+                        setActiveMediaType('image');
+                        setSelectedImage(parsedImages[0] || '');
+                        setCurrentImageIdx(0);
+                      }}
+                      className="bg-neutral-900/90 hover:bg-black text-white text-[11px] font-bold px-3 py-1.5 rounded-full border border-neutral-700 shadow-md backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                      title="Switch to Photos"
+                    >
+                      <span>✕ View Photos</span>
+                    </button>
+                  </div>
+
+                  {/* Top Left Video Badge (Click to open Big Screen) */}
+                  <button
+                    onClick={() => setIsLightboxOpen(true)}
+                    className="absolute top-3 left-3 bg-neutral-950/90 hover:bg-neutral-900 text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-full border border-amber-500/50 shadow-md backdrop-blur-xs flex items-center gap-1.5 z-20 cursor-pointer transition-all"
+                    title="Click for Big Screen"
+                  >
+                    <Play className="w-3 h-3 fill-current" />
+                    <span>Saree Video (Loop • Muted • Click for Big Screen)</span>
+                  </button>
+
+                  {/* Navigation Arrow Buttons */}
+                  {parsedImages.length > 0 && (
                     <>
                       <button
                         onClick={handlePrevImage}
@@ -635,7 +664,7 @@ export default function ProductDetailClient({
                   )}
 
                   {/* Reoti Handloom Premium Glass Watermark Seal Overlay (Bottom-Left) */}
-                  <div className="absolute bottom-3 left-3 sm:left-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-10">
+                  <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-20">
                     <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-500 shrink-0">
                       <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
                     </div>
@@ -644,53 +673,173 @@ export default function ProductDetailClient({
                     </span>
                     <span className="w-1 h-1 rounded-full bg-amber-500 opacity-60" />
                     <span className="text-[9px] text-amber-800 font-semibold tracking-normal lowercase">
-                      authentic
+                      authentic video
                     </span>
                   </div>
                 </div>
-
-                {/* Nykaa-style Floating Magnified Zoom Preview Box (Unclipped on Right Side over Details Column) */}
-                {isHoverZooming && (
-                  <div className="absolute top-0 left-[calc(100%+1.25rem)] z-50 w-[540px] h-[560px] rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xl bg-white hidden lg:block pointer-events-none transition-opacity duration-200">
-                    <div
-                      className="w-full h-full bg-no-repeat"
-                      style={{
-                        backgroundImage: `url(${selectedImage || parsedImages[0]})`,
-                        backgroundSize: '280%',
-                        backgroundPosition: `${zoomPos.percentX}% ${zoomPos.percentY}%`,
-                      }}
+              ) : (
+                /* Main Large Image Area with Nykaa Hover Magnifying Lens & Click Zoom */
+                <div
+                  onMouseMove={handleMouseMove}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={() => setIsLightboxOpen(true)}
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="w-full relative cursor-zoom-in select-none group"
+                >
+                  {/* Inner Clipped Image Container */}
+                  <div
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="w-full h-[460px] sm:h-[560px] max-h-[580px] rounded-xl overflow-hidden bg-slate-100/80 relative border border-slate-200 shadow-sm flex items-center justify-center select-none"
+                  >
+                    <img
+                      src={selectedImage || parsedImages[0]}
+                      alt={product.title}
+                      draggable="false"
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="w-full h-full object-cover object-center group-hover:scale-102 transition-transform duration-300 select-none pointer-events-none"
                     />
+
+                    {/* Automatic Diagonal Heritage Watermark Overlay */}
+                    <WatermarkOverlay variant="pdp" imageUrl={selectedImage || parsedImages[0]} />
+
+                    {/* Nykaa-style Translucent Hover Lens Box over Image */}
+                    {isHoverZooming && (
+                      <div
+                        className="absolute w-44 h-44 border-2 border-white/90 bg-white/30 backdrop-blur-[1px] pointer-events-none rounded shadow-md z-20 hidden lg:block"
+                        style={{
+                          left: `calc(${zoomPos.percentX}% - 88px)`,
+                          top: `calc(${zoomPos.percentY}% - 88px)`,
+                        }}
+                      />
+                    )}
+
+                    {/* Top Right Zoom Plus Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsLightboxOpen(true);
+                      }}
+                      className="absolute top-3 right-3 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-lg shadow-md border border-gray-300 transition-transform active:scale-95 cursor-pointer z-10 flex items-center justify-center"
+                      title="Zoom Full Screen"
+                    >
+                      <ZoomIn className="w-5 h-5 text-gray-800" />
+                    </button>
+
+                    {/* Watch Video Button Badge Overlay on Main Image */}
+                    {product.videoUrl && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMediaType('video');
+                        }}
+                        className="absolute top-3 left-3 bg-neutral-950/85 hover:bg-neutral-950 text-amber-300 text-[11px] font-bold px-3 py-1.5 rounded-full border border-amber-500/50 shadow-md backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer z-20"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        <span>Watch Saree Video</span>
+                      </button>
+                    )}
+
+                    {/* Navigation Arrow Buttons on Image Sides */}
+                    {parsedImages.length > 1 && (
+                      <>
+                        <button
+                          onClick={handlePrevImage}
+                          className="absolute top-1/2 left-3 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-full shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-20 flex items-center justify-center"
+                          title="Previous Photo"
+                        >
+                          <ArrowLeft className="w-4 h-4 text-gray-900" />
+                        </button>
+                        <button
+                          onClick={handleNextImage}
+                          className="absolute top-1/2 right-3 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-2.5 rounded-full shadow-md border border-gray-300 transition-all active:scale-95 cursor-pointer z-20 flex items-center justify-center"
+                          title="Next Photo"
+                        >
+                          <ArrowRight className="w-4 h-4 text-gray-900" />
+                        </button>
+                      </>
+                    )}
+
+                    {/* Reoti Handloom Premium Glass Watermark Seal Overlay (Bottom-Left) */}
+                    <div className="absolute bottom-3 left-3 sm:left-3 bg-white/95 backdrop-blur-md text-amber-950 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-amber-300/90 shadow-md pointer-events-none flex items-center gap-1.5 z-10">
+                      <div className="w-4 h-4 rounded-full overflow-hidden border border-amber-500 shrink-0">
+                        <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                      </div>
+                      <span className="font-serif font-extrabold text-amber-950 text-[11px] tracking-wide">
+                        Reoti Handloom
+                      </span>
+                      <span className="w-1 h-1 rounded-full bg-amber-500 opacity-60" />
+                      <span className="text-[9px] text-amber-800 font-semibold tracking-normal lowercase">
+                        authentic
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Nykaa-style Floating Magnified Zoom Preview Box (Unclipped on Right Side over Details Column) */}
+                  {isHoverZooming && (
+                    <div className="absolute top-0 left-[calc(100%+1.25rem)] z-50 w-[540px] h-[560px] rounded-xl overflow-hidden border-2 border-gray-300 shadow-2xl bg-white hidden lg:block pointer-events-none transition-opacity duration-200">
+                      <div
+                        className="w-full h-full bg-no-repeat"
+                        style={{
+                          backgroundImage: `url(${selectedImage || parsedImages[0]})`,
+                          backgroundSize: '280%',
+                          backgroundPosition: `${zoomPos.percentX}% ${zoomPos.percentY}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Mobile Horizontal Thumbnail Strip (Below Main Image) */}
               {(parsedImages.length > 1 || product.videoUrl) && (
                 <div className="flex sm:hidden gap-2.5 overflow-x-auto pb-1 pt-1 no-scrollbar items-center">
-                  {product.videoUrl && (
-                    <button
-                      onClick={() => setIsVideoModalOpen(true)}
-                      className="w-14 h-18 rounded-lg border-2 border-amber-600 bg-neutral-950 text-amber-300 flex flex-col items-center justify-center gap-1 shrink-0 cursor-pointer shadow-md"
-                      title="Watch Saree Video"
-                    >
-                      <Play className="w-4 h-4 fill-current" />
-                      <span className="text-[8px] font-extrabold uppercase">Video</span>
-                    </button>
-                  )}
+                  {/* 1. All Photos First */}
                   {parsedImages.map((imgUrl, idx) => (
                     <button
                       key={idx}
                       onClick={() => {
                         setSelectedImage(imgUrl);
                         setCurrentImageIdx(idx);
+                        setActiveMediaType('image');
                       }}
                       className={`w-14 h-18 rounded-lg border-2 overflow-hidden bg-slate-100 transition-all shrink-0 cursor-pointer ${
-                        selectedImage === imgUrl ? 'border-rose-600 shadow-md ring-2 ring-rose-200' : 'border-gray-200 opacity-80 hover:opacity-100'
+                        activeMediaType === 'image' && selectedImage === imgUrl ? 'border-rose-600 shadow-md ring-2 ring-rose-200' : 'border-gray-200 opacity-80 hover:opacity-100'
                       }`}
                     >
                       <img src={imgUrl} alt={`Thumb ${idx}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
+
+                  {/* 2. Video Thumbnail Last (Live Looping Preview) */}
+                  {product.videoUrl && (
+                    <button
+                      onClick={() => setActiveMediaType('video')}
+                      className={`w-14 h-18 rounded-lg border-2 overflow-hidden relative bg-neutral-950 transition-all shrink-0 cursor-pointer shadow-md group/vid ${
+                        activeMediaType === 'video'
+                          ? 'border-amber-500 ring-2 ring-amber-300'
+                          : 'border-neutral-800 opacity-85 hover:opacity-100'
+                      }`}
+                      title="Watch Saree Video"
+                    >
+                      <video
+                        src={product.videoUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5 pointer-events-none">
+                        <div className="w-5 h-5 rounded-full bg-black/70 backdrop-blur-xs flex items-center justify-center text-amber-300 border border-amber-400/70 shadow-sm">
+                          <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
+                        </div>
+                        <span className="text-[7px] font-black uppercase text-amber-200 tracking-wider bg-black/60 px-1 rounded">
+                          Video
+                        </span>
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -1836,27 +1985,56 @@ export default function ProductDetailClient({
           {/* Lightbox Center Container */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className="max-w-5xl max-h-[85vh] flex flex-col items-center justify-center relative"
+            className="max-w-5xl max-h-[85vh] w-full flex flex-col items-center justify-center relative"
           >
-            <div
-              className="relative overflow-hidden rounded-lg select-none"
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              <img
-                src={parsedImages[currentImageIdx] || selectedImage}
-                alt={product.title}
-                draggable="false"
+            {activeMediaType === 'video' && product.videoUrl ? (
+              /* Big Screen Video Player with Watermark & Loop - Naturally Fitted (0 Empty Black Bars) */
+              <div
+                className="relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-black select-none max-h-[80vh] shadow-2xl border border-amber-500/40"
                 onContextMenu={(e) => e.preventDefault()}
-                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/10 select-none pointer-events-none"
-              />
-              <WatermarkOverlay variant="lightbox" imageUrl={parsedImages[currentImageIdx] || selectedImage} />
-            </div>
+              >
+                <video
+                  src={product.videoUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls
+                  className="max-h-[80vh] max-w-[90vw] sm:max-w-[520px] w-auto h-auto object-contain rounded-2xl block"
+                >
+                  Your browser does not support video playback.
+                </video>
+                <WatermarkOverlay variant="lightbox" imageUrl={product.videoUrl} />
+              </div>
+            ) : (
+              /* High-Res Image Zoom with Watermark */
+              <div
+                className="relative overflow-hidden rounded-lg select-none"
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                <img
+                  src={parsedImages[currentImageIdx] || selectedImage}
+                  alt={product.title}
+                  draggable="false"
+                  onContextMenu={(e) => e.preventDefault()}
+                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/10 select-none pointer-events-none"
+                />
+                <WatermarkOverlay variant="lightbox" imageUrl={parsedImages[currentImageIdx] || selectedImage} />
+              </div>
+            )}
 
             {/* Bottom Caption Bar */}
             <div className="mt-4 flex items-center gap-3 text-white text-xs font-bold bg-gray-900/90 backdrop-blur-md px-5 py-2 rounded-full border border-gray-700 shadow-md">
               <span className="text-amber-400 font-serif font-extrabold">{product.title}</span>
               <span className="text-gray-500">•</span>
-              <span>{currentImageIdx + 1} of {parsedImages.length || 1}</span>
+              {activeMediaType === 'video' ? (
+                <span className="text-amber-300 flex items-center gap-1.5">
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>Saree Draping Video (Big Screen HD)</span>
+                </span>
+              ) : (
+                <span>{currentImageIdx + 1} of {parsedImages.length || 1}</span>
+              )}
             </div>
           </div>
 

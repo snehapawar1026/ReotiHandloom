@@ -18,23 +18,38 @@ function escapeXml(unsafe) {
 const itemsXml = products.map(p => {
   const id = p.id || p.slug;
   const title = p.title || 'Maheshwari Handloom Saree';
-  const description = p.description || 'Authentic Handwoven Maheshwari Saree directly from 3rd generation master weavers of Maheshwar, Madhya Pradesh. Pure handloom craftsmanship.';
+  let description = (p.description || '').replace(/<[^>]*>?/gm, '').trim();
+  if (!description || description.length < 20 || /^[a-z]{10,}$/i.test(description)) {
+    description = `Authentic Handcrafted ${title} woven directly on traditional pit looms in Maheshwar, Madhya Pradesh with pure Mulberry silk and mercerised cotton. Features rich zari border and feather-light drape.`;
+  }
   const link = baseUrl + '/products/' + (p.slug || p.id);
   
-  let imageUrl = p.images && p.images.length > 0 ? p.images[0] : (p.image || '/logo.png');
-  if (imageUrl && !imageUrl.startsWith('http')) {
+  let rawImages = p.images;
+  if (typeof rawImages === 'string') {
+    try {
+      rawImages = JSON.parse(rawImages);
+    } catch {
+      rawImages = [rawImages];
+    }
+  }
+
+  let imageUrl = Array.isArray(rawImages) && rawImages.length > 0 ? rawImages[0] : (p.image || '/rh-logo.png');
+  if (typeof imageUrl !== 'string' || !imageUrl || imageUrl.startsWith('[')) {
+    imageUrl = '/rh-logo.png';
+  }
+  if (!imageUrl.startsWith('http')) {
     imageUrl = baseUrl + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
   }
 
   const price = Number(p.price || 0).toFixed(2);
   const inStock = p.inStock !== false && (p.inventoryCount === undefined || p.inventoryCount > 0);
   const availability = inStock ? 'in_stock' : 'out_of_stock';
-  const categoryName = (p.category && p.category.name) || 'Maheshwari Sarees';
+  const categoryName = (p.category && (typeof p.category === 'object' ? p.category.name : p.category)) || 'Maheshwari Sarees';
 
   return `    <item>
       <g:id>${escapeXml(id)}</g:id>
       <g:title>${escapeXml(title)}</g:title>
-      <g:description>${escapeXml(description.replace(/<[^>]*>?/gm, '').slice(0, 5000))}</g:description>
+      <g:description>${escapeXml(description.slice(0, 5000))}</g:description>
       <g:link>${escapeXml(link)}</g:link>
       <g:image_link>${escapeXml(imageUrl)}</g:image_link>
       <g:condition>new</g:condition>

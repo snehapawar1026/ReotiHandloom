@@ -4201,31 +4201,16 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    Upload Video File (MP4/WebM)
-                  </label>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => handleVideoUpload(e, false)}
-                    className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-amber-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-amber-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    Or Direct Video URL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://... or /uploads/..."
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    className="w-full border border-amber-300 bg-white rounded-lg p-2 text-xs font-medium focus:ring-1 focus:ring-amber-800"
-                  />
-                </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  Upload Video File (MP4/WebM)
+                </label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => handleVideoUpload(e, false)}
+                  className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-amber-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-amber-300"
+                />
               </div>
 
               {videoUrl && (
@@ -4976,31 +4961,16 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    Upload Video File (MP4/WebM)
-                  </label>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => handleVideoUpload(e, false)}
-                    className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-rose-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-rose-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                    Or Direct Video URL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://... or /uploads/..."
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    className="w-full border border-rose-300 bg-white rounded-lg p-2 text-xs font-medium focus:ring-1 focus:ring-rose-800"
-                  />
-                </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  Upload Video File (MP4/WebM)
+                </label>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => handleVideoUpload(e, false)}
+                  className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-rose-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-rose-300"
+                />
               </div>
 
               {videoUrl && (
@@ -5711,7 +5681,6 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[11px] font-bold text-gray-700 mb-1">
                         Upload Video File (MP4/WebM)
@@ -5723,20 +5692,6 @@ export default function AdminDashboard() {
                         className="block w-full text-xs text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-extrabold file:bg-amber-900 file:text-white hover:file:bg-black cursor-pointer bg-white p-1 rounded-xl border border-amber-300"
                       />
                     </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                        Or Direct Video URL
-                      </label>
-                      <input
-                        type="url"
-                        placeholder="https://... or /uploads/..."
-                        value={editVideoUrl}
-                        onChange={(e) => setEditVideoUrl(e.target.value)}
-                        className="w-full border border-amber-300 bg-white rounded-lg p-2 text-xs font-medium focus:ring-1 focus:ring-amber-800"
-                      />
-                    </div>
-                  </div>
 
                   {editVideoUrl && (
                     <div className="mt-2 p-2.5 bg-white rounded-xl border border-amber-300 flex items-center justify-between gap-3">

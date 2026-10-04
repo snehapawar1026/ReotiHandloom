@@ -40,12 +40,10 @@ fs.cpSync(path.join(nextDir, 'static'), path.join(tempDir, 'public', '_next', 's
 // 5. Copy all public assets (EXCLUDING uploads to protect live user photos)
 const publicDir = path.join(rootDir, 'public');
 if (fs.existsSync(publicDir)) {
-  fs.cpSync(publicDir, path.join(tempDir, 'public'), { recursive: true });
-  // CRITICAL SAFETY: Remove public/uploads so live server uploads are 100% protected and never overwritten
-  const tempUploads = path.join(tempDir, 'public', 'uploads');
-  if (fs.existsSync(tempUploads)) {
-    fs.rmSync(tempUploads, { recursive: true, force: true });
-  }
+  fs.cpSync(publicDir, path.join(tempDir, 'public'), {
+    recursive: true,
+    filter: (src) => !src.includes('uploads'),
+  });
 }
 
 // 6. CRITICAL DATA SAFETY:
@@ -75,6 +73,10 @@ if (fs.existsSync(path.join(rootDir, 'public', '.htaccess'))) {
     path.join(tempDir, '.htaccess')
   );
 }
+
+// 8. Auto-Restart trigger for cPanel Passenger / LiteSpeed
+fs.mkdirSync(path.join(tempDir, 'tmp'), { recursive: true });
+fs.writeFileSync(path.join(tempDir, 'tmp', 'restart.txt'), new Date().toISOString(), 'utf-8');
 
 // 6. Create complete_update.zip using Python zipfile
 try {

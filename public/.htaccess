@@ -14,7 +14,15 @@ LimitRequestBody 209715200
   php_value max_input_time 300
 </IfModule>
 
-# 2. Enable GZIP / Deflate Compression (Reduces JS/CSS/HTML transfer by 75-80%)
+# 2. LiteSpeed Server Cache Control for Next.js App
+<IfModule LiteSpeed>
+  # Bypass LiteSpeed Server Cache for dynamic HTML so updates reflect instantly
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/(_next|images|uploads|favicon|.*\\.(css|js|jpg|jpeg|png|webp|avif|gif|svg|woff|woff2|ttf))$ [NC]
+  RewriteRule .* - [E=Cache-Control:no-cache]
+</IfModule>
+
+# 3. Enable GZIP / Deflate Compression (Reduces JS/CSS/HTML transfer by 75-80%)
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/plain
   AddOutputFilterByType DEFLATE text/html
@@ -36,13 +44,13 @@ LimitRequestBody 209715200
   AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
 </IfModule>
 
-# 3. Leverage Browser Caching (Instant Mobile Load on Repeat Visits)
+# 4. Leverage Browser Caching (Instant Mobile Load on Repeat Visits)
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresDefault "access plus 1 month"
 
-  # HTML documents (Fast 10 min cache with revalidation)
-  ExpiresByType text/html "access plus 600 seconds"
+  # HTML documents (Always revalidate for instant updates)
+  ExpiresByType text/html "access plus 0 seconds"
 
   # Data / API JSON (1 min cache)
   ExpiresByType application/json "access plus 60 seconds"
