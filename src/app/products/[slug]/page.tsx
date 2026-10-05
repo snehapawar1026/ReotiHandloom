@@ -26,16 +26,49 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? primaryImage
     : `https://reotihandloom.com${primaryImage}`;
 
-  const title = `${product.title} - Reoti Handloom`;
-  const description = `₹${product.price.toLocaleString()} • Authentic ${product.fabric || 'Maheshwari Handloom'} ${
-    product.color ? `(${product.color})` : ''
-  }. Handcrafted with traditional Zari border directly from Maheshwar looms. Free Express Shipping!`;
+  const title = `${product.title} | Authentic Maheshwari Handloom Saree - Reoti Handloom`;
+  const description = `Buy ${product.title} online at ₹${product.price.toLocaleString()} from Reoti Handloom Maheshwar. 100% authentic ${
+    product.fabric || 'Silk Cotton'
+  } handloom saree in ${product.color || 'exclusive'} color with royal Zari border. Free Express Shipping across India & 7 Days Hassle-Free Returns.`;
+
+  const keywords = [
+    'Maheshwari Saree',
+    'Maheshwari Sarees Online',
+    'Pure Maheshwari Silk Saree',
+    'Original Maheshwari Handloom Saree',
+    'Maheshwari Silk Cotton Saree',
+    'Buy Maheshwari Saree Online',
+    'Maheshwari Saree Maheshwar',
+    'Zari Border Saree',
+    'Authentic Pitloom Handwoven Saree',
+    'Ahilya Bai Holkar Maheshwari Saree',
+    'Handwoven Saree with Blouse Piece',
+    'Direct from Weavers Maheshwar',
+    'Traditional Zari Pallu Saree',
+    'Festive Wear Handloom Saree',
+    'Wedding Maheshwari Saree',
+    'Pure Handloom Sarees India',
+    'Lightweight Silk Cotton Saree',
+    'Soft Draping Pure Saree',
+    'Eco-Friendly Handcrafted Textile',
+    'Best Maheshwari Sarees Online',
+    'Reoti Handloom Maheshwar',
+    'Reoti Handloom Estd. 1960',
+    `${product.color || 'Royal'} Maheshwari Saree`,
+    `${product.title}`,
+    'Wholesale Maheshwari Sarees Manufacturer',
+    'Maheshwar Saree Shop Online',
+  ];
 
   return {
     title,
     description,
+    keywords,
+    alternates: {
+      canonical: `https://reotihandloom.com/products/${product.slug || slug}`,
+    },
     openGraph: {
-      title: `${product.title} | ₹${product.price.toLocaleString()}`,
+      title: `${product.title} | ₹${product.price.toLocaleString()} • Reoti Handloom`,
       description,
       url: `https://reotihandloom.com/products/${product.slug || slug}`,
       siteName: 'Reoti Handloom',
@@ -46,26 +79,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: absoluteImageUrl,
           width: 800,
           height: 800,
-          alt: product.title,
+          alt: `${product.title} - Authentic Maheshwari Handloom Saree`,
           type: absoluteImageUrl.endsWith('.png') ? 'image/png' : 'image/jpeg',
         },
         {
           url: absoluteImageUrl,
           width: 1200,
           height: 630,
-          alt: product.title,
+          alt: `${product.title} - Reoti Handloom Maheshwar`,
         },
       ],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${product.title} | ₹${product.price.toLocaleString()}`,
+      title: `${product.title} | ₹${product.price.toLocaleString()} • Reoti Handloom`,
       description,
       images: [absoluteImageUrl],
     },
     other: {
       'og:image:secure_url': absoluteImageUrl,
       'image': absoluteImageUrl,
+      'product:price:amount': product.price.toString(),
+      'product:price:currency': 'INR',
+      'product:availability': product.isOutOfStock ? 'out of stock' : 'in stock',
+      'product:condition': 'new',
+      'product:brand': 'Reoti Handloom',
     },
   };
 }
@@ -144,6 +182,8 @@ export default async function Page({ params }: Props) {
         category: product.category?.name || 'Maheshwari Sarees',
         material: product.fabric || 'Silk Cotton Handloom',
         color: product.color || 'Multicolor',
+        countryOfOrigin: 'IN',
+        keywords: 'Maheshwari Saree, Pure Maheshwari Silk Saree, Buy Maheshwari Saree Online, Original Maheshwari Handloom Saree, Silk Cotton Maheshwari Saree, Zari Border Saree, Reoti Handloom Maheshwar',
         offers: {
           '@type': 'Offer',
           url: `https://reotihandloom.com/products/${product.slug || slug}`,
@@ -157,6 +197,14 @@ export default async function Page({ params }: Props) {
           seller: {
             '@type': 'Organization',
             name: 'Reoti Handloom Maheshwar',
+          },
+          hasMerchantReturnPolicy: {
+            '@type': 'MerchantReturnPolicy',
+            applicableCountry: 'IN',
+            returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+            merchantReturnDays: 7,
+            returnMethod: 'https://schema.org/ReturnByMail',
+            returnFees: 'https://schema.org/FreeReturn',
           },
           shippingDetails: {
             '@type': 'OfferShippingDetails',

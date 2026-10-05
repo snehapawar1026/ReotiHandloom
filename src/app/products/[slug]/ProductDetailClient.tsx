@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useShop, ProductItem } from '@/context/ShopContext';
 import { ProductCard } from '@/components/ProductCard';
@@ -114,6 +115,516 @@ const SemiHubBadge = () => (
     alt="Direct from Maheshwar Hub"
     className="w-full h-full object-contain drop-shadow-md transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-xl"
   />
+);
+
+// 7 Dedicated 3D Luxury Animated Emblems for PDP Accordion Sections
+const AccordionWashEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-1 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-amber-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimWash" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgWash" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#7A1C28" />
+            <stop offset="70%" stopColor="#3B0910" />
+            <stop offset="100%" stopColor="#1A0307" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimWash)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgWash)" />
+        {/* Central Wash Droplet & Silk Ripple */}
+        <path d="M50 25 C50 25 35 44 35 55 C35 63.3 41.7 70 50 70 C58.3 70 65 63.3 65 55 C65 44 50 25 50 25 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <path d="M43 54 C43 50 47 44 50 40" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.9" />
+        <circle cx="50" cy="58" r="3.5" fill="#D48806" />
+        <path d="M28 48 L30 43 L32 48 L37 50 L32 52 L30 57 L28 52 L23 50 Z" fill="#FFD700" />
+        <path d="M72 48 L70 43 L68 48 L63 50 L68 52 L70 57 L72 52 L77 50 Z" fill="#FFD700" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-1" />
+    </div>
+  </div>
+);
+
+const AccordionShippingEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-2 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-emerald-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimShip" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgShip" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#145A32" />
+            <stop offset="70%" stopColor="#0B3C1D" />
+            <stop offset="100%" stopColor="#051E0E" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimShip)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgShip)" />
+        {/* Express Delivery Truck with Speed Star */}
+        <rect x="28" y="42" width="26" height="18" rx="2" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1" />
+        <path d="M54 47 L65 47 L71 53 L71 60 L54 60 Z" fill="#FFD54F" stroke="#FFF7D6" strokeWidth="1" />
+        <rect x="57" y="49" width="7" height="5" rx="1" fill="#145A32" />
+        <circle cx="38" cy="62" r="5" fill="#4A3008" stroke="#FFE58F" strokeWidth="1.5" />
+        <circle cx="63" cy="62" r="5" fill="#4A3008" stroke="#FFE58F" strokeWidth="1.5" />
+        <path d="M24 38 L38 34 M22 43 L32 41" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="48" cy="32" r="2.5" fill="#FFD700" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-2" />
+    </div>
+  </div>
+);
+
+const AccordionReturnsEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-3 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-amber-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimRet" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgRet" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#6C3483" />
+            <stop offset="70%" stopColor="#4A154B" />
+            <stop offset="100%" stopColor="#240726" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimRet)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgRet)" />
+        {/* 7-Day Guarantee Return Circle */}
+        <path d="M50 28 A20 20 0 1 1 32 42" fill="none" stroke="#FFE58F" strokeWidth="4" strokeLinecap="round" />
+        <path d="M30 32 L32 44 L44 42" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1" />
+        <text x="50" y="57" fill="#FFF7D6" fontSize="16" fontWeight="900" textAnchor="middle" fontFamily="serif">7D</text>
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-3" />
+    </div>
+  </div>
+);
+
+const AccordionIronEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-4 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-amber-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimIron" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgIron" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#873600" />
+            <stop offset="70%" stopColor="#4D1F00" />
+            <stop offset="100%" stopColor="#260F00" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimIron)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgIron)" />
+        {/* Iron Outline with Steam Sparkles */}
+        <path d="M30 60 L70 60 C64 48 50 48 50 48 L32 48 C30 48 28 50 28 53 L28 58 C28 59.1 28.9 60 30 60 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <path d="M34 48 L34 38 L54 38 L54 44" fill="none" stroke="#FFD54F" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="42" cy="30" r="2" fill="#FFE58F" />
+        <circle cx="52" cy="27" r="2.5" fill="#FFE58F" />
+        <circle cx="62" cy="32" r="2" fill="#FFE58F" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-4" />
+    </div>
+  </div>
+);
+
+const AccordionDetailsEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-1 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-amber-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimDet" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgDet" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#1B263B" />
+            <stop offset="70%" stopColor="#0D1B2A" />
+            <stop offset="100%" stopColor="#050C14" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimDet)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgDet)" />
+        {/* Handloom Shuttle & Royal Weave Specification Certificate */}
+        <rect x="32" y="28" width="36" height="44" rx="3" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <line x1="38" y1="38" x2="62" y2="38" stroke="#7A1C28" strokeWidth="2" strokeLinecap="round" />
+        <line x1="38" y1="46" x2="62" y2="46" stroke="#7A1C28" strokeWidth="2" strokeLinecap="round" />
+        <line x1="38" y1="54" x2="56" y2="54" stroke="#7A1C28" strokeWidth="2" strokeLinecap="round" />
+        <circle cx="56" cy="62" r="5" fill="#D4AF37" stroke="#FFF" strokeWidth="1" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-1" />
+    </div>
+  </div>
+);
+
+const AccordionFaqEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-2 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-amber-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimFaq" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgFaq" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#2E1A47" />
+            <stop offset="70%" stopColor="#1C0F2D" />
+            <stop offset="100%" stopColor="#0B0512" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimFaq)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgFaq)" />
+        {/* Royal Inquiry Crest with Star */}
+        <text x="50" y="62" fill="#FFE58F" fontSize="32" fontWeight="900" textAnchor="middle" fontFamily="serif">?</text>
+        <circle cx="30" cy="36" r="2.5" fill="#FFD700" />
+        <circle cx="70" cy="36" r="2.5" fill="#FFD700" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-2" />
+    </div>
+  </div>
+);
+
+const AccordionTagsEmblem = () => (
+  <div className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 animate-royal-float-3 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-1 bg-amber-400/30 rounded-full filter blur-xs animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-md">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="goldRimTag" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="35%" stopColor="#D4AF37" />
+            <stop offset="70%" stopColor="#996515" />
+            <stop offset="100%" stopColor="#4A3008" />
+          </radialGradient>
+          <radialGradient id="bgTag" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#5D4037" />
+            <stop offset="70%" stopColor="#3E2723" />
+            <stop offset="100%" stopColor="#1B0000" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#goldRimTag)" stroke="#FFE082" strokeWidth="1.5" />
+        <circle cx="50" cy="50" r="43" fill="none" stroke="#FFEBA8" strokeWidth="1" strokeDasharray="3 3" />
+        <circle cx="50" cy="50" r="40" fill="url(#bgTag)" />
+        {/* Luxury Gold Label Tag with Silk String */}
+        <path d="M36 30 L54 30 L70 46 L52 64 L36 48 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <circle cx="44" cy="38" r="3" fill="#3E2723" />
+        <path d="M44 38 Q36 24 28 26" stroke="#FFE58F" strokeWidth="2" strokeLinecap="round" fill="none" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-3" />
+    </div>
+  </div>
+);
+
+// 10 Mini Luxury Animated Emblems for Product Specification Rows
+const SpecColorIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-1 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-rose-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniColor" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniColor" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#BE123C" />
+            <stop offset="70%" stopColor="#881337" />
+            <stop offset="100%" stopColor="#4C0519" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniColor)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniColor)" />
+        <circle cx="36" cy="42" r="5" fill="#FFE58F" />
+        <circle cx="52" cy="34" r="5" fill="#38BDF8" />
+        <circle cx="66" cy="46" r="5" fill="#34D399" />
+        <path d="M38 68 C38 60 48 56 56 60 C64 64 68 70 54 74 C44 76 38 74 38 68 Z" fill="#FFE58F" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-1" />
+    </div>
+  </div>
+);
+
+const SpecBlouseIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-2 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniBlouse" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniBlouse" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#9333EA" />
+            <stop offset="70%" stopColor="#6B21A8" />
+            <stop offset="100%" stopColor="#3B0764" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniBlouse)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniBlouse)" />
+        <path d="M30 36 L42 36 L50 48 L58 36 L70 36 L76 50 L66 54 L66 70 L34 70 L34 54 L24 50 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="2" />
+        <line x1="50" y1="48" x2="50" y2="70" stroke="#7A1C28" strokeWidth="2" strokeDasharray="3 2" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-2" />
+    </div>
+  </div>
+);
+
+const SpecFabricIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-3 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-sky-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniFabric" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniFabric" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#0369A1" />
+            <stop offset="70%" stopColor="#075985" />
+            <stop offset="100%" stopColor="#082F49" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniFabric)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniFabric)" />
+        <path d="M28 50 C28 36 72 36 72 50 C72 64 28 64 28 50 Z" fill="none" stroke="#FFE58F" strokeWidth="4" />
+        <line x1="40" y1="30" x2="60" y2="70" stroke="#FFE58F" strokeWidth="3" strokeLinecap="round" />
+        <line x1="60" y1="30" x2="40" y2="70" stroke="#FFE58F" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-3" />
+    </div>
+  </div>
+);
+
+const SpecBorderIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-4 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniBorder" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniBorder" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#B45309" />
+            <stop offset="70%" stopColor="#78350F" />
+            <stop offset="100%" stopColor="#451A03" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniBorder)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniBorder)" />
+        <path d="M26 62 L38 42 L50 62 L62 42 L74 62 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <circle cx="38" cy="38" r="3" fill="#FFD700" />
+        <circle cx="50" cy="34" r="3.5" fill="#FFD700" />
+        <circle cx="62" cy="38" r="3" fill="#FFD700" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-4" />
+    </div>
+  </div>
+);
+
+const SpecCraftIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-1 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniCraft" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniCraft" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#831843" />
+            <stop offset="70%" stopColor="#500724" />
+            <stop offset="100%" stopColor="#280312" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniCraft)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniCraft)" />
+        <path d="M24 50 Q50 32 76 50 Q50 68 24 50 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <ellipse cx="50" cy="50" rx="8" ry="4" fill="#831843" />
+        <line x1="50" y1="46" x2="50" y2="54" stroke="#FFD700" strokeWidth="2" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-1" />
+    </div>
+  </div>
+);
+
+const SpecEcoIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-2 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-emerald-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniEco" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniEco" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#047857" />
+            <stop offset="70%" stopColor="#064E3B" />
+            <stop offset="100%" stopColor="#022C22" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniEco)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniEco)" />
+        <path d="M34 66 C34 40 50 30 70 30 C70 50 60 66 34 66 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <path d="M34 66 Q52 48 70 30" stroke="#047857" strokeWidth="2.5" fill="none" />
+        <path d="M46 54 Q54 50 56 46" stroke="#047857" strokeWidth="2" fill="none" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-2" />
+    </div>
+  </div>
+);
+
+const SpecDrapeIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-3 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniDrape" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniDrape" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#7C2D12" />
+            <stop offset="70%" stopColor="#451A03" />
+            <stop offset="100%" stopColor="#1C0700" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniDrape)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniDrape)" />
+        <path d="M26 40 Q40 60 50 40 T74 40" stroke="#FFE58F" strokeWidth="4" strokeLinecap="round" fill="none" />
+        <path d="M26 60 Q40 80 50 60 T74 60" stroke="#FFE58F" strokeWidth="4" strokeLinecap="round" fill="none" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-3" />
+    </div>
+  </div>
+);
+
+const SpecCareIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-4 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniCare" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniCare" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#1E3A8A" />
+            <stop offset="70%" stopColor="#172554" />
+            <stop offset="100%" stopColor="#0B132B" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniCare)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniCare)" />
+        <path d="M50 28 C50 28 36 46 36 56 C36 64 42 70 50 70 C58 70 64 64 64 56 C64 46 50 28 50 28 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <circle cx="50" cy="58" r="3" fill="#1E3A8A" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-4" />
+    </div>
+  </div>
+);
+
+const SpecLengthIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-1 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniLen" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniLen" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="70%" stopColor="#1F2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniLen)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniLen)" />
+        <rect x="28" y="42" width="44" height="16" rx="3" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <line x1="36" y1="42" x2="36" y2="48" stroke="#1F2937" strokeWidth="1.5" />
+        <line x1="44" y1="42" x2="44" y2="52" stroke="#1F2937" strokeWidth="2" />
+        <line x1="52" y1="42" x2="52" y2="48" stroke="#1F2937" strokeWidth="1.5" />
+        <line x1="60" y1="42" x2="60" y2="52" stroke="#1F2937" strokeWidth="2" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-1" />
+    </div>
+  </div>
+);
+
+const SpecOriginIcon = () => (
+  <div className="relative w-6 h-6 sm:w-6.5 sm:h-6.5 shrink-0 animate-royal-float-2 group-hover:scale-110 transition-transform duration-300">
+    <div className="absolute -inset-0.5 bg-amber-400/30 rounded-full filter blur-[2px] animate-royal-aura pointer-events-none" />
+    <div className="relative w-full h-full overflow-hidden rounded-full drop-shadow-xs border border-amber-300/80">
+      <svg viewBox="0 0 100 100" className="w-full h-full select-none">
+        <defs>
+          <radialGradient id="rimMiniOrigin" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#FFF4B8" />
+            <stop offset="50%" stopColor="#D4AF37" />
+            <stop offset="100%" stopColor="#7A4E08" />
+          </radialGradient>
+          <radialGradient id="bgMiniOrigin" cx="50%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#4A0E17" />
+            <stop offset="70%" stopColor="#2E080E" />
+            <stop offset="100%" stopColor="#140205" />
+          </radialGradient>
+        </defs>
+        <circle cx="50" cy="50" r="48" fill="url(#rimMiniOrigin)" />
+        <circle cx="50" cy="50" r="41" fill="url(#bgMiniOrigin)" />
+        <path d="M30 68 L30 46 L50 32 L70 46 L70 68 Z" fill="#FFE58F" stroke="#FFF7D6" strokeWidth="1.5" />
+        <path d="M42 68 L42 52 C42 48 58 48 58 52 L58 68 Z" fill="#4A0E17" />
+        <circle cx="50" cy="42" r="3" fill="#FFD700" />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/50 to-transparent pointer-events-none animate-royal-shimmer-2" />
+    </div>
+  </div>
 );
 
 interface ProductDetailClientProps {
@@ -857,97 +1368,106 @@ export default function ProductDetailClient({
               </span>
             )}
 
-            {/* Brand Title with Official Logo Seal */}
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-amber-400 p-0.5 bg-amber-100 shrink-0 shadow-xs">
-                <img src="/logo.jpg" alt="Reoti Handloom" className="w-full h-full object-cover object-top rounded-full" />
-              </div>
-              <div>
-                <h2 className="font-serif font-extrabold text-lg text-amber-950 tracking-tight leading-none">
-                  Reoti Handloom
-                </h2>
-                <p className="text-[10px] text-amber-800 font-medium italic mt-0.5">
-                  Something "more" in Maheshwari Handloom
-                </p>
-              </div>
-            </div>
-
-            {/* Product Title & SHARE Button */}
-            <div className="flex items-start justify-between gap-4 mt-1">
-              <h1 className="text-base text-gray-700 font-medium leading-snug flex-1">
-                {product.title}
-              </h1>
-              <div className="flex flex-col items-end shrink-0 gap-1.5">
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={handleDirectWhatsAppShare}
-                    className="px-2.5 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                    title="Share directly on WhatsApp"
-                  >
-                    <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
-                    <span>WhatsApp</span>
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="px-2.5 py-1.5 border border-amber-950/40 hover:border-amber-950 text-amber-950 hover:bg-amber-50 rounded font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
-                    title="Share / Copy product link"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>SHARE</span>
-                  </button>
+            {/* Brand Title with Official Logo Seal & Heritage Badges */}
+            <div className="flex items-center justify-between gap-3 mb-2.5 pb-2 border-b border-amber-900/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-amber-400 p-0.5 bg-gradient-to-br from-amber-100 to-amber-200 shrink-0 shadow-sm">
+                  <img src="/logo.jpg" alt="Reoti Handloom" className="w-full h-full object-cover object-top rounded-full" />
                 </div>
-                {shareCopied && (
-                  <span className="text-[10px] font-bold text-emerald-700">
-                    ✓ Link Copied!
-                  </span>
-                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-serif font-black text-lg sm:text-xl text-[#4A0E17] tracking-tight leading-none">
+                      Reoti Handloom
+                    </h2>
+                    <span className="text-[9px] font-black uppercase text-amber-900 bg-amber-100/90 border border-amber-300/80 px-2 py-0.5 rounded-full shadow-2xs">
+                      Authentic
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-800 font-medium italic mt-0.5">
+                    Something "more" in Maheshwari Handloom • Estd. 1960
+                  </p>
+                </div>
+              </div>
+
+              {/* Share Buttons */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={handleDirectWhatsAppShare}
+                  className="px-2.5 py-1.5 bg-[#25D366] hover:bg-[#20ba5a] text-white rounded-lg font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                  title="Share directly on WhatsApp"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5 fill-current" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="px-2.5 py-1.5 border border-amber-900/30 hover:border-[#8B2635] text-amber-950 hover:bg-amber-50 rounded-lg font-sans text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
+                  title="Share / Copy product link"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">SHARE</span>
+                </button>
               </div>
             </div>
 
-            {/* Rating Box */}
-            <div className="flex items-center gap-2 mt-2">
+            {shareCopied && (
+              <div className="mb-2 p-2 bg-emerald-50 border border-emerald-300 rounded-lg text-emerald-800 text-xs font-bold flex items-center gap-1.5 animate-fadeIn">
+                <span>✓</span> Product link copied to clipboard!
+              </div>
+            )}
+
+            {/* Product Title */}
+            <h1 className="font-serif text-lg sm:text-2xl font-bold text-gray-900 leading-snug tracking-tight">
+              {product.title}
+            </h1>
+
+            {/* Rating & Review Counter */}
+            <div className="flex items-center gap-2.5 mt-2.5">
               {reviews.length > 0 || (product.reviewCount && product.reviewCount > 0) ? (
                 <>
-                  <div className="flex items-center gap-1 border border-emerald-300 rounded px-2 py-0.5 text-xs font-bold text-emerald-800 bg-emerald-50">
+                  <div className="flex items-center gap-1.5 border border-emerald-400/80 rounded-lg px-2.5 py-0.5 text-xs font-black text-emerald-900 bg-emerald-50/90 shadow-2xs">
                     <span>{product.rating ? product.rating.toFixed(1) : '5.0'}</span>
-                    <Star className="w-3 h-3 fill-emerald-600 text-emerald-600" />
+                    <Star className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
                   </div>
-                  <span className="text-xs text-gray-500 font-medium">
-                    Based on {reviews.length > 0 ? reviews.length : product.reviewCount} verified rating{(reviews.length > 1 || (product.reviewCount && product.reviewCount > 1)) ? 's' : ''}
+                  <span className="text-xs text-gray-600 font-medium">
+                    {reviews.length > 0 ? reviews.length : product.reviewCount} Customer Rating{(reviews.length > 1 || (product.reviewCount && product.reviewCount > 1)) ? 's' : ''} • 100% Verified
                   </span>
                 </>
               ) : (
-                <span className="text-xs text-amber-900 bg-amber-50/80 border border-amber-200 px-2.5 py-1 rounded-md font-medium">
-                  ★ No customer ratings yet. Be the first to review this saree!
+                <span className="text-xs text-amber-900 bg-amber-50/90 border border-amber-200/90 px-3 py-1 rounded-lg font-semibold shadow-2xs flex items-center gap-1.5">
+                  <span className="text-amber-600">★</span> Authentic Direct from Loom Master Weavers
                 </span>
               )}
             </div>
           </div>
 
-          {/* Pricing Section */}
-          <div className="py-3.5 border-y border-gray-200 space-y-1 bg-white">
+          {/* Luxury Pricing Box */}
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-50/60 via-[#FFFDF9] to-rose-50/40 border border-amber-200/80 shadow-2xs space-y-1.5">
             <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="text-2xl font-extrabold text-gray-900 font-sans">
+              <span className="text-2xl sm:text-3xl font-serif font-black text-[#4A0E17] tracking-tight">
                 ₹{product.price.toLocaleString()}
               </span>
               {product.discountPercent && product.discountPercent > 0 && product.originalPrice && product.originalPrice > product.price ? (
-                <span className="text-sm font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                  {product.discountPercent}% Off
+                <span className="text-xs font-black text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                  {product.discountPercent}% OFF
                 </span>
               ) : null}
               {hasFallPico && (
-                <span className="text-[11px] font-bold text-emerald-900 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300 inline-flex items-center gap-1">
+                <span className="text-[11px] font-black text-[#8B2635] bg-rose-100/90 px-3 py-0.5 rounded-full border border-rose-300 inline-flex items-center gap-1 shadow-2xs">
                   <span>🎁 Free Fall & Pico Included</span>
                 </span>
               )}
             </div>
             {product.originalPrice && product.originalPrice > product.price ? (
-              <div className="text-xs text-gray-500 font-medium">
-                MRP <span className="line-through font-sans">₹{product.originalPrice.toLocaleString()}</span> <span className="text-[11px] text-gray-400">Inclusive of all taxes</span>
+              <div className="text-xs text-gray-500 font-medium flex items-center gap-2">
+                <span>MRP <span className="line-through font-sans">₹{product.originalPrice.toLocaleString()}</span></span>
+                <span className="text-emerald-700 font-bold">• Free All-India Express Shipping</span>
+                <span className="text-[11px] text-gray-400">(Inclusive of all taxes)</span>
               </div>
             ) : (
-              <div className="text-xs text-gray-400 font-medium">
-                <span>Inclusive of all taxes</span>
+              <div className="text-xs text-emerald-800 font-bold flex items-center gap-2">
+                <span>✓ Free All-India Express Delivery</span>
+                <span className="text-[11px] text-gray-400 font-normal">(Inclusive of all taxes)</span>
               </div>
             )}
           </div>
@@ -1403,261 +1923,512 @@ export default function ProductDetailClient({
               </div>
             </div>
 
-            {/* Dotted Accordion List */}
-            <div className="space-y-1 bg-[#FAF6F0]/60 p-4 rounded-2xl border border-amber-200/80 shadow-2xs">
+            {/* Simple & Attractive Luxury Product Information Accordions */}
+            <div className="space-y-3 bg-gradient-to-b from-[#FFFDF9] via-[#FAF6F0] to-[#FDFBF7] p-4 sm:p-5 rounded-2xl border border-amber-200/90 shadow-sm font-sans">
               
               {/* Accordion 1: Wash & Care */}
-              <div className="border-b border-dotted border-amber-900/30 pb-3.5 pt-1.5">
+              <div className="border-b border-amber-900/10 pb-3.5 pt-1">
                 <button
                   type="button"
                   onClick={() => toggleSection('wash')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <Droplets className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Wash & Care</span>
+                    <AccordionWashEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Wash & Care
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-amber-800/80 uppercase tracking-wider">
+                        • Gentle Care Guide
+                      </span>
+                    </span>
                   </span>
-                  {openSections.wash ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.wash ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.wash ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.wash && (
-                  <div className="mt-3.5 pl-8 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed space-y-3">
-                    <p>
-                      <strong className="text-black font-extrabold">Wash Care:</strong> Dry Wash Recommended. Do not Machine wash or soak in hard detergent. Please do a gentle wash if needed.
-                    </p>
-                    <p className="text-gray-700 italic text-xs sm:text-sm">
-                      <strong className="text-gray-950 not-italic font-extrabold">Disclaimer:</strong> The pictures were taken in daylight. Colour may vary slightly from the image due to the screen brightness.
-                    </p>
+                  <div className="mt-3 pl-11 sm:pl-12 text-xs sm:text-sm text-gray-800 leading-relaxed space-y-2.5 animate-fadeIn">
+                    <div className="p-3.5 bg-white/95 rounded-xl border border-amber-200/80 shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2 text-amber-950 font-serif font-bold text-xs sm:text-sm">
+                        <span className="w-2 h-2 rounded-full bg-amber-600" />
+                        <span>Recommended Washing Method</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs text-gray-700 pl-4">
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-amber-700 font-bold">✦</span>
+                          <span><strong className="text-gray-950 font-extrabold">Dry Wash Recommended:</strong> Ideal to preserve the natural silk luster and delicate zari shine over time.</span>
+                        </p>
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-amber-700 font-bold">✦</span>
+                          <span><strong className="text-gray-950 font-extrabold">Gentle Hand Wash Only:</strong> If washing at home, use cold water and mild liquid detergent. Never machine wash or soak for long durations.</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gradient-to-r from-amber-50/90 to-rose-50/50 rounded-xl border border-amber-200/70 text-[11px] sm:text-xs text-amber-950 flex items-start gap-2.5 shadow-2xs">
+                      <span className="text-amber-800 text-sm shrink-0">☀️</span>
+                      <p className="italic leading-relaxed">
+                        <strong className="not-italic font-bold text-gray-900 mr-1">Daylight Photography Disclaimer:</strong>
+                        All pictures are captured under natural ambient daylight. Minor shade variation may occasionally occur depending on your mobile or screen display brightness.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Accordion 2: Shipping Information */}
-              <div className="border-b border-dotted border-amber-900/30 py-3.5">
+              <div className="border-b border-amber-900/10 py-3">
                 <button
                   type="button"
                   onClick={() => toggleSection('shipping')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <Truck className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Shipping Information</span>
+                    <AccordionShippingEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Shipping Information
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-emerald-800 uppercase tracking-wider">
+                        • Free Express 4-5 Days
+                      </span>
+                    </span>
                   </span>
-                  {openSections.shipping ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.shipping ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.shipping ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.shipping && (
-                  <div className="mt-3.5 pl-8 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed space-y-3">
-                    <p>
-                      We offer free shipping across India within a period of 4-5 working days of delivery. For international shipping, please contact us on WhatsApp.
-                    </p>
-                    <button
-                      onClick={() => router.push('/policies/shipping-policy')}
-                      className="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs sm:text-sm uppercase rounded-lg border border-amber-300 cursor-pointer transition-colors shadow-2xs"
-                    >
-                      LEARN MORE
-                    </button>
+                  <div className="mt-3 pl-11 sm:pl-12 text-xs sm:text-sm text-gray-800 leading-relaxed space-y-3 animate-fadeIn">
+                    <div className="p-3.5 bg-white/95 rounded-xl border border-amber-200/80 shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2 text-emerald-900 font-bold text-xs sm:text-sm">
+                        <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                        <span>100% Free Express Delivery Across India</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs text-gray-700 pl-4">
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-emerald-700 font-bold">✓</span>
+                          <span><strong className="text-gray-950 font-extrabold">Delivery Timeline:</strong> Delivered directly to your doorstep within <strong>4 to 5 working days</strong>.</span>
+                        </p>
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-emerald-700 font-bold">✓</span>
+                          <span><strong className="text-gray-950 font-extrabold">Dispatch & Tracking:</strong> Hand-packed and dispatched from Maheshwar with end-to-end SMS & WhatsApp tracking updates.</span>
+                        </p>
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-emerald-700 font-bold">✓</span>
+                          <span><strong className="text-gray-950 font-extrabold">International Shipping:</strong> Worldwide express shipping available. Please connect with our team on WhatsApp for rates.</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        onClick={() => router.push('/policies/shipping-policy')}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#FAF3E8] hover:bg-amber-100 text-amber-950 font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-lg border border-amber-300 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <span>View Shipping Policy</span>
+                        <span>→</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Accordion 3: Returns & Exchange */}
-              <div className="border-b border-dotted border-amber-900/30 py-3.5">
+              <div className="border-b border-amber-900/10 py-3">
                 <button
                   type="button"
                   onClick={() => toggleSection('returns')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <RotateCcw className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Returns & Exchange</span>
+                    <AccordionReturnsEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Returns & Exchange
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-amber-800/80 uppercase tracking-wider">
+                        • 7-Day Hassle-Free
+                      </span>
+                    </span>
                   </span>
-                  {openSections.returns ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.returns ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.returns ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.returns && (
-                  <div className="mt-3.5 pl-8 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed space-y-3">
-                    <p>
-                      We accept hassle-free returns and exchanges within 7 days of delivery for standard handloom sarees.
-                    </p>
-                    <div className="text-xs text-[#8B2635] bg-rose-50/80 p-2.5 rounded-lg border border-rose-200">
-                      <strong>Customization Note:</strong> Sarees with Fall & Pico binding tailored upon customer request cannot be returned or exchanged once the work is completed.
+                  <div className="mt-3 pl-11 sm:pl-12 text-xs sm:text-sm text-gray-800 leading-relaxed space-y-3 animate-fadeIn">
+                    <div className="p-3.5 bg-white/95 rounded-xl border border-amber-200/80 shadow-2xs space-y-2.5">
+                      <div className="flex items-center gap-2 text-gray-950 font-serif font-bold text-xs sm:text-sm">
+                        <span className="w-2 h-2 rounded-full bg-amber-600" />
+                        <span>7 Days Return & Exchange Policy</span>
+                      </div>
+                      <p className="text-xs text-gray-700 leading-relaxed pl-4">
+                        We offer a simple and hassle-free return or exchange process within <strong>7 days of delivery</strong> for all standard handloom sarees in their original unworn condition.
+                      </p>
+
+                      <div className="text-[11px] sm:text-xs text-rose-950 bg-rose-50/90 p-3 rounded-xl border border-rose-200/90 leading-relaxed">
+                        <strong className="text-rose-900 block mb-0.5">⚠️ Customization Policy Notice:</strong>
+                        Sarees customized with complimentary Fall & Pico binding upon customer request are custom-tailored and cannot be returned or exchanged once finishing is completed.
+                      </div>
                     </div>
-                    <button
-                      onClick={() => router.push('/policies/return-policy')}
-                      className="px-4 py-2 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs sm:text-sm uppercase rounded-lg border border-amber-300 cursor-pointer transition-colors shadow-2xs"
-                    >
-                      LEARN MORE
-                    </button>
+                    <div>
+                      <button
+                        onClick={() => router.push('/policies/return-policy')}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#FAF3E8] hover:bg-amber-100 text-amber-950 font-bold text-[11px] sm:text-xs uppercase tracking-wider rounded-lg border border-amber-300 cursor-pointer transition-colors shadow-2xs"
+                      >
+                        <span>View Returns Policy</span>
+                        <span>→</span>
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Accordion 4: Iron Instruction */}
-              <div className="border-b border-dotted border-amber-900/30 py-3.5">
+              <div className="border-b border-amber-900/10 py-3">
                 <button
                   type="button"
                   onClick={() => toggleSection('iron')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <Flame className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Iron Instruction</span>
+                    <AccordionIronEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Iron Instruction
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-amber-800/80 uppercase tracking-wider">
+                        • Low Heat with Cloth
+                      </span>
+                    </span>
                   </span>
-                  {openSections.iron ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.iron ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.iron ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.iron && (
-                  <div className="mt-3.5 pl-8 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed">
-                    <p>Low temperature / keep a cloth over the garment to iron.</p>
+                  <div className="mt-3 pl-11 sm:pl-12 text-xs sm:text-sm text-gray-800 leading-relaxed animate-fadeIn">
+                    <div className="p-3.5 bg-white/95 rounded-xl border border-amber-200/80 shadow-2xs space-y-2">
+                      <div className="flex items-center gap-2 text-amber-950 font-serif font-bold text-xs sm:text-sm">
+                        <span className="text-base leading-none">♨️</span>
+                        <span>Pressing & Ironing Guidelines</span>
+                      </div>
+                      <div className="space-y-1.5 text-xs text-gray-700 pl-4">
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-amber-700 font-bold">✦</span>
+                          <span><strong className="text-gray-950 font-extrabold">Low Temperature:</strong> Always iron on low to medium heat (Silk setting).</span>
+                        </p>
+                        <p className="flex items-start gap-1.5">
+                          <span className="text-amber-700 font-bold">✦</span>
+                          <span><strong className="text-gray-950 font-extrabold">Protective Cloth Layer:</strong> Keep a thin cotton cloth or muslin over the garment/zari border while ironing to protect the delicate handloom weave.</span>
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Accordion 5: Product Details */}
-              <div className="border-b border-dotted border-amber-900/30 py-3.5">
+              <div className="border-b border-amber-900/10 py-3">
                 <button
                   type="button"
                   onClick={() => toggleSection('details')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Product Details</span>
+                    <AccordionDetailsEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Product Details
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-amber-800/80 uppercase tracking-wider">
+                        • Complete Specifications
+                      </span>
+                    </span>
                   </span>
-                  {openSections.details ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.details ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.details ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.details && (
-                  <div className="mt-4 pl-8 space-y-4 text-sm sm:text-base text-gray-900 font-semibold leading-relaxed">
-                    <p className="font-semibold text-gray-900">
-                      This {product.title} is a traditional, handwoven saree designed for admirers of authentic craftsmanship and sustainable textiles.
-                    </p>
-
-                    <ul className="space-y-2.5 font-semibold text-gray-900">
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Saree Color:</span>
-                        <span>{product.color || 'As Shown'}</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Blouse Color:</span>
-                        <span>{product.blouseColor || 'Running Blouse (Matching Saree Color)'}</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Fabric & Weave:</span>
-                        <span>{product.fabric || 'Silk Cotton Maheshwari'} (Authentic Handwoven)</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Border Type:</span>
-                        <span>{product.borderType || 'Gold Zari'}</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Craftsmanship:</span>
-                        <span>Authentic handwoven with traditional look</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Sustainability:</span>
-                        <span>Highly sustainable; made from natural threads; natural dyed</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Texture:</span>
-                        <span>Soft in feel with graceful drape</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Care:</span>
-                        <span>Dry clean recommended</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="font-black text-black min-w-36 sm:min-w-44">• Dimensions:</span>
-                        <span>{product.lengthWithBlouse || '6.3 Meters (With Blouse Piece)'}</span>
-                      </li>
-                    </ul>
-
-                    <div className="pt-3.5 border-t border-amber-200/80 text-gray-900 font-semibold whitespace-pre-line leading-relaxed text-sm sm:text-base">
-                      {product.description || 'Handcrafted with meticulous dedication by skilled artisans of Maheshwar, this authentic handloom saree exemplifies timeless elegance. Featuring traditional weaving techniques passed down through generations, rich metallic zari patterns, and lightweight pure silk-cotton texture for exquisite comfort and graceful drape.'}
+                  <div className="mt-3 pl-11 sm:pl-12 space-y-3.5 text-xs sm:text-sm text-gray-800 leading-relaxed animate-fadeIn">
+                    {/* Luxury Introduction Quote Card */}
+                    <div className="p-3 bg-gradient-to-r from-amber-50/80 to-[#FFFDF9] rounded-xl border border-amber-200/70 shadow-2xs">
+                      <p className="font-serif italic text-amber-950 font-medium leading-relaxed">
+                        “ This {product.title} is an authentic traditional handwoven masterpiece created for connoisseurs of timeless Indian textile heritage. ”
+                      </p>
                     </div>
+
+                    {/* High-End Two-Column Specification Grid with Animated Mini-Emblems */}
+                    <div className="bg-white/95 rounded-xl border border-amber-200/80 overflow-hidden shadow-2xs divide-y divide-amber-100">
+                      
+                      {/* 1. Saree Color */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecColorIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Saree Color:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">{product.color || 'As Shown'}</span>
+                      </div>
+
+                      {/* 2. Blouse Color */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecBlouseIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Blouse Color:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">{product.blouseColor || 'Running Blouse (Matching Saree Color)'}</span>
+                      </div>
+
+                      {/* 3. Fabric & Weave */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecFabricIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Fabric & Weave:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">{product.fabric || 'Silk Cotton'} (Authentic Handwoven)</span>
+                      </div>
+
+                      {/* 4. Border Type */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecBorderIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Border Type:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">{product.borderType || 'Gold Zari'}</span>
+                      </div>
+
+                      {/* 5. Craftsmanship */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecCraftIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Craftsmanship:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">Authentic handwoven pitloom craftsmanship</span>
+                      </div>
+
+                      {/* 6. Sustainability */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecEcoIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Sustainability:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">Eco-friendly; woven with natural threads & safe dyes</span>
+                      </div>
+
+                      {/* 7. Texture & Drape */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecDrapeIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Texture & Drape:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">Soft in feel with featherlight, graceful drape</span>
+                      </div>
+
+                      {/* 8. Care */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecCareIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Care:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">Dry clean recommended</span>
+                      </div>
+
+                      {/* 9. Total Length */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecLengthIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Total Length:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">{product.lengthWithBlouse || '6.3 Meters (With 0.8m Blouse Piece)'}</span>
+                      </div>
+
+                      {/* 10. Loom Origin */}
+                      <div className="flex items-center px-3.5 py-2.5 hover:bg-amber-50/40 transition-colors group/row">
+                        <span className="font-bold text-gray-950 w-40 sm:w-48 shrink-0 flex items-center gap-2.5">
+                          <SpecOriginIcon />
+                          <span className="text-xs sm:text-sm font-bold text-gray-950">Loom Origin:</span>
+                        </span>
+                        <span className="text-gray-800 font-medium text-xs sm:text-sm">Maheshwar, Madhya Pradesh (Estd. 1960)</span>
+                      </div>
+                    </div>
+
+                    {product.description && (
+                      <div className="p-3.5 bg-white/95 rounded-xl border border-amber-200/80 text-gray-700 font-medium whitespace-pre-line leading-relaxed text-xs sm:text-sm shadow-2xs">
+                        {product.description}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Accordion 6: Frequently Asked Questions (Handloom FAQs) */}
-              <div className="border-b border-dotted border-amber-900/30 py-3.5">
+              {/* Accordion 6: Frequently Asked Questions */}
+              <div className="border-b border-amber-900/10 py-3">
                 <button
                   type="button"
                   onClick={() => toggleSection('faqs')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <HelpCircle className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Frequently Asked Questions</span>
+                    <AccordionFaqEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Frequently Asked Questions
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-amber-800/80 uppercase tracking-wider">
+                        • Verified Answers
+                      </span>
+                    </span>
                   </span>
-                  {openSections.faqs ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.faqs ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.faqs ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.faqs && (
-                  <div className="mt-3.5 pl-8 space-y-3 text-xs sm:text-sm text-gray-900 font-semibold leading-relaxed">
-                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
-                      <p className="font-extrabold text-amber-950">Q: Is this 100% authentic handloom?</p>
-                      <p className="text-gray-700 font-medium">Yes, authentically handwoven on traditional pit looms by master weavers in Maheshwar, Madhya Pradesh (Estd. 1960).</p>
+                  <div className="mt-3 pl-11 sm:pl-12 space-y-2.5 text-xs sm:text-sm text-gray-800 leading-relaxed animate-fadeIn">
+                    <div className="p-3 bg-white/95 rounded-xl border border-amber-200/80 space-y-1 shadow-2xs">
+                      <p className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="text-[#8B2635] font-black">Q:</span> Is this 100% authentic handloom?
+                      </p>
+                      <p className="text-gray-700 pl-4 text-xs">Yes, authentically handwoven on traditional pit looms by master weavers in Maheshwar, Madhya Pradesh (Estd. 1960).</p>
                     </div>
-                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
-                      <p className="font-extrabold text-amber-950">Q: Is a blouse piece included?</p>
-                      <p className="text-gray-700 font-medium">Yes, every saree includes a matching 80cm unstitched blouse piece attached.</p>
+                    <div className="p-3 bg-white/95 rounded-xl border border-amber-200/80 space-y-1 shadow-2xs">
+                      <p className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="text-[#8B2635] font-black">Q:</span> Is a blouse piece included?
+                      </p>
+                      <p className="text-gray-700 pl-4 text-xs">Yes, every saree includes a matching ~80cm unstitched running blouse piece attached.</p>
                     </div>
-                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
-                      <p className="font-extrabold text-amber-950">Q: What are the shipping charges and timeline?</p>
-                      <p className="text-gray-700 font-medium">We offer 100% Free Express Delivery across India. Orders are delivered in 3 to 6 working days.</p>
+                    <div className="p-3 bg-white/95 rounded-xl border border-amber-200/80 space-y-1 shadow-2xs">
+                      <p className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="text-[#8B2635] font-black">Q:</span> What are the shipping charges and timeline?
+                      </p>
+                      <p className="text-gray-700 pl-4 text-xs">We offer 100% Free Express Delivery across India. Orders are delivered in 4 to 5 working days.</p>
                     </div>
-                    <div className="p-3 bg-white/90 rounded-xl border border-amber-200/70 shadow-2xs space-y-1">
-                      <p className="font-extrabold text-amber-950">Q: What is your return & exchange policy?</p>
-                      <p className="text-gray-700 font-medium">We provide a 7-day hassle-free return and exchange guarantee on standard handloom items. Please note that customized sarees with Fall & Pico binding cannot be returned or exchanged.</p>
+                    <div className="p-3 bg-white/95 rounded-xl border border-amber-200/80 space-y-1 shadow-2xs">
+                      <p className="font-bold text-amber-950 flex items-center gap-1.5">
+                        <span className="text-[#8B2635] font-black">Q:</span> What is your return & exchange policy?
+                      </p>
+                      <p className="text-gray-700 pl-4 text-xs">We provide a 7-day hassle-free return and exchange guarantee on standard handloom items. Please note that customized sarees with Fall & Pico binding cannot be returned or exchanged.</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Accordion 7: Tags */}
-              <div className="pt-3">
+              {/* Accordion 7: Tags & Styles (Explore Matching Handloom Collections) */}
+              <div className="pt-2 pb-1">
                 <button
                   type="button"
                   onClick={() => toggleSection('tags')}
-                  className="w-full flex items-center justify-between font-black text-base sm:text-lg text-gray-950 hover:text-amber-950 transition-colors py-2 text-left cursor-pointer"
+                  className="w-full flex items-center justify-between font-serif font-bold text-sm sm:text-base text-gray-900 hover:text-[#8B2635] transition-colors py-1.5 text-left cursor-pointer group"
                 >
                   <span className="flex items-center gap-3">
-                    <Tag className="w-5 h-5 text-amber-800 shrink-0" />
-                    <span>Tags</span>
+                    <AccordionTagsEmblem />
+                    <span className="flex flex-col sm:flex-row sm:items-baseline sm:gap-2">
+                      <span className="tracking-wide text-gray-950 font-serif font-bold text-sm sm:text-base group-hover:text-[#8B2635] transition-colors">
+                        Tags & Styles
+                      </span>
+                      <span className="text-[10px] font-sans font-semibold text-amber-800/80 uppercase tracking-wider">
+                        • Explore Matching Collections
+                      </span>
+                    </span>
                   </span>
-                  {openSections.tags ? (
-                    <ChevronUp className="w-5 h-5 text-gray-600" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-600" />
-                  )}
+                  <div className={`w-6 h-6 rounded-full border border-amber-200 flex items-center justify-center transition-all ${
+                    openSections.tags ? 'bg-[#8B2635] text-amber-100' : 'bg-amber-100/70 text-amber-950 group-hover:bg-amber-200'
+                  }`}>
+                    {openSections.tags ? (
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    )}
+                  </div>
                 </button>
                 {openSections.tags && (
-                  <div className="mt-3.5 pl-8 flex flex-wrap gap-2.5 text-xs sm:text-sm">
-                    <span className="bg-amber-100 text-amber-950 px-3 py-1.5 rounded-lg font-black shadow-2xs">Authentic Maheshwari</span>
-                    <span className="bg-amber-100 text-amber-950 px-3 py-1.5 rounded-lg font-black shadow-2xs">Handloom Saree</span>
-                    <span className="bg-amber-100 text-amber-950 px-3 py-1.5 rounded-lg font-black shadow-2xs">Silk Cotton</span>
-                    <span className="bg-amber-100 text-amber-950 px-3 py-1.5 rounded-lg font-black shadow-2xs">Reoti Handloom</span>
-                    <span className="bg-amber-100 text-amber-950 px-3 py-1.5 rounded-lg font-black shadow-2xs">Festive Weave</span>
+                  <div className="mt-3 pl-11 sm:pl-12 space-y-3.5 text-xs animate-fadeIn">
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        'Maheshwari Saree',
+                        'Pure Maheshwari Silk Saree',
+                        'Original Maheshwari Handloom Saree',
+                        'Maheshwari Silk Cotton Saree',
+                        `${product.color || 'Royal'} Maheshwari Saree`,
+                        `${product.fabric || 'Silk Cotton'} Handloom Saree`,
+                        'Buy Maheshwari Saree Online',
+                        'Maheshwari Saree Maheshwar',
+                        'Zari Border Saree',
+                        'Authentic Pitloom Handwoven Saree',
+                        'Ahilya Bai Holkar Maheshwari Saree',
+                        'Handwoven Saree with Blouse Piece',
+                        'Direct from Weavers Maheshwar',
+                        'Traditional Zari Pallu Saree',
+                        'Festive Wear Handloom Saree',
+                        'Wedding Maheshwari Saree',
+                        'Pure Handloom Sarees India',
+                        'Lightweight Silk Cotton Saree',
+                        'Soft Draping Pure Saree',
+                        'Eco-Friendly Handcrafted Textile',
+                        'Best Maheshwari Sarees Online',
+                        'Reoti Handloom Estd. 1960',
+                        'Wholesale Maheshwari Sarees Manufacturer',
+                        'Maheshwar Saree Shop Online',
+                      ].map((tag, idx) => (
+                        <Link
+                          key={idx}
+                          href={`/products?q=${encodeURIComponent(tag)}`}
+                          title={`Explore ${tag} at Reoti Handloom`}
+                          rel="tag"
+                          className="bg-white hover:bg-amber-100/90 text-amber-950 hover:text-[#8B2635] px-3 py-1.5 rounded-full font-bold border border-amber-200 hover:border-amber-400 shadow-2xs transition-all hover:scale-103 flex items-center gap-1.5"
+                        >
+                          <span className="text-amber-600 text-[10px]">✦</span>
+                          <span>{tag}</span>
+                        </Link>
+                      ))}
+                    </div>
+
+                    <div className="p-3 bg-gradient-to-r from-amber-50/90 to-[#FFFDF9] rounded-xl border border-amber-200/70 text-[11px] sm:text-xs text-amber-950 flex items-start gap-2.5 shadow-2xs">
+                      <span className="text-amber-700 text-sm shrink-0">✨</span>
+                      <p className="leading-relaxed">
+                        <strong className="text-gray-950 font-bold mr-1">Explore Related Weaves:</strong>
+                        Click any style tag above to discover matching handloom sarees, pure silk cotton fabrics, and exclusive Maheshwari royal patterns directly from our looms.
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
