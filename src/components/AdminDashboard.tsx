@@ -45,6 +45,9 @@ import {
   User,
   ArrowLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Repeat,
   LayoutGrid,
   Truck,
   CheckCircle2,
@@ -168,6 +171,233 @@ export default function AdminDashboard() {
 
   const customerActs = React.useMemo(() => customerData.activities.filter((a) => !isActAdmin(a)), [customerData.activities, isActAdmin]);
   const adminActs = React.useMemo(() => customerData.activities.filter((a) => isActAdmin(a)), [customerData.activities, isActAdmin]);
+
+  // Customer Visit Session & Unique Person Tracking State (Grouping multiple page views into 1 Clean Journey Card with Dropdown)
+  const [expandedSessions, setExpandedSessions] = useState<Record<string, boolean>>({});
+  const [sessionViewMode, setSessionViewMode] = useState<'PERSONS' | 'SESSIONS' | 'RAW'>('PERSONS');
+
+  const toggleSessionExpand = (sessionId: string) => {
+    setExpandedSessions((prev) => ({ ...prev, [sessionId]: !prev[sessionId] }));
+  };
+
+  // Helper to reliably normalize visitor identity
+  const getVisitorIdentityKey = React.useCallback((act: any) => {
+    if (act.userEmail && act.userEmail.trim()) return `email_${act.userEmail.trim().toLowerCase()}`;
+    if (act.userPhone && act.userPhone.trim()) return `phone_${act.userPhone.replace(/\D/g, '')}`;
+    if (act.userIp && act.userIp.trim() && act.userIp !== '127.0.0.1' && act.userIp !== '::1') {
+      return `ip_${act.userIp.trim()}`;
+    }
+    return `act_${act.id || Math.random()}`;
+  }, []);
+
+  // 1. Group raw activities strictly by UNIQUE PERSON / VISITOR (All their lifetime visits under 1 Master Card)
+  const groupActivitiesIntoPersons = React.useCallback((actList: any[]) => {
+    if (!actList || actList.length === 0) return [];
+
+    // Sort chronologically ascending
+    const sorted = [...actList].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    const personsMap: Record<string, any> = {};
+
+    for (const act of sorted) {
+      const key = getVisitorIdentityKey(act);
+      const actTime = new Date(act.createdAt).getTime();
+
+      if (!personsMap[key]) {
+        personsMap[key] = {
+          personId: `person_${key}`,
+          userKey: key,
+          userName: act.userName || null,
+          userEmail: act.userEmail || null,
+          userPhone: act.userPhone || null,
+          userIp: act.userIp || '127.0.0.1',
+          location: act.location || act.city || null,
+          city: act.city || null,
+          device: act.device || 'Web',
+          firstSeen: new Date(act.createdAt),
+          lastSeen: new Date(act.createdAt),
+          totalActivities: 0,
+          totalPageViews: 0,
+          hasLead: false,
+          hasOrder: false,
+          hasCart: false,
+          isAdmin: isActAdmin(act),
+          allActivities: [],
+          visits: [], // Grouped chronological visits for this person
+        };
+      }
+
+      const person = personsMap[key];
+      person.lastSeen = new Date(act.createdAt);
+      person.totalActivities += 1;
+      person.allActivities.push(act);
+
+      if (act.type === 'VIEW_PRODUCT' || act.type === 'VISIT') {
+        person.totalPageViews += 1;
+      }
+      if (act.type === 'LEAD') person.hasLead = true;
+      if (act.type === 'ORDER') person.hasOrder = true;
+      if (act.title?.toLowerCase().includes('cart')) person.hasCart = true;
+
+      // Prefer detailed customer details
+      if (act.userName && (!person.userName || person.userName === 'Visitor')) person.userName = act.userName;
+      if (act.userPhone && !person.userPhone) person.userPhone = act.userPhone;
+      if (act.userEmail && !person.userEmail) person.userEmail = act.userEmail;
+      if (act.location && (!person.location || person.location.includes('Online Visitor'))) {
+        person.location = act.location;
+        person.city = act.city || person.city;
+      }
+      if (act.device && (!person.device || person.device === 'Web')) {
+        person.device = act.device;
+      }
+
+      // Group into visits (45-min inactivity window or day change)
+      const lastVisit = person.visits[person.visits.length - 1];
+      const isSameDay =
+        lastVisit &&
+        new Date(act.createdAt).toDateString() === new Date(lastVisit.lastTime).toDateString();
+      const isWithinWindow =
+        lastVisit &&
+        actTime - new Date(lastVisit.lastTime).getTime() <= 45 * 60 * 1000;
+
+      if (lastVisit && isSameDay && isWithinWindow) {
+        lastVisit.activities.push(act);
+        lastVisit.lastTime = new Date(act.createdAt);
+        lastVisit.durationMinutes = Math.max(
+          1,
+          Math.round((lastVisit.lastTime.getTime() - lastVisit.startTime.getTime()) / 60000)
+        );
+      } else {
+        const visitNumber = person.visits.length + 1;
+        person.visits.push({
+          visitNumber,
+          startTime: new Date(act.createdAt),
+          lastTime: new Date(act.createdAt),
+          durationMinutes: 1,
+          activities: [act],
+        });
+      }
+    }
+
+    // Sort newest active person at top
+    return Object.values(personsMap).sort(
+      (a: any, b: any) => b.lastSeen.getTime() - a.lastSeen.getTime()
+    );
+  }, [getVisitorIdentityKey, isActAdmin]);
+
+  // 2. Group raw activities into distinct chronological customer sessions (45-min inactivity window or day change)
+  const groupActivitiesIntoSessions = React.useCallback((actList: any[]) => {
+    if (!actList || actList.length === 0) return [];
+
+    const sorted = [...actList].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+
+    const userVisitHistory: Record<string, number> = {};
+    const sessionsList: any[] = [];
+
+    for (const act of sorted) {
+      const actTime = new Date(act.createdAt).getTime();
+      const userKey = getVisitorIdentityKey(act);
+
+      const existingSession = sessionsList
+        .slice()
+        .reverse()
+        .find((s) => s.userKey === userKey);
+
+      const isSameDay =
+        existingSession &&
+        new Date(act.createdAt).toDateString() ===
+          new Date(existingSession.lastTime).toDateString();
+
+      const isWithinWindow =
+        existingSession &&
+        actTime - new Date(existingSession.lastTime).getTime() <= 45 * 60 * 1000;
+
+      if (existingSession && isSameDay && isWithinWindow) {
+        existingSession.activities.push(act);
+        existingSession.lastTime = new Date(act.createdAt);
+        existingSession.durationMinutes = Math.max(
+          1,
+          Math.round(
+            (existingSession.lastTime.getTime() - existingSession.startTime.getTime()) / 60000
+          )
+        );
+
+        if (act.type === 'VIEW_PRODUCT' || act.type === 'VISIT') {
+          existingSession.totalPageViews += 1;
+        }
+        if (act.type === 'LEAD') existingSession.hasLead = true;
+        if (act.type === 'ORDER') existingSession.hasOrder = true;
+        if (act.title?.toLowerCase().includes('cart')) existingSession.hasCart = true;
+
+        if (act.location && (!existingSession.location || existingSession.location.includes('Online Visitor'))) {
+          existingSession.location = act.location;
+          existingSession.city = act.city;
+        }
+        if (act.userPhone && !existingSession.userPhone) {
+          existingSession.userPhone = act.userPhone;
+        }
+        if (act.userName && !existingSession.userName) {
+          existingSession.userName = act.userName;
+        }
+      } else {
+        userVisitHistory[userKey] = (userVisitHistory[userKey] || 0) + 1;
+        const visitNumber = userVisitHistory[userKey];
+        const isReturningVisitor = visitNumber > 1;
+
+        const sessionId = `sess_${userKey}_${actTime}`;
+        const newSession = {
+          sessionId,
+          userKey,
+          userName: act.userName || null,
+          userEmail: act.userEmail || null,
+          userPhone: act.userPhone || null,
+          userIp: act.userIp || '127.0.0.1',
+          location: act.location || act.city || null,
+          city: act.city || null,
+          device: act.device || 'Web',
+          startTime: new Date(act.createdAt),
+          lastTime: new Date(act.createdAt),
+          durationMinutes: 1,
+          activities: [act],
+          totalPageViews: act.type === 'VIEW_PRODUCT' || act.type === 'VISIT' ? 1 : 0,
+          hasLead: act.type === 'LEAD',
+          hasOrder: act.type === 'ORDER',
+          hasCart: Boolean(act.title?.toLowerCase().includes('cart')),
+          isAdmin: isActAdmin(act),
+          isReturningVisitor,
+          visitNumber,
+        };
+
+        sessionsList.push(newSession);
+      }
+    }
+
+    return sessionsList.sort(
+      (a, b) => b.lastTime.getTime() - a.lastTime.getTime()
+    );
+  }, [getVisitorIdentityKey, isActAdmin]);
+
+  const customerPersons = React.useMemo(
+    () => groupActivitiesIntoPersons(customerActs),
+    [customerActs, groupActivitiesIntoPersons]
+  );
+  const adminPersons = React.useMemo(
+    () => groupActivitiesIntoPersons(adminActs),
+    [adminActs, groupActivitiesIntoPersons]
+  );
+
+  const customerSessions = React.useMemo(
+    () => groupActivitiesIntoSessions(customerActs),
+    [customerActs, groupActivitiesIntoSessions]
+  );
+  const adminSessions = React.useMemo(
+    () => groupActivitiesIntoSessions(adminActs),
+    [adminActs, groupActivitiesIntoSessions]
+  );
 
   // Instagram Feed Manager state
   const [instaPosts, setInstaPosts] = useState<any[]>([]);
@@ -2601,7 +2831,29 @@ export default function AdminDashboard() {
 
             {/* 2. Top-Level Role Segregation Tabs (Customers vs Admin vs All) */}
             {(() => {
-              const customerVisits = customerActs.filter((a) => a.type === 'VISIT' || a.type === 'VIEW_PRODUCT').length;
+              const activePersonList =
+                activityRoleFilter === 'CUSTOMERS'
+                  ? customerPersons
+                  : activityRoleFilter === 'ADMIN'
+                  ? adminPersons
+                  : groupActivitiesIntoPersons(customerData.activities);
+
+              const activeSessionList =
+                activityRoleFilter === 'CUSTOMERS'
+                  ? customerSessions
+                  : activityRoleFilter === 'ADMIN'
+                  ? adminSessions
+                  : groupActivitiesIntoSessions(customerData.activities);
+
+              const activeRawList =
+                activityRoleFilter === 'CUSTOMERS'
+                  ? customerActs
+                  : activityRoleFilter === 'ADMIN'
+                  ? adminActs
+                  : customerData.activities;
+
+              const uniquePersonsCount = customerPersons.length;
+              const repeatPersonsCount = customerPersons.filter((p: any) => p.visits.length > 1).length;
               const customerLeads = customerActs.filter((a) => a.type === 'LEAD').length;
               const customerOrders = customerActs.filter((a) => a.type === 'ORDER').length;
 
@@ -2609,92 +2861,146 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   {/* Summary Metric Counters */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
-                    <div className="bg-emerald-50/80 border border-emerald-200/80 rounded-xl p-3 text-center">
+                    <div className="bg-emerald-50/90 border border-emerald-200 rounded-xl p-3 text-center shadow-xs">
                       <span className="text-[10px] uppercase font-extrabold text-emerald-800 tracking-wider block">
-                        👥 Real Customer Visits
+                        👥 Unique Customer Persons
                       </span>
-                      <span className="text-xl sm:text-2xl font-serif font-black text-emerald-950">
-                        {customerVisits}
-                      </span>
+                      <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                        <span className="text-xl sm:text-2xl font-serif font-black text-emerald-950">
+                          {uniquePersonsCount}
+                        </span>
+                        {repeatPersonsCount > 0 && (
+                          <span className="text-[10px] font-bold bg-emerald-200/80 text-emerald-900 px-1.5 py-0.5 rounded-full">
+                            🔁 {repeatPersonsCount} Repeat Visitors
+                          </span>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="bg-rose-50/80 border border-rose-200/80 rounded-xl p-3 text-center">
+                    <div className="bg-rose-50/90 border border-rose-200 rounded-xl p-3 text-center shadow-xs">
                       <span className="text-[10px] uppercase font-extrabold text-rose-800 tracking-wider block">
                         🔥 Customer Leads
                       </span>
-                      <span className="text-xl sm:text-2xl font-serif font-black text-rose-950">
+                      <span className="text-xl sm:text-2xl font-serif font-black text-rose-950 mt-0.5 block">
                         {customerLeads}
                       </span>
                     </div>
 
-                    <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3 text-center">
+                    <div className="bg-amber-50/90 border border-amber-200 rounded-xl p-3 text-center shadow-xs">
                       <span className="text-[10px] uppercase font-extrabold text-amber-800 tracking-wider block">
                         🛍️ Customer Orders
                       </span>
-                      <span className="text-xl sm:text-2xl font-serif font-black text-amber-950">
+                      <span className="text-xl sm:text-2xl font-serif font-black text-amber-950 mt-0.5 block">
                         {customerOrders}
                       </span>
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center shadow-xs">
                       <span className="text-[10px] uppercase font-extrabold text-slate-700 tracking-wider block">
                         🛡️ Admin Operations
                       </span>
-                      <span className="text-xl sm:text-2xl font-serif font-black text-slate-900">
+                      <span className="text-xl sm:text-2xl font-serif font-black text-slate-900 mt-0.5 block">
                         {adminActs.length}
                       </span>
                     </div>
                   </div>
 
-                  {/* Big Primary Switcher Tabs: Customers / Admin / All */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-100/80 p-1.5 rounded-xl border border-gray-200">
-                    <div className="flex items-center gap-1.5">
+                  {/* Primary Switcher Tabs: Customers / Admin / All & View Mode (Persons vs Sessions vs Raw) */}
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-gray-100/90 p-2 rounded-xl border border-gray-200">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <button
                         onClick={() => setActivityRoleFilter('CUSTOMERS')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                           activityRoleFilter === 'CUSTOMERS'
-                            ? 'bg-emerald-700 text-white shadow-sm'
+                            ? 'bg-emerald-800 text-white shadow-sm'
                             : 'text-gray-700 hover:bg-white/60'
                         }`}
                       >
                         <User className="w-3.5 h-3.5" />
-                        <span>Real Customers & Visitors ({customerActs.length})</span>
+                        <span>Real Customers ({customerPersons.length} Persons)</span>
                       </button>
 
                       <button
                         onClick={() => setActivityRoleFilter('ADMIN')}
-                        className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                           activityRoleFilter === 'ADMIN'
                             ? 'bg-amber-950 text-white shadow-sm'
                             : 'text-gray-700 hover:bg-white/60'
                         }`}
                       >
                         <ShieldCheck className="w-3.5 h-3.5" />
-                        <span>Admin & Management ({adminActs.length})</span>
+                        <span>Admin & Staff ({adminActs.length})</span>
                       </button>
 
                       <button
                         onClick={() => setActivityRoleFilter('ALL')}
-                        className={`px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           activityRoleFilter === 'ALL'
                             ? 'bg-gray-900 text-white shadow-sm'
                             : 'text-gray-700 hover:bg-white/60'
                         }`}
                       >
-                        <span>All ({customerData.activities.length})</span>
+                        <span>All Activity ({customerData.activities.length})</span>
                       </button>
                     </div>
 
-                    {/* Secondary Filter Sub-Pills */}
-                    <div className="flex flex-wrap gap-1 text-[11px] font-semibold">
+                    {/* View Mode 3-Way Toggle: Per-Person (Default) / Sessions / Raw */}
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-300 self-start lg:self-auto shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setSessionViewMode('PERSONS')}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                          sessionViewMode === 'PERSONS'
+                            ? 'bg-emerald-800 text-white shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                        title="Group all visits and clicks by unique customer person"
+                      >
+                        <User className="w-3.5 h-3.5" />
+                        <span>👤 Per Person ({activePersonList.length})</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSessionViewMode('SESSIONS')}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                          sessionViewMode === 'SESSIONS'
+                            ? 'bg-amber-900 text-white shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                        title="Group multiple clicks from the same visit session"
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>🕒 Visits ({activeSessionList.length})</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSessionViewMode('RAW')}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                          sessionViewMode === 'RAW'
+                            ? 'bg-gray-900 text-white shadow-xs'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                        title="View every single event line by line"
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>📋 Raw</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Secondary Filter Sub-Pills */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold">
+                    <div className="flex flex-wrap gap-1">
                       {(['ALL', 'LEAD', 'VISIT', 'LOGIN', 'REGISTER', 'ORDER'] as const).map((filter) => (
                         <button
                           key={filter}
                           onClick={() => setActivityFilter(filter)}
                           className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                             activityFilter === filter
-                              ? 'bg-white text-gray-900 font-extrabold shadow-2xs border border-gray-300'
-                              : 'text-gray-600 hover:text-gray-900'
+                              ? 'bg-amber-950 text-white font-extrabold shadow-2xs'
+                              : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                           }`}
                         >
                           {filter === 'ALL'
@@ -2702,7 +3008,7 @@ export default function AdminDashboard() {
                             : filter === 'LEAD'
                             ? '🔥 Leads'
                             : filter === 'VISIT'
-                            ? '🌐 Visits'
+                            ? '🌐 Page Views'
                             : filter === 'LOGIN'
                             ? '🔐 Logins'
                             : filter === 'REGISTER'
@@ -2711,37 +3017,673 @@ export default function AdminDashboard() {
                         </button>
                       ))}
                     </div>
+
+                    <span className="text-[11px] text-gray-500 font-mono">
+                      {sessionViewMode === 'PERSONS'
+                        ? `Showing ${activePersonList.length} Unique Customer Persons`
+                        : sessionViewMode === 'SESSIONS'
+                        ? `Showing ${activeSessionList.length} Visit Sessions`
+                        : `Showing ${activeRawList.length} Total Event Logs`}
+                    </span>
                   </div>
 
-                  {/* Render Log Feed */}
+                  {/* RENDER LOG FEED: PERSONS (DEFAULT) vs SESSIONS vs RAW FEED */}
                   {(() => {
-                    let baseList =
-                      activityRoleFilter === 'CUSTOMERS'
-                        ? customerActs
-                        : activityRoleFilter === 'ADMIN'
-                        ? adminActs
-                        : customerData.activities;
+                    // MODE 1: PER-PERSON (ALL LIFETIME VISITS OF EACH PERSON IN 1 CARD)
+                    if (sessionViewMode === 'PERSONS') {
+                      let filteredPersons = activePersonList;
+                      if (activityFilter !== 'ALL') {
+                        filteredPersons = filteredPersons.filter((p: any) =>
+                          p.allActivities.some((a: any) => a.type === activityFilter)
+                        );
+                      }
 
-                    if (activityFilter !== 'ALL') {
-                      baseList = baseList.filter((a) => a.type === activityFilter);
+                      if (filteredPersons.length === 0) {
+                        return (
+                          <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 space-y-2">
+                            <p className="text-sm font-semibold text-gray-600">
+                              No {activityRoleFilter === 'CUSTOMERS' ? 'Customer' : activityRoleFilter === 'ADMIN' ? 'Admin' : ''} records found.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3.5 max-h-[750px] overflow-y-auto pr-1">
+                          {filteredPersons.map((person: any) => {
+                            const isExpanded = expandedSessions[person.personId] ?? false;
+                            const isRepeat = person.visits.length > 1;
+                            const userLabel =
+                              person.userName ||
+                              person.userEmail ||
+                              (person.userPhone ? `+91 ${person.userPhone}` : `Visitor (${person.userIp || 'Web'})`);
+
+                            // Collect products viewed by this customer across all visits
+                            const viewedProducts = person.allActivities
+                              .filter((a: any) => a.type === 'VIEW_PRODUCT' || a.title?.includes('Saree') || a.title?.includes('Suit'))
+                              .map((a: any) => a.title?.replace('Viewed Product: ', '').replace('Viewed ', ''))
+                              .slice(0, 4);
+
+                            const waMessage = encodeURIComponent(
+                              `Namaste ${person.userName || 'from Reoti Handloom Maheshwar'}!\n\n` +
+                              `We noticed your interest in our handcrafted weaves` +
+                              (viewedProducts.length > 0 ? ` (${viewedProducts.join(', ')})` : '') +
+                              `.\n\nMay we assist you with saree selection, custom blouse stitching, or festive offers today?`
+                            );
+
+                            const waChatUrl = person.userPhone
+                              ? `https://wa.me/91${person.userPhone.replace(/\D/g, '')}?text=${waMessage}`
+                              : `https://wa.me/919617444445?text=${encodeURIComponent(
+                                  `🚨 *Customer Profile Alert*\n` +
+                                  `👤 Customer: ${userLabel}\n` +
+                                  `📍 Location: ${person.location || person.city || 'India'}\n` +
+                                  `📱 Device: ${person.device}\n` +
+                                  `👁️ Total Actions: ${person.totalActivities} across ${person.visits.length} visits\n` +
+                                  `🕒 Last Active: ${new Date(person.lastSeen).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+                                )}`;
+
+                            return (
+                              <div
+                                key={person.personId}
+                                className={`rounded-2xl border transition-all shadow-xs ${
+                                  person.isAdmin
+                                    ? 'bg-slate-50/90 border-slate-200'
+                                    : person.hasOrder
+                                    ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-400/30'
+                                    : person.hasLead
+                                    ? 'bg-rose-50/60 border-rose-200 ring-1 ring-rose-300/30'
+                                    : 'bg-white border-emerald-100 hover:border-emerald-300'
+                                }`}
+                              >
+                                {/* Person Master Header */}
+                                <div className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                                  <div className="space-y-2 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      {/* Role Badge */}
+                                      <span
+                                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                                          person.isAdmin
+                                            ? 'bg-amber-950 text-amber-200'
+                                            : 'bg-emerald-700 text-white'
+                                        }`}
+                                      >
+                                        {person.isAdmin ? <ShieldCheck className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                                        <span>{person.isAdmin ? 'Admin' : 'Customer Profile'}</span>
+                                      </span>
+
+                                      {/* Repeat Visitor Badge */}
+                                      {isRepeat && (
+                                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
+                                          <Repeat className="w-3 h-3 text-amber-700" />
+                                          <span>Repeat Buyer ({person.visits.length} Visits)</span>
+                                        </span>
+                                      )}
+
+                                      {/* High Intent Indicators */}
+                                      {person.hasOrder && (
+                                        <span className="bg-rose-600 text-white font-black px-2 py-0.5 rounded text-[10px] uppercase shadow-2xs">
+                                          🛍️ Placed Order
+                                        </span>
+                                      )}
+                                      {person.hasLead && (
+                                        <span className="bg-rose-100 text-rose-900 font-extrabold border border-rose-300 px-2 py-0.5 rounded text-[10px] uppercase">
+                                          🔥 Captured Lead
+                                        </span>
+                                      )}
+                                      {person.hasCart && (
+                                        <span className="bg-amber-100 text-amber-950 font-bold border border-amber-300 px-2 py-0.5 rounded text-[10px]">
+                                          🛒 Added to Cart
+                                        </span>
+                                      )}
+
+                                      {/* Location Pill */}
+                                      {(person.location || person.city) && (
+                                        <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-900 font-bold px-2 py-0.5 rounded text-[11px] border border-gray-300 shadow-2xs">
+                                          <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
+                                          <span>{person.location || person.city}</span>
+                                        </span>
+                                      )}
+
+                                      {/* Device Pill */}
+                                      <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 font-medium px-2 py-0.5 rounded text-[10px]">
+                                        {person.device?.toLowerCase().includes('mobile') ? (
+                                          <Smartphone className="w-3 h-3 text-gray-500" />
+                                        ) : (
+                                          <Laptop className="w-3 h-3 text-gray-500" />
+                                        )}
+                                        <span>{person.device}</span>
+                                      </span>
+                                    </div>
+
+                                    {/* Customer Identity Line */}
+                                    <div className="flex flex-wrap items-center gap-2.5 text-xs text-gray-900">
+                                      <span className="font-extrabold text-sm text-gray-950 font-serif">
+                                        {userLabel}
+                                      </span>
+
+                                      {person.userPhone && (
+                                        <a
+                                          href={`tel:+91${person.userPhone}`}
+                                          className="font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition-colors flex items-center gap-1"
+                                        >
+                                          <Phone className="w-3 h-3" />
+                                          <span>+91 {person.userPhone}</span>
+                                        </a>
+                                      )}
+
+                                      {person.userEmail && person.userEmail !== person.userName && (
+                                        <span className="text-gray-600 font-mono text-[11px]">
+                                          ✉️ {person.userEmail}
+                                        </span>
+                                      )}
+
+                                      <span className="text-gray-400 font-mono text-[10px]">
+                                        IP: {person.userIp}
+                                      </span>
+                                    </div>
+
+                                    {/* Action Count & Lifetime Stats */}
+                                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
+                                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-950">
+                                        <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                                        <span>
+                                          Explored <strong>{person.totalActivities}</strong> total actions ({person.totalPageViews} views) across <strong>{person.visits.length}</strong> visit{person.visits.length > 1 ? 's' : ''}
+                                        </span>
+                                      </span>
+                                      <span>•</span>
+                                      <span className="inline-flex items-center gap-1 font-mono text-gray-500">
+                                        <Clock className="w-3 h-3" />
+                                        <span>
+                                          Last active: {new Date(person.lastSeen).toLocaleTimeString('en-IN', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            timeZone: 'Asia/Kolkata',
+                                          })} ({new Date(person.lastSeen).toLocaleDateString('en-IN', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                          })})
+                                        </span>
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Right CTA Actions */}
+                                  <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
+                                    {person.userPhone ? (
+                                      <a
+                                        href={waChatUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
+                                      >
+                                        <MessageSquare className="w-3.5 h-3.5" />
+                                        <span>WhatsApp Customer</span>
+                                      </a>
+                                    ) : (
+                                      <a
+                                        href={waChatUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold text-xs px-3 py-2 rounded-xl shadow-2xs transition-all cursor-pointer"
+                                      >
+                                        <MessageSquare className="w-3.5 h-3.5" />
+                                        <span>Share Profile</span>
+                                      </a>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleSessionExpand(person.personId)}
+                                      className="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs px-3 py-2 rounded-xl border border-gray-300 transition-colors cursor-pointer"
+                                    >
+                                      <span>{isExpanded ? 'Hide Journey' : `View Journey (${person.totalActivities} actions)`}</span>
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-3.5 h-3.5 text-gray-600" />
+                                      ) : (
+                                        <ChevronDown className="w-3.5 h-3.5 text-gray-600" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {/* Accordion / Dropdown Body: Person's All Visits & Actions Timeline */}
+                                {isExpanded && (
+                                  <div className="border-t border-gray-200/80 bg-gray-50/70 p-4 rounded-b-2xl animate-in fade-in duration-200 space-y-4">
+                                    <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                                      <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>🧭 Full Customer Lifetime Journey</span>
+                                        <span className="bg-emerald-100 text-emerald-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                                          {person.visits.length} Visits • {person.totalActivities} Actions
+                                        </span>
+                                      </span>
+                                      <span className="text-[10px] text-gray-500 font-mono">
+                                        First visit: {new Date(person.firstSeen).toLocaleDateString('en-IN', {
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                        })}
+                                      </span>
+                                    </div>
+
+                                    {/* Visits Breakdown */}
+                                    <div className="space-y-4">
+                                      {person.visits.map((visit: any, vIdx: number) => {
+                                        return (
+                                          <div key={vIdx} className="bg-white/80 rounded-xl p-3 border border-gray-200 shadow-2xs space-y-2.5">
+                                            {/* Visit Sub-Header */}
+                                            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100 text-xs">
+                                              <div className="flex items-center gap-2">
+                                                <span className="bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px]">
+                                                  🗓️ Visit #{visit.visitNumber || (vIdx + 1)}
+                                                </span>
+                                                <span className="font-semibold text-gray-700">
+                                                  {new Date(visit.startTime).toLocaleDateString('en-IN', {
+                                                    day: 'numeric',
+                                                    month: 'short',
+                                                    year: 'numeric',
+                                                  })}
+                                                </span>
+                                                <span className="text-gray-400 font-mono text-[10px]">
+                                                  ({new Date(visit.startTime).toLocaleTimeString('en-IN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    timeZone: 'Asia/Kolkata',
+                                                  })} - {new Date(visit.lastTime).toLocaleTimeString('en-IN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    timeZone: 'Asia/Kolkata',
+                                                  })})
+                                                </span>
+                                              </div>
+
+                                              <span className="text-[10px] text-gray-500 font-mono">
+                                                {visit.activities.length} action{visit.activities.length > 1 ? 's' : ''} ({visit.durationMinutes} min active)
+                                              </span>
+                                            </div>
+
+                                            {/* Actions in this visit */}
+                                            <div className="space-y-2 relative pl-4 border-l-2 border-emerald-300/80 ml-2">
+                                              {visit.activities.map((act: any, aIdx: number) => (
+                                                <div key={act.id || aIdx} className="relative text-xs">
+                                                  <div className="absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full bg-emerald-600 border-2 border-white shadow-2xs" />
+                                                  <div className="bg-white p-2 rounded-lg border border-gray-200/70 text-xs hover:border-emerald-300 transition-all">
+                                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                                      <div className="flex flex-wrap items-center gap-1.5">
+                                                        <span className="text-[9px] font-bold text-gray-400 font-mono">
+                                                          #{aIdx + 1}
+                                                        </span>
+                                                        <span
+                                                          className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                                            act.type === 'LEAD'
+                                                              ? 'bg-rose-600 text-white'
+                                                              : act.type === 'ORDER'
+                                                              ? 'bg-rose-100 text-rose-900 font-bold border border-rose-200'
+                                                              : act.type === 'LOGIN'
+                                                              ? 'bg-blue-100 text-blue-800'
+                                                              : act.type === 'REGISTER'
+                                                              ? 'bg-emerald-100 text-emerald-800'
+                                                              : 'bg-amber-100 text-amber-900'
+                                                          }`}
+                                                        >
+                                                          {act.type}
+                                                        </span>
+                                                        <span className="font-bold text-gray-900">{act.title}</span>
+                                                      </div>
+                                                      <span className="text-[10px] text-gray-500 font-mono">
+                                                        {new Date(act.createdAt).toLocaleTimeString('en-IN', {
+                                                          hour: '2-digit',
+                                                          minute: '2-digit',
+                                                          second: '2-digit',
+                                                          timeZone: 'Asia/Kolkata',
+                                                        })}
+                                                      </span>
+                                                    </div>
+                                                    {act.details && (
+                                                      <p className="text-[11px] text-gray-600 font-mono mt-0.5 pl-1">
+                                                        {act.details}
+                                                      </p>
+                                                    )}
+                                                    {act.pageUrl && (
+                                                      <div className="mt-0.5 pl-1 text-[10px] text-emerald-800 font-mono truncate">
+                                                        🔗 Page: {act.pageUrl}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
                     }
 
-                    if (baseList.length === 0) {
+                    // MODE 2: SESSIONS (Grouped by 45m window)
+                    if (sessionViewMode === 'SESSIONS') {
+                      let filteredSessions = activeSessionList;
+                      if (activityFilter !== 'ALL') {
+                        filteredSessions = filteredSessions.filter((s: any) =>
+                          s.activities.some((a: any) => a.type === activityFilter)
+                        );
+                      }
+
+                      if (filteredSessions.length === 0) {
+                        return (
+                          <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 space-y-2">
+                            <p className="text-sm font-semibold text-gray-600">
+                              No {activityRoleFilter === 'CUSTOMERS' ? 'Customer' : activityRoleFilter === 'ADMIN' ? 'Admin' : ''} visit sessions found.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3.5 max-h-[750px] overflow-y-auto pr-1">
+                          {filteredSessions.map((session: any) => {
+                            const isExpanded = expandedSessions[session.sessionId] ?? false;
+                            const isRepeat = session.isReturningVisitor;
+                            const userLabel =
+                              session.userName ||
+                              session.userEmail ||
+                              (session.userPhone ? `+91 ${session.userPhone}` : `Visitor (${session.userIp || 'Web'})`);
+
+                            const viewedProducts = session.activities
+                              .filter((a: any) => a.type === 'VIEW_PRODUCT' || a.title?.includes('Saree') || a.title?.includes('Suit'))
+                              .map((a: any) => a.title?.replace('Viewed Product: ', '').replace('Viewed ', ''))
+                              .slice(0, 4);
+
+                            const waMessage = encodeURIComponent(
+                              `Namaste ${session.userName || 'from Reoti Handloom Maheshwar'}!\n\n` +
+                              `We noticed your interest in our authentic handcrafted weaves` +
+                              (viewedProducts.length > 0 ? ` (${viewedProducts.join(', ')})` : '') +
+                              `.\n\nMay we assist you with saree details or special festive offers today?`
+                            );
+                            const waChatUrl = session.userPhone
+                              ? `https://wa.me/91${session.userPhone.replace(/\D/g, '')}?text=${waMessage}`
+                              : `https://wa.me/919617444445?text=${encodeURIComponent(
+                                  `🚨 *Customer Visit Journey Alert*\n` +
+                                  `👤 User: ${userLabel}\n` +
+                                  `📍 Location: ${session.location || session.city || 'India'}\n` +
+                                  `📱 Device: ${session.device}\n` +
+                                  `👁️ Explored: ${session.activities.length} actions\n` +
+                                  `🕒 Time: ${new Date(session.startTime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`
+                                )}`;
+
+                            return (
+                              <div
+                                key={session.sessionId}
+                                className={`rounded-2xl border transition-all shadow-xs ${
+                                  session.isAdmin
+                                    ? 'bg-slate-50/90 border-slate-200'
+                                    : session.hasOrder
+                                    ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-400/30'
+                                    : session.hasLead
+                                    ? 'bg-rose-50/60 border-rose-200 ring-1 ring-rose-300/30'
+                                    : 'bg-white border-emerald-100 hover:border-emerald-300'
+                                }`}
+                              >
+                                <div className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                                  <div className="space-y-2 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span
+                                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                                          session.isAdmin
+                                            ? 'bg-amber-950 text-amber-200'
+                                            : 'bg-emerald-700 text-white'
+                                        }`}
+                                      >
+                                        {session.isAdmin ? <ShieldCheck className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                                        <span>{session.isAdmin ? 'Admin' : 'Real Customer'}</span>
+                                      </span>
+
+                                      {isRepeat && (
+                                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-extrabold animate-pulse">
+                                          <Repeat className="w-3 h-3 text-amber-700" />
+                                          <span>Repeat Buyer (Visit #{session.visitNumber})</span>
+                                        </span>
+                                      )}
+
+                                      {session.hasOrder && (
+                                        <span className="bg-rose-600 text-white font-black px-2 py-0.5 rounded text-[10px] uppercase shadow-2xs">
+                                          🛍️ Placed Order
+                                        </span>
+                                      )}
+                                      {session.hasLead && (
+                                        <span className="bg-rose-100 text-rose-900 font-extrabold border border-rose-300 px-2 py-0.5 rounded text-[10px] uppercase">
+                                          🔥 Captured Lead
+                                        </span>
+                                      )}
+                                      {session.hasCart && (
+                                        <span className="bg-amber-100 text-amber-950 font-bold border border-amber-300 px-2 py-0.5 rounded text-[10px]">
+                                          🛒 Added to Cart
+                                        </span>
+                                      )}
+
+                                      {(session.location || session.city) && (
+                                        <span className="inline-flex items-center gap-1 bg-gray-50 text-gray-900 font-bold px-2 py-0.5 rounded text-[11px] border border-gray-300 shadow-2xs">
+                                          <MapPin className="w-3 h-3 text-rose-600 shrink-0" />
+                                          <span>{session.location || session.city}</span>
+                                        </span>
+                                      )}
+
+                                      <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 font-medium px-2 py-0.5 rounded text-[10px]">
+                                        {session.device?.toLowerCase().includes('mobile') ? (
+                                          <Smartphone className="w-3 h-3 text-gray-500" />
+                                        ) : (
+                                          <Laptop className="w-3 h-3 text-gray-500" />
+                                        )}
+                                        <span>{session.device}</span>
+                                      </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-2.5 text-xs text-gray-900">
+                                      <span className="font-extrabold text-sm text-gray-950 font-serif">
+                                        {userLabel}
+                                      </span>
+
+                                      {session.userPhone && (
+                                        <a
+                                          href={`tel:+91${session.userPhone}`}
+                                          className="font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 transition-colors flex items-center gap-1"
+                                        >
+                                          <Phone className="w-3 h-3" />
+                                          <span>+91 {session.userPhone}</span>
+                                        </a>
+                                      )}
+
+                                      {session.userEmail && session.userEmail !== session.userName && (
+                                        <span className="text-gray-600 font-mono text-[11px]">
+                                          ✉️ {session.userEmail}
+                                        </span>
+                                      )}
+
+                                      <span className="text-gray-400 font-mono text-[10px]">
+                                        IP: {session.userIp}
+                                      </span>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-gray-600">
+                                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-950">
+                                        <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                                        <span>
+                                          Explored <strong>{session.activities.length}</strong> action
+                                          {session.activities.length > 1 ? 's' : ''} ({session.totalPageViews} saree/page view
+                                          {session.totalPageViews > 1 ? 's' : ''})
+                                        </span>
+                                      </span>
+                                      <span>•</span>
+                                      <span className="inline-flex items-center gap-1 font-mono text-gray-500">
+                                        <Clock className="w-3 h-3" />
+                                        <span>
+                                          {new Date(session.startTime).toLocaleTimeString('en-IN', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            timeZone: 'Asia/Kolkata',
+                                          })}
+                                          {session.durationMinutes > 1
+                                            ? ` - ${new Date(session.lastTime).toLocaleTimeString('en-IN', {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                timeZone: 'Asia/Kolkata',
+                                              })} (${session.durationMinutes} mins active)`
+                                            : ` (${new Date(session.startTime).toLocaleDateString('en-IN', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                              })})`}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-gray-100">
+                                    {session.userPhone ? (
+                                      <a
+                                        href={waChatUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition-all cursor-pointer"
+                                      >
+                                        <MessageSquare className="w-3.5 h-3.5" />
+                                        <span>WhatsApp Customer</span>
+                                      </a>
+                                    ) : (
+                                      <a
+                                        href={waChatUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold text-xs px-3 py-2 rounded-xl shadow-2xs transition-all cursor-pointer"
+                                      >
+                                        <MessageSquare className="w-3.5 h-3.5" />
+                                        <span>Share Visit</span>
+                                      </a>
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleSessionExpand(session.sessionId)}
+                                      className="inline-flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs px-3 py-2 rounded-xl border border-gray-300 transition-colors cursor-pointer"
+                                    >
+                                      <span>{isExpanded ? 'Hide Steps' : `View Journey (${session.activities.length})`}</span>
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-3.5 h-3.5 text-gray-600" />
+                                      ) : (
+                                        <ChevronDown className="w-3.5 h-3.5 text-gray-600" />
+                                      )}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {isExpanded && (
+                                  <div className="border-t border-gray-200/80 bg-gray-50/70 p-4 rounded-b-2xl animate-in fade-in duration-200">
+                                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200">
+                                      <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span>🧭 Customer Navigation Journey</span>
+                                        <span className="bg-amber-100 text-amber-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                                          {session.activities.length} Steps
+                                        </span>
+                                      </span>
+                                      <span className="text-[10px] text-gray-500 font-mono">
+                                        Session Date: {new Date(session.startTime).toLocaleDateString('en-IN', {
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                        })}
+                                      </span>
+                                    </div>
+
+                                    <div className="space-y-2.5 relative pl-4 border-l-2 border-emerald-300/80 ml-2">
+                                      {session.activities.map((act: any, idx: number) => {
+                                        return (
+                                          <div key={act.id || idx} className="relative group text-xs">
+                                            <div className="absolute -left-[23px] top-1.5 w-3 h-3 rounded-full bg-emerald-600 border-2 border-white shadow-2xs" />
+
+                                            <div className="bg-white p-2.5 rounded-xl border border-gray-200/80 shadow-2xs hover:border-emerald-300 transition-all">
+                                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                  <span className="text-[10px] font-black text-gray-400 font-mono">
+                                                    #{idx + 1}
+                                                  </span>
+
+                                                  <span
+                                                    className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                                                      act.type === 'LEAD'
+                                                        ? 'bg-rose-600 text-white'
+                                                        : act.type === 'ORDER'
+                                                        ? 'bg-rose-100 text-rose-900 border border-rose-300 font-bold'
+                                                        : act.type === 'LOGIN'
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : act.type === 'REGISTER'
+                                                        ? 'bg-emerald-100 text-emerald-800'
+                                                        : 'bg-amber-100 text-amber-900'
+                                                    }`}
+                                                  >
+                                                    {act.type}
+                                                  </span>
+
+                                                  <span className="font-bold text-gray-900">{act.title}</span>
+                                                </div>
+
+                                                <span className="text-[10px] text-gray-500 font-mono">
+                                                  {new Date(act.createdAt).toLocaleTimeString('en-IN', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                    timeZone: 'Asia/Kolkata',
+                                                  })}
+                                                </span>
+                                              </div>
+
+                                              {act.details && (
+                                                <p className="text-[11px] text-gray-600 font-mono mt-1 pl-1">
+                                                  {act.details}
+                                                </p>
+                                              )}
+
+                                              {act.pageUrl && (
+                                                <div className="mt-1 pl-1 text-[10px] text-emerald-800 font-mono truncate">
+                                                  🔗 Page: {act.pageUrl}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    // MODE 3: RAW EVENT LOG
+                    let rawFiltered = activeRawList;
+                    if (activityFilter !== 'ALL') {
+                      rawFiltered = rawFiltered.filter((a: any) => a.type === activityFilter);
+                    }
+
+                    if (rawFiltered.length === 0) {
                       return (
                         <div className="text-center py-12 bg-gray-50/50 rounded-xl border border-dashed border-gray-200 space-y-2">
                           <p className="text-sm font-semibold text-gray-600">
-                            No {activityRoleFilter === 'CUSTOMERS' ? 'Customer' : activityRoleFilter === 'ADMIN' ? 'Admin' : ''} activity records found for this filter.
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            New website visits, views, leads, and orders will appear here in real-time.
+                            No raw activity records found for this filter.
                           </p>
                         </div>
                       );
                     }
 
                     return (
-                      <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
-                        {baseList.map((act) => {
+                      <div className="space-y-3 max-h-[750px] overflow-y-auto pr-1">
+                        {rawFiltered.map((act: any) => {
                           const isAdmin = isActAdmin(act);
                           const waText = encodeURIComponent(
                             `🚨 *Reoti Store Activity Alert*\n\n` +
@@ -2765,7 +3707,6 @@ export default function AdminDashboard() {
                             >
                               <div className="space-y-1.5 flex-1">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  {/* Role Indicator Pill */}
                                   <span
                                     className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1 ${
                                       isAdmin
@@ -2777,7 +3718,6 @@ export default function AdminDashboard() {
                                     <span>{isAdmin ? 'Admin' : 'Customer'}</span>
                                   </span>
 
-                                  {/* Event Type Badge */}
                                   <span
                                     className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
                                       act.type === 'LEAD'
@@ -2794,7 +3734,6 @@ export default function AdminDashboard() {
                                     {act.type}
                                   </span>
 
-                                  {/* Exact Location Pill */}
                                   {(act.location || act.city) && (
                                     <span className="inline-flex items-center gap-1 bg-white text-gray-900 font-bold px-2 py-0.5 rounded text-[10px] border border-gray-300 shadow-2xs">
                                       <MapPin className="w-3 h-3 text-rose-600" />
@@ -2802,7 +3741,6 @@ export default function AdminDashboard() {
                                     </span>
                                   )}
 
-                                  {/* Device Info */}
                                   {act.device && (
                                     <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-700 font-medium px-2 py-0.5 rounded text-[10px]">
                                       {act.device}
@@ -2830,7 +3768,6 @@ export default function AdminDashboard() {
                                 </div>
                               </div>
 
-                              {/* WhatsApp / Action CTA */}
                               {act.userPhone ? (
                                 <a
                                   href={`https://wa.me/91${act.userPhone.replace(/\D/g, '')}?text=${encodeURIComponent(
