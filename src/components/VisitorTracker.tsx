@@ -174,10 +174,24 @@ export function VisitorTracker() {
           ? `🛡️ Admin Viewing: ${productTitle || pathname}`
           : undefined;
 
+        const getVisitorId = () => {
+          try {
+            let vid = localStorage.getItem('rh_vid');
+            if (!vid) {
+              vid = 'v_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+              localStorage.setItem('rh_vid', vid);
+            }
+            return vid;
+          } catch (e) {
+            return undefined;
+          }
+        };
+
         await fetch('/api/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+            visitorId: getVisitorId(),
             pageUrl: pathname,
             pageTitle,
             referrer,

@@ -128,6 +128,7 @@ export async function POST(req: NextRequest) {
       type: body.type || (isAdmin ? 'ADMIN_VISIT' : 'VISIT'),
       title,
       details: body.details || `Page: ${pageUrl} | Device: ${deviceString}${body.referrer ? ` | From: ${body.referrer}` : ''}`,
+      visitorId: body.visitorId || null,
       userEmail: body.userEmail || null,
       userPhone: body.userPhone || null,
       userIp: rawIp,

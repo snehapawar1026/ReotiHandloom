@@ -182,6 +182,7 @@ export default function AdminDashboard() {
 
   // Helper to reliably normalize visitor identity
   const getVisitorIdentityKey = React.useCallback((act: any) => {
+    if (act.visitorId && act.visitorId.trim()) return `vid_${act.visitorId.trim()}`;
     if (act.userEmail && act.userEmail.trim()) return `email_${act.userEmail.trim().toLowerCase()}`;
     if (act.userPhone && act.userPhone.trim()) return `phone_${act.userPhone.replace(/\D/g, '')}`;
     if (act.userIp && act.userIp.trim() && act.userIp !== '127.0.0.1' && act.userIp !== '::1') {
