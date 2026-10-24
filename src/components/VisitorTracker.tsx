@@ -1,137 +1,51 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { usePathname } from 'next/navigation';
+import { useEffect, useRef, Suspense } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 
-export function VisitorTracker() {
+function VisitorTrackerInternal() {
   const pathname = usePathname();
-  const lastTracked = useRef<{ path: string; time: number }>({ path: '', time: 0 });
-  const clientLocationRef = useRef<any>(null);
+  const searchParams = useSearchParams();
+  const lastTracked = useRef<{ url: string; time: number }>({ url: '', time: 0 });
 
   useEffect(() => {
-    // Try to get cached client location from sessionStorage or localStorage
-    try {
-      const cached = sessionStorage.getItem('rh_exact_loc') || localStorage.getItem('rh_exact_loc');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (
-          parsed.city?.toLowerCase().includes('ghansoli') ||
-          parsed.locationText?.toLowerCase().includes('ghansoli') ||
-          (parsed.city?.toLowerCase().includes('mumbai') && parsed.postal?.startsWith('45'))
-        ) {
-          sessionStorage.removeItem('rh_exact_loc');
-          localStorage.removeItem('rh_exact_loc');
-          clientLocationRef.current = null;
-        } else {
-          clientLocationRef.current = parsed;
-        }
-      }
-    } catch (e) {}
-
-    // Fetch high-accuracy client location (Single Source IP + GPS + Auto Pincode)
-    if (!clientLocationRef.current) {
-      const detectLocation = async () => {
-        try {
-          // 1. High-accuracy IP Geolocation lookup
-          const res = await fetch('https://ipwho.is/', { cache: 'no-store' });
-          if (res.ok) {
-            const d = await res.json();
-            if (d && d.success && d.city) {
-              const city = d.city || '';
-              const region = d.region || d.region_code || '';
-              const postal = d.postal || '';
-              const country = d.country || 'India';
-
-              const locationText = postal
-                ? `${city}, ${region} (Pin: ${postal})`
-                : region
-                ? `${city}, ${region}`
-                : `${city}, ${country}`;
-
-              const loc = { city, region, country, postal, locationText };
-              clientLocationRef.current = loc;
-              sessionStorage.setItem('rh_exact_loc', JSON.stringify(loc));
-              localStorage.setItem('rh_exact_loc', JSON.stringify(loc));
-              window.dispatchEvent(new Event('rh_location_updated'));
-            }
-          }
-        } catch (e) {}
-      };
-
-      // Defer background detection so it never blocks page load or mobile UI
-      const timer = setTimeout(detectLocation, 4000);
-      return () => clearTimeout(timer);
-    }
-
-    // 3. Global Auto-Resolver: When user inputs a 6-digit Pincode anywhere on the site
-    const handleGlobalInput = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      if (target && target.value) {
-        const val = target.value.trim();
-        if (/^\d{6}$/.test(val)) {
-          fetch(`https://api.postalpincode.in/pincode/${val}`)
-            .then((r) => r.json())
-            .then((res) => {
-              if (res && res[0]?.Status === 'Success' && res[0].PostOffice?.length > 0) {
-                const po = res[0].PostOffice[0];
-                const town = po.Name || po.Block || po.District;
-                const locText = `${town}, ${po.District}, ${po.State} (Pin: ${val})`;
-                const exactLoc = {
-                  city: town,
-                  region: po.State,
-                  country: 'India',
-                  postal: val,
-                  locationText: locText,
-                  isExactPin: true,
-                };
-                clientLocationRef.current = exactLoc;
-                sessionStorage.setItem('rh_exact_loc', JSON.stringify(exactLoc));
-                localStorage.setItem('rh_exact_loc', JSON.stringify(exactLoc));
-                window.dispatchEvent(new Event('rh_location_updated'));
-
-                fetch('/api/track', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    pageUrl: window.location.pathname,
-                    pageTitle: document.title || 'Reoti Handloom',
-                    type: 'PINCODE_DETECT',
-                    title: `📦 Customer Pincode: ${val} (${town}, ${po.District})`,
-                    clientLocation: exactLoc,
-                  }),
-                  keepalive: true,
-                }).catch(() => {});
-              }
-            })
-            .catch(() => {});
-        }
-      }
-    };
-
-    window.addEventListener('input', handleGlobalInput);
-    return () => window.removeEventListener('input', handleGlobalInput);
-  }, []);
-
-  useEffect(() => {
-    // Ignore tracking for admin pages
-    if (!pathname || pathname.startsWith('/admin') || pathname.startsWith('/reoti-studio-manage') || pathname.startsWith('/api')) {
+    // Ignore tracking for admin pages or internal API routes
+    if (
+      !pathname ||
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/reoti-studio-manage') ||
+      pathname.startsWith('/api')
+    ) {
       return;
     }
 
+    const searchStr = searchParams?.toString() ? `?${searchParams.toString()}` : '';
+    const fullUrl = `${pathname}${searchStr}`;
     const now = Date.now();
-    if (lastTracked.current.path === pathname && now - lastTracked.current.time < 5000) {
+
+    // Prevent duplicate rapid calls within 2 seconds for exact same URL
+    if (lastTracked.current.url === fullUrl && now - lastTracked.current.time < 2000) {
       return;
     }
-    lastTracked.current = { path: pathname, time: now };
+    lastTracked.current = { url: fullUrl, time: now };
 
     const trackVisit = async () => {
       try {
-        const pageTitle = document.title || 'Reoti Handloom';
-        const referrer = document.referrer || '';
+        const pageTitle = typeof document !== 'undefined' ? document.title || 'Reoti Handloom' : 'Reoti Handloom';
+        const referrer = typeof document !== 'undefined' ? document.referrer || '' : '';
+
+        // Check for bot or automated crawler
+        const isClientBot = Boolean(
+          typeof navigator !== 'undefined' && (
+            (navigator as any).webdriver ||
+            /bot|googlebot|crawler|spider|robot|crawling/i.test(navigator.userAgent || '')
+          )
+        );
 
         let isAdmin = false;
         let userEmail = '';
         let userName = '';
+
         try {
           const storedUser =
             localStorage.getItem('reoti_user') ||
@@ -159,20 +73,43 @@ export function VisitorTracker() {
           }
         } catch (e) {}
 
-        // Check if viewing a specific product
-        let type = isAdmin ? 'ADMIN_VISIT' : 'VISIT';
+        let clientLocation: any = undefined;
+        try {
+          const locStr = localStorage.getItem('rh_exact_loc') || sessionStorage.getItem('rh_exact_loc');
+          if (locStr) {
+            clientLocation = JSON.parse(locStr);
+          }
+        } catch (e) {}
+
+        const searchQuery = searchParams?.get('search') || '';
+        let type = isAdmin ? 'ADMIN_VISIT' : (isClientBot ? 'BOT_CRAWL' : 'VISIT');
         let productTitle = '';
-        if (pathname.startsWith('/products/')) {
-          type = isAdmin ? 'ADMIN_VISIT' : 'VIEW_PRODUCT';
+        let title: string | undefined = undefined;
+
+        if (searchQuery) {
+          type = isAdmin ? 'ADMIN_VISIT' : 'SEARCH';
+          title = `🔍 Searched Saree: "${searchQuery}"`;
+        } else if (pathname.startsWith('/products/')) {
+          type = isAdmin ? 'ADMIN_VISIT' : (isClientBot ? 'BOT_CRAWL' : 'VIEW_PRODUCT');
           const h1 = document.querySelector('h1');
           if (h1 && h1.textContent) {
             productTitle = h1.textContent.trim();
           }
+          if (!productTitle) {
+            const slug = pathname.replace('/products/', '').split('?')[0].split('#')[0].trim();
+            if (slug) {
+              productTitle = slug
+                .split('-')
+                .filter(Boolean)
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ');
+            }
+          }
         }
 
-        const title = isAdmin
-          ? `🛡️ Admin Viewing: ${productTitle || pathname}`
-          : undefined;
+        if (isAdmin) {
+          title = `🛡️ Admin Viewing: ${productTitle || (searchQuery ? `Search "${searchQuery}"` : pathname)}`;
+        }
 
         const getVisitorId = () => {
           try {
@@ -187,34 +124,41 @@ export function VisitorTracker() {
           }
         };
 
-        await fetch('/api/track', {
+        fetch('/api/track', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             visitorId: getVisitorId(),
-            pageUrl: pathname,
+            pageUrl: fullUrl,
             pageTitle,
             referrer,
             type,
             title,
             productTitle,
+            searchQuery: searchQuery || undefined,
             isAdmin,
+            isBot: isClientBot,
+            clientLocation,
             userEmail: userEmail || (isAdmin ? 'reotihandloom@gmail.com' : undefined),
             userName: userName || (isAdmin ? 'REOTI' : undefined),
-            clientLocation: clientLocationRef.current || null,
           }),
           keepalive: true,
-        });
-      } catch (e) {
-        // Silently fail without affecting user experience
-      }
+        }).catch(() => {});
+      } catch (e) {}
     };
 
-    // Small delay to let page title load & location resolve
-    const timer = setTimeout(trackVisit, 900);
+    // Execute immediately after small 50ms tick so it never gets delayed or dropped on mobile
+    const timer = setTimeout(trackVisit, 50);
     return () => clearTimeout(timer);
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   return null;
 }
 
+export function VisitorTracker() {
+  return (
+    <Suspense fallback={null}>
+      <VisitorTrackerInternal />
+    </Suspense>
+  );
+}

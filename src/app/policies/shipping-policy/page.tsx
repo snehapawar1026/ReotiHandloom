@@ -1,8 +1,15 @@
-'use client';
-
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Truck, ShieldCheck, HelpCircle, ChevronRight } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Shipping Policy | Free Express Delivery Across India - Reoti Handloom',
+  description: 'Learn about Reoti Handloom shipping timelines, free express doorstep delivery across India, and real-time tracking.',
+  alternates: {
+    canonical: 'https://reotihandloom.com/policies/shipping-policy',
+  },
+};
 
 export default function ShippingPolicyPage() {
   return (

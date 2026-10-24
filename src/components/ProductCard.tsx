@@ -2,19 +2,30 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useShop, ProductItem } from '@/context/ShopContext';
 import { Heart, Star } from 'lucide-react';
 import { WatermarkOverlay } from '@/components/WatermarkOverlay';
 
 interface ProductCardProps {
   product: ProductItem;
+  priority?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, priority = false }) => {
   const { toggleWishlist, isInWishlist } = useShop();
 
   const isLiked = isInWishlist(product.id);
-  const parsedImages = JSON.parse(product.images || '[]');
+  let parsedImages: string[] = [];
+  try {
+    if (Array.isArray(product.images)) {
+      parsedImages = product.images;
+    } else if (typeof product.images === 'string') {
+      parsedImages = JSON.parse(product.images || '[]');
+    }
+  } catch (e) {
+    parsedImages = [];
+  }
   const primaryImg = parsedImages[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c';
 
   const productUrl = `/products/${product.slug || product.id}`;
@@ -22,19 +33,31 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <Link
       href={productUrl}
-      prefetch={true}
+      prefetch={false}
+      data-product-card="true"
+      draggable={false}
+      onContextMenu={(e) => e.preventDefault()}
       className="group relative bg-[#FAF7F2] border border-[#E5DAC3] hover:border-[#8B263E] rounded-xl overflow-hidden flex flex-col justify-between shadow-2xs hover:shadow-lg transition-all duration-300 cursor-pointer select-none active:scale-[0.98] block text-inherit no-underline"
-      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+      style={{
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
+        WebkitTouchCallout: 'none',
+        userSelect: 'none',
+      }}
     >
       {/* Image Container with Soft Warm Craft Frame & Aspect Ratio 3/4 */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-amber-50/50 p-1 border-b border-[#E8DFC8] select-none">
-        <img
+      <div
+        onContextMenu={(e) => e.preventDefault()}
+        className="relative aspect-[3/4] w-full overflow-hidden bg-amber-50/50 p-1 border-b border-[#E8DFC8] select-none"
+        style={{ WebkitTouchCallout: 'none' }}
+      >
+        <Image
           src={primaryImg}
           alt={product.title}
-          draggable="false"
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
+          fill
+          priority={priority}
+          sizes="(max-width: 640px) 74vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
         />
 
         {/* Automatic Diagonal Watermark Overlay */}
@@ -70,14 +93,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Reoti Handloom Authentic Heritage Watermark Badge (Bottom-Left) */}
         <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur-xs text-[#581C1C] px-2 py-0.5 rounded-full text-[8px] font-bold tracking-wider uppercase border border-amber-300/80 pointer-events-none flex items-center gap-1 shadow-2xs z-10">
           <div className="w-2.5 h-2.5 rounded-full overflow-hidden border border-amber-600 shrink-0">
-            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+            <img src="/favicon-48x48.png" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-serif font-extrabold text-[8px] text-[#581C1C]">REOTI HANDLOOM</span>
-          <span className="text-[7px] text-amber-700 font-normal lowercase">• authentic</span>
         </div>
 
         {/* Top-Right Action Icon: Wishlist Heart */}
-        <div className="absolute top-2.5 right-2.5 flex flex-col gap-1.5 z-20">
+        <div className="absolute top-2 right-2 flex flex-col gap-1.5 z-20">
           <button
             type="button"
             onClick={(e) => {
@@ -109,7 +131,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </div>
             {/* Rating Badge (Only render if customer rating exists) */}
             {product.reviewCount !== undefined && product.reviewCount > 0 && product.rating && product.rating > 0 ? (
-              <div className="flex items-center gap-0.5 bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-bold text-[9px] sm:text-[10px] shrink-0 border border-emerald-200 shadow-2xs">
+              <div className="flex items-center gap-0.5 bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded font-bold text-[8px] sm:text-[10px] shrink-0 border border-emerald-200 shadow-2xs">
                 <span>{product.rating.toFixed(1)}</span>
                 <Star className="w-2.5 h-2.5 fill-emerald-700 text-emerald-700" />
               </div>
@@ -117,25 +139,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
 
           {/* Product Title */}
-          <h3 className="font-medium text-xs sm:text-xs text-gray-700 line-clamp-1 group-hover:text-[#8B263E] transition-colors leading-snug">
+          <h3 className="font-serif font-bold text-xs sm:text-sm text-gray-900 line-clamp-1 group-hover:text-[#8B263E] transition-colors leading-snug">
             {product.title}
           </h3>
         </div>
 
         {/* Pricing Section */}
-        <div className="mt-2 pt-1.5 border-t border-amber-100 flex items-center justify-between flex-wrap gap-1">
+        <div className="mt-1.5 sm:mt-2 pt-1.5 border-t border-amber-100 flex items-center justify-between flex-wrap gap-1">
           <div className="flex items-baseline gap-1.5 font-sans">
             <span className="font-sans font-extrabold text-sm sm:text-base text-[#581C1C] tracking-tight">
               ₹{product.price.toLocaleString()}
             </span>
             {product.originalPrice && product.originalPrice > product.price ? (
-              <span className="font-sans text-[11px] text-gray-400 line-through">
+              <span className="font-sans text-[10px] sm:text-[11px] text-gray-400 line-through">
                 ₹{product.originalPrice.toLocaleString()}
               </span>
             ) : null}
           </div>
           {product.discountPercent && product.discountPercent > 0 && product.originalPrice && product.originalPrice > product.price ? (
-            <span className="text-[9px] sm:text-[10px] font-sans font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+            <span className="text-[8px] sm:text-[9.5px] font-sans font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
               {product.discountPercent}% Off
             </span>
           ) : null}
@@ -144,13 +166,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Add to Bag Button -> Opens Item Description Page */}
         {product.isOutOfStock ? (
           <div
-            className="w-full mt-2 py-1.5 sm:py-2 bg-gray-200 text-gray-500 font-serif font-bold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg cursor-not-allowed border border-gray-300 text-center"
+            className="w-full mt-2 py-2 bg-gray-200 text-gray-500 font-serif font-bold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg cursor-not-allowed border border-gray-300 text-center"
           >
             OUT OF STOCK
           </div>
         ) : (
           <div
-            className="w-full mt-2 py-1.5 sm:py-2 bg-[#581C1C] group-hover:bg-[#722424] text-amber-50 font-serif font-semibold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg transition-colors shadow-2xs flex items-center justify-center gap-1 text-center"
+            className="w-full mt-2 py-2 bg-[#581C1C] group-hover:bg-[#722424] text-amber-50 font-serif font-semibold text-[10px] sm:text-[11px] uppercase tracking-wider rounded-lg transition-colors shadow-2xs flex items-center justify-center gap-1 text-center"
           >
             <span>ADD TO BAG</span>
           </div>
@@ -159,4 +181,3 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     </Link>
   );
 };
-

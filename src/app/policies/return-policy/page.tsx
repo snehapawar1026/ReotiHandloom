@@ -22,6 +22,16 @@ import {
   Award,
 } from 'lucide-react';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Return & Refund Policy | 7 Days Hassle-Free Returns - Reoti Handloom',
+  description: 'Learn about Reoti Handloom 7-day hassle-free return and refund policy for authentic Maheshwari sarees.',
+  alternates: {
+    canonical: 'https://reotihandloom.com/policies/return-policy',
+  },
+};
+
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 

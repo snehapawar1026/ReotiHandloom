@@ -37,8 +37,16 @@ const itemsXml = products.map(p => {
   if (typeof imageUrl !== 'string' || !imageUrl || imageUrl.startsWith('[')) {
     imageUrl = '/rh-logo.png';
   }
-  if (!imageUrl.startsWith('http')) {
-    imageUrl = baseUrl + (imageUrl.startsWith('/') ? '' : '/') + imageUrl;
+
+  // Use watermarked feed image if available
+  const rawFilename = path.basename(imageUrl.split('?')[0]);
+  const feedLocalPath = path.join(__dirname, '../public/feed-images', rawFilename);
+  if (fs.existsSync(feedLocalPath)) {
+    imageUrl = baseUrl + '/feed-images/' + rawFilename + '?v=2';
+  } else if (!imageUrl.startsWith('http')) {
+    imageUrl = baseUrl + (imageUrl.startsWith('/') ? '' : '/') + imageUrl + '?v=2';
+  } else {
+    imageUrl = imageUrl + (imageUrl.includes('?') ? '&' : '?') + 'v=2';
   }
 
   const price = Number(p.price || 0).toFixed(2);

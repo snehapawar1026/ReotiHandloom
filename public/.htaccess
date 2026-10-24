@@ -1,4 +1,18 @@
 # ==============================================================================
+# Security: Disable Directory Browsing & Custom Luxury Maintenance Screens
+# ==============================================================================
+Options -Indexes
+<IfModule mod_autoindex.c>
+  IndexIgnore *
+</IfModule>
+
+# Custom Error Pages (Whenever site is restarting or denied, show branded maintenance)
+ErrorDocument 403 /maintenance.html
+ErrorDocument 500 /maintenance.html
+ErrorDocument 502 /maintenance.html
+ErrorDocument 503 /maintenance.html
+
+# ==============================================================================
 # LiteSpeed & Apache High-Performance Caching & Compression Configuration
 # Optimized for Reoti Handloom (Production Speed Boost for Mobile & Desktop)
 # ==============================================================================
@@ -14,11 +28,19 @@ LimitRequestBody 209715200
   php_value max_input_time 300
 </IfModule>
 
-# 2. LiteSpeed Server Cache Control for Next.js App
-<IfModule LiteSpeed>
-  # Bypass LiteSpeed Server Cache for dynamic HTML so updates reflect instantly
+# Force HTTPS Redirect (Guarantees Secure Context for Clipboard, Push & Fast SSL)
+<IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteCond %{REQUEST_URI} !^/(_next|images|uploads|favicon|.*\\.(css|js|jpg|jpeg|png|webp|avif|gif|svg|woff|woff2|ttf))$ [NC]
+  RewriteCond %{HTTPS} off
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# 2. LiteSpeed Server Cache Control for Next.js App (Instant Live Reflection)
+<IfModule LiteSpeed>
+  CacheDisable public /
+  RewriteEngine On
+  RewriteCond %{REQUEST_URI} !^/(_next|images|uploads|favicon|.*\.(css|js|jpg|jpeg|png|webp|avif|gif|svg|woff|woff2|ttf))$ [NC]
   RewriteRule .* - [E=Cache-Control:no-cache]
 </IfModule>
 

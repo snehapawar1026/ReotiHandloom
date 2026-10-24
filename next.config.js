@@ -27,10 +27,15 @@ const securityHeaders = [
 
 const nextConfig = {
   output: 'standalone',
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
   devIndicators: false,
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'framer-motion', 'clsx', 'tailwind-merge'],
+  },
   images: {
-    formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 86400,
+    unoptimized: true,
   },
   async headers() {
     return [
@@ -43,7 +48,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
+            value: 'public, max-age=2592000, stale-while-revalidate=604800',
           },
         ],
       },
@@ -52,7 +57,16 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
+            value: 'public, max-age=2592000, stale-while-revalidate=604800',
+          },
+        ],
+      },
+      {
+        source: '/favicon(.*)|/logo(.*)|/icon(.*)|/rh-logo(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

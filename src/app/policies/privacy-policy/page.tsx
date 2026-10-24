@@ -1,4 +1,14 @@
-﻿export default function PrivacyPolicyPage() {
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | Reoti Handloom Maheshwar',
+  description: 'Learn about our data privacy, security practices, and how your information is protected at Reoti Handloom.',
+  alternates: {
+    canonical: 'https://reotihandloom.com/policies/privacy-policy',
+  },
+};
+
+export default function PrivacyPolicyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-16 text-gray-800">
       <h1 className="text-3xl font-serif font-bold text-[#581C1C] mb-6">Privacy Policy</h1>

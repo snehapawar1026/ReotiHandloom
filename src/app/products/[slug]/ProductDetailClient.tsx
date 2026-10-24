@@ -7,6 +7,7 @@ import { useShop, ProductItem } from '@/context/ShopContext';
 import { ProductCard } from '@/components/ProductCard';
 import { MobileProductSlider } from '@/components/MobileProductSlider';
 import { WatermarkOverlay } from '@/components/WatermarkOverlay';
+import { copyToClipboard as safeCopy } from '@/lib/clipboard';
 import {
   Heart,
   ShoppingBag,
@@ -680,6 +681,45 @@ export default function ProductDetailClient({
   // Fall & Pico bidding & Lightbox state
   const [hasFallPico, setHasFallPico] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+
+  // Dedicated Product View Tracker - guarantees view is logged immediately with exact title
+  useEffect(() => {
+    if (!product?.title) return;
+    try {
+      const getVid = () => {
+        try {
+          let vid = localStorage.getItem('rh_vid');
+          if (!vid) {
+            vid = 'v_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+            localStorage.setItem('rh_vid', vid);
+          }
+          return vid;
+        } catch (e) {
+          return undefined;
+        }
+      };
+
+      let clientLocation: any = undefined;
+      try {
+        const locStr = localStorage.getItem('rh_exact_loc') || sessionStorage.getItem('rh_exact_loc');
+        if (locStr) clientLocation = JSON.parse(locStr);
+      } catch (e) {}
+
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitorId: getVid(),
+          pageUrl: `/products/${product.slug || product.id}`,
+          pageTitle: product.title,
+          type: 'VIEW_PRODUCT',
+          productTitle: product.title,
+          clientLocation,
+        }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch (e) {}
+  }, [product?.id]);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [activeMediaType, setActiveMediaType] = useState<'image' | 'video'>('image');
@@ -764,10 +804,8 @@ export default function ProductDetailClient({
     window.open(url, '_blank');
   };
 
-  const copyToClipboard = (url: string) => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(url);
-    }
+  const copyToClipboard = async (url: string) => {
+    await safeCopy(url);
     setShareCopied(true);
     setTimeout(() => setShareCopied(false), 3000);
   };
@@ -1075,14 +1113,12 @@ export default function ProductDetailClient({
                     }`}
                     title="Watch Saree Draping Video"
                   >
-                    {/* Live Looping Video in Thumbnail */}
-                    <video
-                      src={product.videoUrl}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
+                    {/* Fast-Loading Poster in Video Thumbnail */}
+                    <img
+                      src={parsedImages[0] || '/uploads/saree_1789923479221_mexzs.jpeg'}
+                      alt="Watch Saree Draping Video"
                       className="w-full h-full object-cover pointer-events-none"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5 pointer-events-none">
                       <div className="w-6 h-6 rounded-full bg-black/70 backdrop-blur-xs flex items-center justify-center text-amber-300 border border-amber-400/70 shadow-sm group-hover/vid:scale-110 transition-transform">
@@ -1333,13 +1369,11 @@ export default function ProductDetailClient({
                       }`}
                       title="Watch Saree Video"
                     >
-                      <video
-                        src={product.videoUrl}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
+                      <img
+                        src={parsedImages[0] || '/uploads/saree_1789923479221_mexzs.jpeg'}
+                        alt="Watch Saree Video"
                         className="w-full h-full object-cover pointer-events-none"
+                        loading="lazy"
                       />
                       <div className="absolute inset-0 bg-black/25 flex flex-col items-center justify-center gap-0.5 pointer-events-none">
                         <div className="w-5 h-5 rounded-full bg-black/70 backdrop-blur-xs flex items-center justify-center text-amber-300 border border-amber-400/70 shadow-sm">

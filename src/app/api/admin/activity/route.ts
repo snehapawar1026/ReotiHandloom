@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const filterType = (searchParams.get('type') || 'ALL') as any;
+    const filterType = (searchParams.get('type') || searchParams.get('clear') || 'ALL') as any;
     clearActivitiesInStore(filterType);
     return NextResponse.json({ success: true, message: 'Activities cleared successfully.' });
   } catch (e: any) {

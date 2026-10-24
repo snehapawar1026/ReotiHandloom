@@ -12,6 +12,7 @@ import { TrustQualityWidget } from '@/components/TrustQualityWidget';
 import { VisitorTracker } from '@/components/VisitorTracker';
 import { SmartLeadCaptureModal } from '@/components/SmartLeadCaptureModal';
 import { ImageProtection } from '@/components/ImageProtection';
+import { GlobalErrorTracker } from '@/components/GlobalErrorTracker';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -35,6 +36,31 @@ export const metadata: Metadata = {
     'Buy 100% authentic handcrafted Maheshwari Sarees, Silk-Cotton, Pure Silk, Tissue Zari & Garbha Reshami directly from 3rd generation master weavers in Maheshwar since 1960. Free Express Delivery & Cash on Delivery across India.',
   keywords: [
     'Maheshwari Sarees',
+    'maheshwari saree',
+    'maheshwari silk sarees',
+    'maheshwari sarees',
+    'maheshwari cotton silk saree',
+    'pure maheshwari silk saree',
+    'maheshwari silk suit',
+    'maheshwari silk suits',
+    'maheshwari silk dress material online',
+    'maheshwari dress',
+    'reshmi saree',
+    'garbha reshami silk saree',
+    'checks sarees',
+    'checked saree',
+    'silver border saree',
+    'chanderi silk saree',
+    'pure chanderi silk sarees',
+    'pure chanderi saree',
+    'chanderi katan silk saree',
+    'bagh print saree',
+    'bagh suits',
+    'maheshwari saree origin',
+    'handloom maheshwari sarees',
+    'maheshwari handloom sarees',
+    'महेश्वरी साड़ी',
+    'गहेश्वरी साड़ी',
     'Maheshwari Sarees Online',
     'Buy Maheshwari Sarees Online',
     'Authentic Maheshwari Handloom Sarees',
@@ -48,8 +74,6 @@ export const metadata: Metadata = {
     'Reoti Handloom',
     'Bugdi Border Saree',
     'Narmada Border Saree',
-    'Maheshwari Suit Material',
-    'Maheshwari Dress Material',
     'Original Maheshwari Sarees with Price',
     'Handloom Sarees Cash on Delivery',
     'GI Certified Maheshwar Handloom',
@@ -185,26 +209,34 @@ const jsonLdFaq = {
   mainEntity: [
     {
       '@type': 'Question',
-      name: 'How can I buy 100% authentic Maheshwari Sarees online directly from weavers?',
+      name: 'History & Origin: Who founded Maheshwari sarees and when?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'You can buy certified 100% authentic Maheshwari Handloom Sarees directly from Reoti Handloom on https://reotihandloom.com. Each saree is woven by 3rd generation master artisans on traditional pit looms in Maheshwar with pure silk and mercerised cotton.',
+        text: 'Maheshwari sarees were founded around 1770 by the visionary queen Rajmata Ahilyabai Holkar of the Holkar dynasty in Maheshwar, Madhya Pradesh. She invited traditional master weavers from Surat and Malwa to design royal gifts and garments for visiting royalty and dignitaries using architectural motifs from the Maheshwar Fort and sacred Narmada river.',
       },
     },
     {
       '@type': 'Question',
-      name: 'What makes Maheshwari Sarees unique and famous worldwide?',
+      name: 'What is special about authentic Maheshwari Sarees?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Maheshwari sarees were originated under the royal patronage of Rajmata Devi Ahilya Bai Holkar in the 18th century. They are celebrated for their reversible Zari borders (Bugdi and Narmada लहर), lightweight feather-soft drape, natural sheen, and fine Mulberry silk warp.',
+        text: 'Maheshwari sarees are famous for their feather-light breathability (under 400 grams), reversible Zari borders (Bugdi / Karvat) that look identical on both sides, fine Mulberry silk warp with combed cotton weft, and royal architectural motifs like Chatai (mat), Chameli (jasmine), and Eent (brick pattern).',
       },
     },
     {
       '@type': 'Question',
-      name: 'Do you offer Free Delivery and Cash on Delivery across India?',
+      name: 'Where can I buy original Maheshwari Handloom Sarees directly from weavers?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes, Reoti Handloom provides 100% Free Express Delivery across India on all prepaid and Cash on Delivery (COD) orders with 7-day hassle-free returns.',
+        text: 'You can buy 100% authentic certified Maheshwari Handloom Sarees directly from Reoti Handloom (Est. 1960) at 73 Laxmibai Marg, Maheshwar (MP) and online on https://reotihandloom.com with free delivery and Cash on Delivery across India.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'How to identify genuine Maheshwari Handloom vs fake powerloom sarees?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Authentic handloom sarees feature subtle loom pin marks (Kanni) along the selvedge, clean reversible border finishing without loose back floats, organic breathability, and natural Mulberry silk sheen.',
       },
     },
   ],
@@ -215,6 +247,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${playfair.variable} ${jakarta.variable}`}>
       <head>
         <meta name="p:domain_verify" content="37dae2c939e0e05ddb5fe0687309a246" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
@@ -225,12 +259,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         {/* Google Analytics GA4 */}
         <Script
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           src="https://www.googletagmanager.com/gtag/js?id=G-KXC0XN60C8"
         />
         <Script
           id="google-analytics-init"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -245,6 +279,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-screen flex flex-col bg-slate-50 text-gray-900 font-sans antialiased">
         <ShopProvider>
+          <GlobalErrorTracker />
           <Navbar />
           <CartDrawer />
           <main className="flex-1">{children}</main>

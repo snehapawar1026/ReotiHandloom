@@ -70,16 +70,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Category URLs
-  const categoryRoutes: MetadataRoute.Sitemap = (data.categories || [])
-    .filter((c: any) => !c.isHidden && c.slug)
-    .map((c: any) => ({
-      url: `${baseUrl}/products?category=${c.slug}`,
-      lastModified: c.updatedAt ? new Date(c.updatedAt) : new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.85,
-    }));
-
   // Dynamic Product URLs
   const productRoutes: MetadataRoute.Sitemap = (data.products || [])
     .filter((p: any) => !p.isHidden && (p.slug || p.id))
@@ -100,5 +90,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-  return [...staticRoutes, ...categoryRoutes, ...productRoutes, ...blogRoutes];
+  return [...staticRoutes, ...productRoutes, ...blogRoutes];
 }

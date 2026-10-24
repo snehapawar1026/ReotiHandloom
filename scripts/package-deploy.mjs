@@ -4,14 +4,11 @@ import { execSync } from 'child_process';
 
 const rootDir = path.resolve(process.cwd());
 const parentDir = path.resolve(rootDir, '..');
-const tempDir = path.join(parentDir, 'temp_deploy');
-const zipFile = path.join(parentDir, 'complete_update.zip');
+const tempDir = path.join(parentDir, `temp_deploy_${Date.now()}`);
+const zipFile = path.join(parentDir, 'complete_update_new.zip');
+const fallbackZip = path.join(parentDir, 'complete_update.zip');
 
 console.log('📦 Starting 1-Click Deployment Packaging...');
-
-if (fs.existsSync(tempDir)) {
-  fs.rmSync(tempDir, { recursive: true, force: true });
-}
 
 fs.mkdirSync(path.join(tempDir, '.next'), { recursive: true });
 fs.mkdirSync(path.join(tempDir, 'public', '_next'), { recursive: true });
@@ -67,12 +64,8 @@ if (fs.existsSync(path.join(rootDir, '.env.local'))) {
     path.join(tempDir, '.env.local')
   );
 }
-if (fs.existsSync(path.join(rootDir, 'public', '.htaccess'))) {
-  fs.copyFileSync(
-    path.join(rootDir, 'public', '.htaccess'),
-    path.join(tempDir, '.htaccess')
-  );
-}
+// NOTE: Do NOT copy .htaccess into the deployment package.
+// This ensures cPanel's CloudLinux/Passenger configuration in /home/fbaqsmhn/reotihandloom/.htaccess is never overwritten.
 
 // 8. Auto-Restart trigger for cPanel Passenger / LiteSpeed
 fs.mkdirSync(path.join(tempDir, 'tmp'), { recursive: true });
@@ -115,6 +108,13 @@ try {
 try {
   fs.rmSync(tempDir, { recursive: true, force: true });
 } catch (e) {}
+
+try {
+  fs.copyFileSync(zipFile, fallbackZip);
+  console.log(`✅ Also updated ${fallbackZip}`);
+} catch (e) {
+  console.log('Note: complete_update.zip was locked in file picker, so complete_update_new.zip is ready to use.');
+}
 
 const stats = fs.statSync(zipFile);
 const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);

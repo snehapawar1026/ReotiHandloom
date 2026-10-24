@@ -16,42 +16,53 @@ interface GoogleReviewItem {
   saree_image?: string;
 }
 
-export const GoogleReviewsSection = () => {
-  const [rating, setRating] = useState<number>(4.8);
-  const [totalReviews, setTotalReviews] = useState<number>(331);
-  const [reviews, setReviews] = useState<GoogleReviewItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+interface GoogleReviewsSectionProps {
+  initialReviews?: GoogleReviewItem[];
+  initialRating?: number;
+  initialTotalReviews?: number;
+}
+
+export const GoogleReviewsSection: React.FC<GoogleReviewsSectionProps> = ({
+  initialReviews,
+  initialRating,
+  initialTotalReviews,
+}) => {
+  const [rating, setRating] = useState<number>(initialRating || 4.8);
+  const [totalReviews, setTotalReviews] = useState<number>(initialTotalReviews || 331);
+  const [reviews, setReviews] = useState<GoogleReviewItem[]>(initialReviews || []);
+  const [loading, setLoading] = useState<boolean>(!initialReviews || initialReviews.length === 0);
   const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch('/api/google-reviews')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          setRating(data.rating || 4.8);
-          setTotalReviews(data.totalReviews || 331);
-          setReviews(data.reviews || []);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+    if (!initialReviews || initialReviews.length === 0) {
+      fetch('/api/google-reviews')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setRating(data.rating || 4.8);
+            setTotalReviews(data.totalReviews || 331);
+            setReviews(data.reviews || []);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [initialReviews]);
 
-  // Guaranteed Continuous Non-stop Auto-Slide (Every 2.8 Seconds)
+  // Auto-Slide smoothly every 5 seconds without freezing iOS UI
   useEffect(() => {
     if (loading || !sliderRef.current || reviews.length === 0) return;
 
     const interval = setInterval(() => {
-      if (sliderRef.current) {
+      if (sliderRef.current && document.visibilityState === 'visible') {
         const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-        // If near end of scroll width, smoothly wrap to start
         if (scrollLeft + clientWidth >= scrollWidth - 20) {
           sliderRef.current.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
-          sliderRef.current.scrollBy({ left: 360, behavior: 'smooth' });
+          sliderRef.current.scrollBy({ left: 340, behavior: 'smooth' });
         }
       }
-    }, 2800);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [loading, reviews.length]);
@@ -178,17 +189,17 @@ export const GoogleReviewsSection = () => {
                       {rev.profile_photo_url ? (
                         <img
                           src={rev.profile_photo_url}
-                          alt={rev.author_name}
+                          alt={rev.author_name || 'Customer'}
                           className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
                         />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-900 font-bold text-sm flex items-center justify-center shrink-0">
-                          {rev.author_name.charAt(0)}
+                          {(rev.author_name || 'Customer').charAt(0).toUpperCase()}
                         </div>
                       )}
                       <div>
                         <h4 className="font-extrabold text-xs text-gray-900 flex items-center gap-1 group-hover:text-blue-600 transition-colors">
-                          <span>{rev.author_name}</span>
+                          <span>{rev.author_name || 'Verified Customer'}</span>
                           <CheckCircle className="w-3.5 h-3.5 text-blue-500 fill-blue-50 shrink-0" />
                         </h4>
                         <p className="text-[10px] text-gray-500 font-medium">

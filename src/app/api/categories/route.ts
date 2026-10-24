@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     { success: true, categories: allCats },
     {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400',
       },
     }
   );

@@ -1,3 +1,13 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | Reoti Handloom Maheshwar',
+  description: 'Read the terms and conditions for purchasing handwoven Maheshwari sarees and fabrics from Reoti Handloom.',
+  alternates: {
+    canonical: 'https://reotihandloom.com/policies/terms',
+  },
+};
+
 export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-16 text-gray-800">

@@ -95,8 +95,29 @@ const NavbarContent = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    const query = searchQuery.trim();
+    if (query) {
+      try {
+        let clientLocation: any = undefined;
+        try {
+          const locStr = localStorage.getItem('rh_exact_loc') || sessionStorage.getItem('rh_exact_loc');
+          if (locStr) clientLocation = JSON.parse(locStr);
+        } catch (e) {}
+
+        fetch('/api/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'SEARCH',
+            searchQuery: query,
+            title: `🔍 Searched Saree: "${query}"`,
+            pageUrl: `/products?search=${encodeURIComponent(query)}`,
+            clientLocation,
+          }),
+          keepalive: true,
+        }).catch(() => {});
+      } catch (e) {}
+      router.push(`/products?search=${encodeURIComponent(query)}`);
     }
   };
 
@@ -191,10 +212,11 @@ const NavbarContent = () => {
         .catch(() => {});
     };
 
-    fetchFreshCategories();
+    // Defer initial fetch so main page HTML/Images render with 0 delay on iOS/mobile
+    const initialTimer = setTimeout(fetchFreshCategories, 3000);
 
-    // Periodic auto-refresh every 2 minutes
-    const interval = setInterval(fetchFreshCategories, 120000);
+    // Periodic auto-refresh every 3 minutes
+    const interval = setInterval(fetchFreshCategories, 180000);
 
     // Refresh when user returns / focuses the tab
     const onVisibilityChange = () => {
@@ -207,6 +229,7 @@ const NavbarContent = () => {
     document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
+      clearTimeout(initialTimer);
       clearInterval(interval);
       window.removeEventListener('focus', fetchFreshCategories);
       document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -697,6 +720,7 @@ const NavbarContent = () => {
               {/* Home */}
               <Link
                 href="/"
+                prefetch={true}
                 onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isHomeActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
@@ -706,6 +730,7 @@ const NavbarContent = () => {
               {/* New Arrivals */}
               <Link
                 href="/products?sort=newest"
+                prefetch={true}
                 onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isNewArrivalsActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
@@ -718,6 +743,7 @@ const NavbarContent = () => {
               {/* Maheshwari Sarees Direct Link */}
               <Link
                 href="/products"
+                prefetch={true}
                 onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isSareesActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
@@ -727,6 +753,7 @@ const NavbarContent = () => {
               {/* Maheshwari Suits Direct Link */}
               <Link
                 href="/products?category=maheshwari-suits"
+                prefetch={true}
                 onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isSuitsActive ? activeLinkStyle : inactiveLinkStyle}`}
               >
@@ -736,6 +763,7 @@ const NavbarContent = () => {
               {/* Semi Maheshwari Sarees Direct Link */}
               <Link
                 href="/products?category=semi-maheshwari-sarees"
+                prefetch={true}
                 onClick={() => setActiveDesktopMenu(null)}
                 className={`${linkBaseStyle} ${isSemiMaheshwariActive ? activeLinkStyle : inactiveLinkStyle}`}
               >

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { BookOpen, Calendar, Clock, Tag, ArrowRight, Play, Search, Sparkles, ChevronRight, X } from 'lucide-react';
 
@@ -22,12 +22,112 @@ interface BlogPost {
 
 const CATEGORIES = ['ALL', 'Weaving Heritage', 'Buyer Guide', 'Care & Maintenance', 'Styling Tips', 'Handloom Stories'];
 
+const getBlogPoster = (blog: BlogPost): string => {
+  if ((blog as any).posterUrl) return (blog as any).posterUrl;
+  if ((blog as any).thumbnailUrl) return (blog as any).thumbnailUrl;
+  if (blog.mediaUrl && !blog.mediaUrl.endsWith('.mp4') && !blog.mediaUrl.endsWith('.webm')) {
+    return blog.mediaUrl;
+  }
+  const slug = (blog.slug || '').toLowerCase();
+  const title = (blog.title || '').toLowerCase();
+  if (slug.includes('identify') || title.includes('identify') || title.includes('fake')) {
+    return '/uploads/saree_1789240597301_iy1ww.jpeg';
+  }
+  if (slug.includes('heritage') || title.includes('heritage') || title.includes('legacy') || title.includes('ahilyabai')) {
+    return '/uploads/saree_1789221965397_lf0kg.jpeg';
+  }
+  if (slug.includes('care') || title.includes('care') || title.includes('maintenance')) {
+    return '/uploads/saree_1789233209397_zszzb.jpeg';
+  }
+  return '/uploads/saree_1789923479221_mexzs.jpeg';
+};
+
+function BlogLiveVideo({
+  src,
+  poster,
+  title,
+  onOpenModal,
+}: {
+  src: string;
+  poster: string;
+  title: string;
+  onOpenModal: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+
+    const startPlayback = () => {
+      const p = video.play();
+      if (p !== undefined) {
+        p.catch(() => {
+          const playOnGesture = () => {
+            video.play().catch(() => {});
+            window.removeEventListener('touchstart', playOnGesture);
+            window.removeEventListener('click', playOnGesture);
+          };
+          window.addEventListener('touchstart', playOnGesture, { once: true });
+          window.addEventListener('click', playOnGesture, { once: true });
+        });
+      }
+    };
+
+    startPlayback();
+  }, [src]);
+
+  return (
+    <div
+      onClick={onOpenModal}
+      className="block relative w-full h-full cursor-pointer group/vid bg-black"
+      role="button"
+      tabIndex={0}
+      aria-label={`Watch video: ${title}`}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        poster={poster}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none"
+      />
+
+      <div className="absolute bottom-2.5 right-2.5 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-xs text-amber-200 px-2 py-0.5 rounded-full text-[10px] font-bold shadow-md pointer-events-none">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        <span>REEL</span>
+      </div>
+
+      <div className="absolute inset-0 bg-black/15 group-hover/vid:bg-black/5 transition-colors flex items-center justify-center pointer-events-none">
+        <div className="w-10 h-10 rounded-full bg-[#581C1C]/75 text-amber-100 flex items-center justify-center opacity-75 group-hover/vid:opacity-100 group-hover/vid:scale-110 transition-all shadow-xl border border-amber-300/40">
+          <Play className="w-4 h-4 fill-current ml-0.5 text-amber-200" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BlogsPage() {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeVideoModal, setActiveVideoModal] = useState<string | null>(null);
+  const [activeVideoModal, setActiveVideoModal] = useState<{
+    url: string;
+    title?: string;
+    slug?: string;
+    category?: string;
+  } | null>(null);
 
   useEffect(() => {
     fetch('/api/blogs')
@@ -170,26 +270,31 @@ export default function BlogsPage() {
                 >
                   <div>
                     {/* Media Thumbnail Container */}
-                    <div className="relative aspect-[16/10] overflow-hidden bg-amber-100">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-amber-100 group/vid">
                       {isVideo ? (
+                        <BlogLiveVideo
+                          src={blog.mediaUrl}
+                          poster={getBlogPoster(blog)}
+                          title={blog.title}
+                          onOpenModal={() =>
+                            setActiveVideoModal({
+                              url: blog.mediaUrl || blog.videoUrl || '',
+                              title: blog.title,
+                              slug: blog.slug,
+                              category: blog.category,
+                            })
+                          }
+                        />
+                      ) : (
                         <Link href={`/blogs/${blog.slug}`} className="block relative w-full h-full cursor-pointer">
-                          <video
-                            src={blog.mediaUrl}
-                            poster={blog.mediaUrl.replace(/\.(mp4|webm)$/, '.jpg')}
+                          <img
+                            src={blog.mediaUrl || '/uploads/saree_1789923479221_mexzs.jpeg'}
+                            alt={blog.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
+                            loading="lazy"
+                            decoding="async"
                           />
                         </Link>
-                      ) : (
-                        <img
-                          src={blog.mediaUrl || '/uploads/saree_1789923479221_mexzs.jpeg'}
-                          alt={blog.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          loading="lazy"
-                        />
                       )}
 
                       {/* Category Pill Tag */}
@@ -259,20 +364,60 @@ export default function BlogsPage() {
 
       {/* Video Modal */}
       {activeVideoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="relative w-full max-w-3xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/20">
-            <button
-              onClick={() => setActiveVideoModal(null)}
-              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-white/20 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <video
-              src={activeVideoModal}
-              controls
-              autoPlay
-              className="w-full max-h-[80vh] object-contain"
-            />
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
+          onClick={() => setActiveVideoModal(null)}
+        >
+          <div
+            className="relative w-full max-w-3xl bg-neutral-950 rounded-2xl overflow-hidden shadow-2xl border border-amber-500/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-3.5 sm:p-4 bg-gradient-to-r from-neutral-900 via-neutral-950 to-neutral-900 border-b border-amber-500/20">
+              <div className="min-w-0 pr-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400 block truncate">
+                  {activeVideoModal.category || 'Reoti Handloom Video'}
+                </span>
+                <h3 className="text-white font-serif font-bold text-sm sm:text-base truncate">
+                  {activeVideoModal.title || 'Maheshwar Handloom Video Story'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveVideoModal(null)}
+                className="w-9 h-9 rounded-full bg-white/15 hover:bg-white text-white hover:text-black flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                aria-label="Close video"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Video Player */}
+            <div className="relative aspect-video w-full bg-black flex items-center justify-center">
+              <video
+                src={activeVideoModal.url}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            {/* Modal Footer */}
+            {activeVideoModal.slug && (
+              <div className="p-3.5 bg-neutral-900/90 flex items-center justify-between text-xs text-amber-200 border-t border-white/5">
+                <span className="hidden sm:inline">100% Authentic Maheshwar Heritage Looms</span>
+                <Link
+                  href={`/blogs/${activeVideoModal.slug}`}
+                  onClick={() => setActiveVideoModal(null)}
+                  className="inline-flex items-center gap-1.5 font-bold text-amber-400 hover:text-white transition-colors bg-amber-950/60 hover:bg-amber-950 px-3 py-1.5 rounded-full border border-amber-500/30"
+                >
+                  <span>Read Full Article</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

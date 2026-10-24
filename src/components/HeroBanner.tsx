@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
 interface BannerItem {
@@ -40,25 +41,31 @@ const DEFAULT_BANNERS: BannerItem[] = [
   },
 ];
 
-export const HeroBanner = () => {
-  const [banners, setBanners] = useState<BannerItem[]>(DEFAULT_BANNERS);
+interface HeroBannerProps {
+  initialBanners?: BannerItem[];
+}
+
+export const HeroBanner: React.FC<HeroBannerProps> = ({ initialBanners }) => {
+  const [banners, setBanners] = useState<BannerItem[]>(
+    initialBanners && initialBanners.length > 0 ? initialBanners : DEFAULT_BANNERS
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    fetch('/api/banners')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
-          const cleaned = data.banners.filter((b: any) => !b.image?.includes('unsplash.com'));
-          if (cleaned.length > 0) {
-            setBanners(cleaned);
-          } else {
-            setBanners(DEFAULT_BANNERS);
+    if (!initialBanners || initialBanners.length === 0) {
+      fetch('/api/banners')
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
+            const cleaned = data.banners.filter((b: any) => !b.image?.includes('unsplash.com'));
+            if (cleaned.length > 0) {
+              setBanners(cleaned);
+            }
           }
-        }
-      })
-      .catch(console.error);
-  }, []);
+        })
+        .catch(console.error);
+    }
+  }, [initialBanners]);
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -74,10 +81,13 @@ export const HeroBanner = () => {
     <div className="relative w-full h-[340px] sm:h-[480px] lg:h-[560px] bg-neutral-950 overflow-hidden font-sans group">
       {/* Background Image with Crisp Lighting & Vignette Overlay */}
       <div className="absolute inset-0">
-        <img
+        <Image
           src={activeBanner.image}
           alt={activeBanner.title}
-          className="w-full h-full object-cover object-center brightness-105 contrast-105 scale-105 transition-all duration-700"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center brightness-105 contrast-105 scale-105 transition-all duration-700"
         />
         {/* Luxury Gradient Veil */}
         <div className="absolute inset-0 bg-gradient-to-r from-amber-950/90 via-black/40 to-transparent" />

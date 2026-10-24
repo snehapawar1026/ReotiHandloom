@@ -18,6 +18,7 @@ export function hasExistingWatermark(imageUrl?: string): boolean {
     imageUrl.includes('saree_17890') ||
     imageUrl.includes('saree_17891') ||
     imageUrl.includes('saree_17892') ||
+    imageUrl.includes('festival_') ||
     imageUrl.includes('real_insta_')
   );
 }
@@ -40,23 +41,29 @@ export function WatermarkOverlay({
     <div
       className={`absolute inset-0 pointer-events-none select-none overflow-hidden z-10 flex items-center justify-center ${className}`}
       aria-hidden="true"
-      style={{ userSelect: 'none' }}
+      style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
     >
       <div
-        className="pointer-events-none select-none flex items-center justify-center transform -rotate-[28deg] opacity-50 transition-opacity"
+        className="pointer-events-none select-none flex items-center justify-center transform -rotate-[28deg] opacity-50"
         style={{
           transformOrigin: 'center center',
-          filter: 'drop-shadow(0 1px 5px rgba(0, 0, 0, 0.6))',
+          filter: isPdp
+            ? 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45))'
+            : 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4))',
         }}
       >
         <img
           src="/images/reoti_exact_white_watermark_hd.png"
           alt="Reoti Handloom Authentic Maheshwari Saree"
           draggable="false"
+          loading="lazy"
+          decoding="async"
           className={`object-contain pointer-events-none select-none ${
-            isPdp
-              ? 'w-[280px] sm:w-[420px] md:w-[480px] max-w-[85%]'
-              : 'w-36 sm:w-48 md:w-56 max-w-[80%]'
+            variant === 'lightbox'
+              ? 'w-[340px] sm:w-[440px] md:w-[520px] max-w-[80%]'
+              : isPdp
+              ? 'w-[240px] sm:w-[300px] md:w-[340px] max-w-[72%]'
+              : 'w-36 sm:w-44 md:w-48 max-w-[70%]'
           }`}
         />
       </div>

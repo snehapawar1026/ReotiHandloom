@@ -4,6 +4,29 @@ import { getStoreData, isSemiMaheshwari, isSuitProduct } from '@/lib/storeManage
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+const COLOR_SYNONYMS: Record<string, string[]> = {
+  blue: ['blue', 'peacock', 'teal', 'navy', 'royal blue', 'sky blue', 'firozi', 'neelam', 'aqua', 'turquoise'],
+  red: ['red', 'maroon', 'wine', 'crimson', 'tomato', 'lal', 'surkh', 'cherry', 'coral red'],
+  green: ['green', 'bottle green', 'parrot', 'olive', 'teal', 'pista', 'mehendi', 'hara', 'rama', 'dark green'],
+  yellow: ['yellow', 'mustard', 'lemon', 'haldi', 'pitambari', 'gold', 'golden'],
+  pink: ['pink', 'magenta', 'rani', 'baby pink', 'gulabi', 'rose', 'coral', 'peach', 'dusty rose'],
+  black: ['black', 'kala', 'charcoal', 'dark'],
+  white: ['white', 'off white', 'cream', 'ivory', 'safed'],
+  orange: ['orange', 'peach', 'mango', 'kesariya'],
+  purple: ['purple', 'violet', 'lavender', 'jamuni', 'baingani', 'plum'],
+  maroon: ['maroon', 'wine', 'deep red'],
+  gold: ['gold', 'golden', 'zari', 'metallic'],
+  silver: ['silver', 'rupeli', 'silver zari'],
+  grey: ['grey', 'gray', 'charcoal'],
+  gray: ['grey', 'gray', 'charcoal'],
+  brown: ['brown', 'chocolate', 'coffee', 'katha'],
+};
+
+const STOP_WORDS = new Set([
+  'saree', 'sarees', 'sari', 'saris', 'handloom', 'pure', 'buy', 'online', 'collection', 'wear', 'for', 'women', 'reoti'
+]);
+
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get('category');
@@ -124,11 +147,13 @@ export async function GET(req: NextRequest) {
       return false;
     });
   } else if (!includeAll) {
-    // When no specific category is requested (e.g. Home, Bestsellers, Trending, All Sarees), strictly exclude ALL Semi Maheshwari products AND exclude Suit products unless explicitly searched
-    const searchingForSuit = (search || '').toLowerCase().includes('suit');
+    const searchLower = (search || '').toLowerCase();
+    const searchingForSuit = searchLower.includes('suit') || searchLower.includes('dress') || searchLower.includes('kurta') || searchLower.includes('dupatta');
+    const searchingForSemi = searchLower.includes('semi') || searchLower.includes('sami');
+
     storeProducts = storeProducts.filter((p: any) => {
-      if (isSemiMaheshwari(p, allCategories)) return false;
-      if (!searchingForSuit && isSuitProduct(p, allCategories)) return false;
+      if (isSemiMaheshwari(p, allCategories) && !searchingForSemi) return false;
+      if (isSuitProduct(p, allCategories) && !searchingForSuit) return false;
       return true;
     });
   }
@@ -142,7 +167,13 @@ export async function GET(req: NextRequest) {
     storeProducts = storeProducts.filter((p) => p.borderType?.toLowerCase().includes(borderType.toLowerCase()));
   }
   if (color) {
-    storeProducts = storeProducts.filter((p) => p.color?.toLowerCase().includes(color.toLowerCase()));
+    const cLower = color.toLowerCase().trim();
+    const synonyms = COLOR_SYNONYMS[cLower] || [cLower];
+    storeProducts = storeProducts.filter((p) => {
+      const pColor = (p.color || '').toLowerCase();
+      const pTitle = (p.title || '').toLowerCase();
+      return synonyms.some((syn) => pColor.includes(syn) || pTitle.includes(syn));
+    });
   }
   if (featured === 'true') {
     storeProducts = storeProducts.filter((p) => p.isFeatured);
@@ -163,14 +194,111 @@ export async function GET(req: NextRequest) {
     storeProducts = storeProducts.filter((p) => p.price <= parseFloat(maxPrice));
   }
   if (search) {
-    const q = search.toLowerCase();
-    storeProducts = storeProducts.filter(
-      (p) =>
-        p.title?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.fabric?.toLowerCase().includes(q) ||
-        p.color?.toLowerCase().includes(q)
-    );
+    const rawTokens = search.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+    if (rawTokens.length > 0) {
+      const meaningfulTokens = rawTokens.filter((t) => !STOP_WORDS.has(t));
+      const searchTokens = meaningfulTokens.length > 0 ? meaningfulTokens : rawTokens;
+
+      const scoredProducts: { product: any; score: number }[] = [];
+
+      for (const p of storeProducts) {
+        const title = (p.title || '').toLowerCase();
+        const desc = (p.description || '').toLowerCase();
+        const pColor = (p.color || '').toLowerCase();
+        const fabricStr = (p.fabric || '').toLowerCase();
+        const weave = (p.weaveType || '').toLowerCase();
+        const border = (p.borderType || '').toLowerCase();
+        const catStr = (typeof p.category === 'object' ? `${p.category?.name || ''}` : String(p.category || '')).toLowerCase();
+        const allText = `${title} ${desc} ${pColor} ${fabricStr} ${weave} ${border} ${catStr}`;
+
+        let score = 0;
+        let matchedTokens = 0;
+
+        for (const token of searchTokens) {
+          let tokenMatched = false;
+
+          if (title.includes(token)) {
+            score += 15;
+            tokenMatched = true;
+          }
+          if (pColor.includes(token)) {
+            score += 12;
+            tokenMatched = true;
+          }
+          if (fabricStr.includes(token)) {
+            score += 8;
+            tokenMatched = true;
+          }
+          if (weave.includes(token) || border.includes(token)) {
+            score += 8;
+            tokenMatched = true;
+          }
+          if (catStr.includes(token)) {
+            score += 8;
+            tokenMatched = true;
+          }
+          if (desc.includes(token)) {
+            score += 3;
+            tokenMatched = true;
+          }
+
+          if (COLOR_SYNONYMS[token]) {
+            for (const syn of COLOR_SYNONYMS[token]) {
+              if (pColor.includes(syn) || title.includes(syn)) {
+                score += 10;
+                tokenMatched = true;
+                break;
+              }
+            }
+          }
+
+          if (['cotton', 'silk', 'cottonsilk', 'silkcotton', 'mulberry'].includes(token)) {
+            if (fabricStr.includes('silk') || fabricStr.includes('cotton') || title.includes('silk') || title.includes('cotton')) {
+              score += 8;
+              tokenMatched = true;
+            }
+          }
+
+          if (['tissue', 'shimmer', 'metallic'].includes(token)) {
+            if (title.includes('zari') || border.includes('zari') || title.includes('tissue') || title.includes('gold') || title.includes('silver')) {
+              score += 10;
+              tokenMatched = true;
+            }
+          }
+
+          if (['plain', 'simple'].includes(token)) {
+            if (title.includes('border') || weave.includes('plain') || title.includes('zari border')) {
+              score += 8;
+              tokenMatched = true;
+            }
+          }
+
+          if (token === 'chanderi') {
+            if (allText.includes('chanderi')) {
+              score += 20;
+              tokenMatched = true;
+            } else if (fabricStr.includes('silk') || title.includes('katan') || fabricStr.includes('cotton')) {
+              score += 5;
+              tokenMatched = true;
+            }
+          }
+
+          if (tokenMatched) {
+            matchedTokens++;
+          }
+        }
+
+        if (matchedTokens > 0 && score > 0) {
+          if (matchedTokens === searchTokens.length) {
+            score += 25;
+          }
+          scoredProducts.push({ product: p, score });
+        }
+      }
+
+      scoredProducts.sort((a, b) => b.score - a.score);
+      storeProducts = scoredProducts.map((sp) => sp.product);
+    }
   }
 
   if (sort === 'price-low') storeProducts.sort((a, b) => a.price - b.price);
@@ -182,7 +310,7 @@ export async function GET(req: NextRequest) {
     { success: true, products: storeProducts, count: storeProducts.length },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400',
       },
     }
   );

@@ -26,27 +26,76 @@ let inMemoryStore: StoreData = {
 };
 
 function getStorageFilePaths(): string[] {
-  return [
-    path.join(process.cwd(), 'src', 'data', 'storeData.json'),
-    path.join(process.cwd(), 'data', 'storeData.json'),
-    path.join(process.cwd(), 'storeData.json'),
+  const dirs = [
+    process.cwd(),
+    __dirname,
+    path.resolve(__dirname, '..'),
+    path.resolve(__dirname, '..', '..'),
+    path.resolve(__dirname, '..', '..', '..'),
+    '/home/fbaqsmhn/reotihandloom',
+    '/home/fbaqsmhn/reotihandloom/web',
+    '/home/fbaqsmhn',
   ];
-}
 
-function getStorageFilePath(): string {
-  const paths = getStorageFilePaths();
-  for (const p of paths) {
-    if (fs.existsSync(p)) {
-      return p;
+  const subpaths = [
+    path.join('src', 'data', 'storeData.json'),
+    path.join('data', 'storeData.json'),
+    'storeData.json',
+  ];
+
+  const paths: string[] = [];
+  for (const d of dirs) {
+    for (const sp of subpaths) {
+      try {
+        const full = path.resolve(d, sp);
+        if (!paths.includes(full)) {
+          paths.push(full);
+        }
+      } catch (e) {}
     }
   }
-  const defaultPath = paths[0];
-  const dir = path.dirname(defaultPath);
-  if (!fs.existsSync(dir)) {
+  return paths;
+}
+
+let resolvedStoragePath: string | null = null;
+
+function getStorageFilePath(): string {
+  if (resolvedStoragePath && fs.existsSync(/*turbopackIgnore: true*/ resolvedStoragePath)) {
+    return resolvedStoragePath;
+  }
+  const paths = getStorageFilePaths();
+  // 1. Prefer existing file that has actual categories and products data
+  for (const p of paths) {
     try {
-      fs.mkdirSync(dir, { recursive: true });
+      if (fs.existsSync(/*turbopackIgnore: true*/ p)) {
+        const content = fs.readFileSync(/*turbopackIgnore: true*/ p, 'utf-8');
+        if (content && content.includes('"categories"') && content.includes('"products"')) {
+          resolvedStoragePath = p;
+          return p;
+        }
+      }
     } catch (e) {}
   }
+
+  // 2. Fallback to any existing file
+  for (const p of paths) {
+    try {
+      if (fs.existsSync(/*turbopackIgnore: true*/ p)) {
+        resolvedStoragePath = p;
+        return p;
+      }
+    } catch (e) {}
+  }
+
+  // 3. Fallback to primary default
+  const defaultPath = path.join(process.cwd(), 'src', 'data', 'storeData.json');
+  try {
+    const dir = path.dirname(defaultPath);
+    if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) {
+      fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
+    }
+  } catch (e) {}
+  resolvedStoragePath = defaultPath;
   return defaultPath;
 }
 
@@ -55,8 +104,8 @@ let lastFileMtime = 0;
 
 export function getStoreData(): StoreData {
   const now = Date.now();
-  // Fast Path: If in-memory cache is fresh (less than 2.5s old), return immediately without touching disk
-  if (inMemoryStore.products && inMemoryStore.products.length > 0 && now - lastLoadedTime < 2500) {
+  // Ultra-Fast Path: If in-memory RAM cache is present and fresh (less than 30s old), return in 0.001ms without blocking event loop
+  if (inMemoryStore.products && inMemoryStore.products.length > 0 && now - lastLoadedTime < 30000) {
     return inMemoryStore;
   }
 
@@ -64,7 +113,6 @@ export function getStoreData(): StoreData {
   try {
     if (fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
       const stats = fs.statSync(/*turbopackIgnore: true*/ filePath);
-      // If file has not changed on disk, use in-memory store
       if (stats.mtimeMs === lastFileMtime && inMemoryStore.products && inMemoryStore.products.length > 0) {
         lastLoadedTime = now;
         return inMemoryStore;
@@ -74,8 +122,8 @@ export function getStoreData(): StoreData {
       if (content && !content.startsWith('\x00')) {
         const parsed = JSON.parse(content);
         inMemoryStore = {
-          categories: Array.isArray(parsed.categories) ? parsed.categories : inMemoryStore.categories || [],
-          products: Array.isArray(parsed.products) ? parsed.products : inMemoryStore.products || [],
+          categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : inMemoryStore.categories || [],
+          products: Array.isArray(parsed.products) && parsed.products.length > 0 ? parsed.products : inMemoryStore.products || [],
           banners: Array.isArray(parsed.banners) ? parsed.banners : inMemoryStore.banners || [],
           instaPosts: Array.isArray(parsed.instaPosts) ? parsed.instaPosts : inMemoryStore.instaPosts || [],
           reviews: Array.isArray(parsed.reviews) ? parsed.reviews : inMemoryStore.reviews || [],
@@ -88,11 +136,27 @@ export function getStoreData(): StoreData {
         lastFileMtime = stats.mtimeMs;
         lastLoadedTime = now;
       }
+    } else {
+      lastLoadedTime = now;
     }
   } catch (err) {
-    console.warn('[StoreManager] Read file warning, using in-memory store:', err);
+    lastLoadedTime = now;
   }
   return inMemoryStore;
+}
+
+let pendingActivityFlush: NodeJS.Timeout | null = null;
+
+function scheduleActivityDiskFlush() {
+  if (pendingActivityFlush) return;
+  pendingActivityFlush = setTimeout(() => {
+    pendingActivityFlush = null;
+    try {
+      const payload = JSON.stringify(inMemoryStore, null, 2);
+      const primaryPath = getStorageFilePath();
+      fs.writeFile(primaryPath, payload, 'utf-8', () => {});
+    } catch (e) {}
+  }, 45000); // Debounce write to disk at most once every 45s for analytics
 }
 
 export function saveStoreData(data: Partial<StoreData>): StoreData {
@@ -102,41 +166,18 @@ export function saveStoreData(data: Partial<StoreData>): StoreData {
   };
 
   const payload = JSON.stringify(inMemoryStore, null, 2);
-  const paths = getStorageFilePaths();
-
-  // Ensure default dir exists
   const primaryPath = getStorageFilePath();
+
   try {
     const dir = path.dirname(primaryPath);
     if (!fs.existsSync(/*turbopackIgnore: true*/ dir)) {
       fs.mkdirSync(/*turbopackIgnore: true*/ dir, { recursive: true });
     }
-    const tempFile = primaryPath + `.${Date.now()}.tmp`;
-    fs.writeFileSync(/*turbopackIgnore: true*/ tempFile, payload, 'utf-8');
-    try {
-      if (fs.existsSync(/*turbopackIgnore: true*/ primaryPath)) {
-        fs.unlinkSync(/*turbopackIgnore: true*/ primaryPath);
-      }
-    } catch (e) {}
-    fs.renameSync(/*turbopackIgnore: true*/ tempFile, primaryPath);
-    try {
-      lastFileMtime = fs.statSync(/*turbopackIgnore: true*/ primaryPath).mtimeMs;
-      lastLoadedTime = Date.now();
-    } catch (e) {}
+    fs.writeFileSync(/*turbopackIgnore: true*/ primaryPath, payload, 'utf-8');
+    lastFileMtime = fs.statSync(/*turbopackIgnore: true*/ primaryPath).mtimeMs;
+    lastLoadedTime = Date.now();
   } catch (err) {
     console.warn('[StoreManager] Write primary file warning:', err);
-    try {
-      fs.writeFileSync(/*turbopackIgnore: true*/ primaryPath, payload, 'utf-8');
-    } catch (e) {}
-  }
-
-  // Also write to any other existing paths to keep everything 100% in sync
-  for (const p of paths) {
-    if (p !== primaryPath && fs.existsSync(/*turbopackIgnore: true*/ p)) {
-      try {
-        fs.writeFileSync(/*turbopackIgnore: true*/ p, payload, 'utf-8');
-      } catch (e) {}
-    }
   }
 
   return inMemoryStore;
@@ -683,9 +724,27 @@ export function logActivityInStore(activityInput: any) {
     activityInput.pageUrl?.startsWith('/reoti-studio-manage')
   );
 
+  const isBot = Boolean(
+    activityInput.isBot ||
+    activityInput.userRole === 'BOT' ||
+    activityInput.type === 'BOT_CRAWL' ||
+    (activityInput.userIp && (
+      activityInput.userIp.startsWith('66.249.') ||
+      activityInput.userIp.startsWith('64.233.') ||
+      activityInput.userIp.startsWith('157.55.') ||
+      activityInput.userIp.startsWith('40.77.') ||
+      activityInput.userIp.startsWith('207.46.')
+    )) ||
+    activityInput.title?.toLowerCase().includes('googlebot') ||
+    activityInput.title?.toLowerCase().includes('crawler') ||
+    activityInput.details?.toLowerCase().includes('googlebot') ||
+    activityInput.details?.toLowerCase().includes('crawler') ||
+    activityInput.device?.toLowerCase().includes('bot')
+  );
+
   const newActivity = {
     id,
-    type: activityInput.type || 'VISIT',
+    type: activityInput.type || (isBot ? 'BOT_CRAWL' : (isAdmin ? 'ADMIN_VISIT' : 'VISIT')),
     title: activityInput.title || 'Store Activity',
     details: activityInput.details || null,
     userEmail: activityInput.userEmail || null,
@@ -701,25 +760,86 @@ export function logActivityInStore(activityInput: any) {
     pageTitle: activityInput.pageTitle || null,
     referrer: activityInput.referrer || null,
     isAdmin,
-    userRole: isAdmin ? 'ADMIN' : 'CUSTOMER',
+    isBot,
+    botName: activityInput.botName || (isBot ? 'Googlebot / Search Crawler' : null),
+    userRole: isAdmin ? 'ADMIN' : (isBot ? 'BOT' : 'CUSTOMER'),
     createdAt: new Date().toISOString(),
   };
 
-  const activities = [newActivity, ...(data.activities || [])].slice(0, 2000);
-  saveStoreData({ activities });
+  // Keep customer activities preserved separately (up to 3000), admin activities (up to 500), and bots (up to 150)
+  // so bot indexing or admin work NEVER reduces real customer history!
+  const currentActs = inMemoryStore.activities || [];
+  const adminActs = currentActs.filter((a: any) => a.isAdmin || a.userRole === 'ADMIN' || a.userEmail === 'reotihandloom@gmail.com');
+  const botActs = currentActs.filter((a: any) => !a.isAdmin && (
+    a.isBot ||
+    a.userRole === 'BOT' ||
+    a.type === 'BOT_CRAWL' ||
+    (a.userIp && (
+      a.userIp.startsWith('66.249.') ||
+      a.userIp.startsWith('64.233.') ||
+      a.userIp.startsWith('157.55.') ||
+      a.userIp.startsWith('40.77.') ||
+      a.userIp.startsWith('207.46.')
+    )) ||
+    a.title?.toLowerCase().includes('googlebot') ||
+    a.title?.toLowerCase().includes('crawler') ||
+    a.details?.toLowerCase().includes('googlebot') ||
+    a.details?.toLowerCase().includes('crawler')
+  ));
+  const customerActs = currentActs.filter((a: any) =>
+    !a.isAdmin &&
+    a.userRole !== 'ADMIN' &&
+    a.userRole !== 'BOT' &&
+    !a.isBot &&
+    a.type !== 'BOT_CRAWL' &&
+    (!a.userIp || (!a.userIp.startsWith('66.249.') && !a.userIp.startsWith('64.233.') && !a.userIp.startsWith('157.55.') && !a.userIp.startsWith('40.77.') && !a.userIp.startsWith('207.46.'))) &&
+    !a.title?.toLowerCase().includes('googlebot') &&
+    !a.title?.toLowerCase().includes('crawler') &&
+    !a.details?.toLowerCase().includes('googlebot') &&
+    !a.details?.toLowerCase().includes('crawler') &&
+    a.userEmail !== 'reotihandloom@gmail.com'
+  );
+
+  let updatedActivities: any[] = [];
+  if (isAdmin) {
+    const trimmedAdmin = [newActivity, ...adminActs].slice(0, 500);
+    updatedActivities = [...trimmedAdmin, ...customerActs, ...botActs.slice(0, 100)];
+  } else if (isBot) {
+    const trimmedBot = [newActivity, ...botActs].slice(0, 150);
+    updatedActivities = [...adminActs, ...customerActs, ...trimmedBot];
+  } else {
+    const trimmedCustomer = [newActivity, ...customerActs].slice(0, 3000);
+    updatedActivities = [...adminActs, ...trimmedCustomer, ...botActs.slice(0, 100)];
+  }
+
+  inMemoryStore.activities = updatedActivities;
+  scheduleActivityDiskFlush();
   return newActivity;
 }
 
-export function clearActivitiesInStore(filterType?: 'ALL' | 'ADMIN' | 'TEST') {
-  const data = getStoreData();
+export function clearActivitiesInStore(filterType?: 'ALL' | 'ADMIN' | 'BOTS' | 'TEST') {
   if (filterType === 'ADMIN') {
-    const activities = (data.activities || []).filter(
+    const activities = (inMemoryStore.activities || []).filter(
       (a: any) => !a.isAdmin && a.userEmail !== 'reotihandloom@gmail.com'
     );
-    saveStoreData({ activities });
+    inMemoryStore.activities = activities;
+  } else if (filterType === 'BOTS') {
+    const activities = (inMemoryStore.activities || []).filter(
+      (a: any) =>
+        !a.isBot &&
+        a.userRole !== 'BOT' &&
+        a.type !== 'BOT_CRAWL' &&
+        (!a.userIp || (!a.userIp.startsWith('66.249.') && !a.userIp.startsWith('64.233.') && !a.userIp.startsWith('157.55.') && !a.userIp.startsWith('40.77.') && !a.userIp.startsWith('207.46.'))) &&
+        !a.title?.toLowerCase().includes('googlebot') &&
+        !a.title?.toLowerCase().includes('crawler') &&
+        !a.details?.toLowerCase().includes('googlebot') &&
+        !a.details?.toLowerCase().includes('crawler')
+    );
+    inMemoryStore.activities = activities;
   } else {
-    saveStoreData({ activities: [] });
+    inMemoryStore.activities = [];
   }
+  scheduleActivityDiskFlush();
   return true;
 }
 

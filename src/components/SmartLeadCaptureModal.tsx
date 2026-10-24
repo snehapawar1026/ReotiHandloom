@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Sparkles, X, Gift, Phone, CheckCircle2, MessageCircle, Copy, Check, ArrowRight } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export function SmartLeadCaptureModal() {
   const pathname = usePathname();
@@ -97,8 +98,8 @@ export function SmartLeadCaptureModal() {
     }
   };
 
-  const handleCopyCoupon = () => {
-    navigator.clipboard.writeText(couponCode);
+  const handleCopyCoupon = async () => {
+    await copyToClipboard(couponCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -128,7 +129,7 @@ export function SmartLeadCaptureModal() {
           </div>
 
           <h3 className="text-2xl font-serif font-extrabold text-amber-100 leading-tight">
-            Flat 10% OFF + ₹300 Discount
+            Flat 10% OFF
           </h3>
           <p className="text-xs text-amber-200/90 mt-1">
             Direct from Maheshwar Fort Looms • 100% Handcrafted

@@ -24,6 +24,13 @@ a, button, [role="button"], input, select, textarea {
   touch-action: manipulation;
 }
 
+/* Disable Image & Link context menu / download popups on Mobile & Desktop */
+img, a, video, [data-product-card] {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
 /* Hide Next.js Dev Indicator Badge */
 nextjs-portal,
 div[data-nextjs-router-build-status],

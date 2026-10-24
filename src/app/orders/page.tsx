@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Download
 } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 
 function OrdersPageContent() {
   const searchParams = useSearchParams();
@@ -740,8 +741,8 @@ function OrdersPageContent() {
                                 </span>
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(trackingNumber);
+                                  onClick={async () => {
+                                    await copyToClipboard(trackingNumber);
                                     setCopiedAwb(true);
                                     setTimeout(() => setCopiedAwb(false), 2000);
                                   }}
@@ -908,8 +909,8 @@ function OrdersPageContent() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(trackingModalOrder.trackingNumber);
+                          onClick={async () => {
+                            await copyToClipboard(trackingModalOrder.trackingNumber);
                             setCopiedAwb(true);
                             setTimeout(() => setCopiedAwb(false), 2000);
                           }}

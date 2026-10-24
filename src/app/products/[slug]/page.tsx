@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { getAllProducts, getProductBySlugOrId, getStoreData, isSemiMaheshwari } from '@/lib/storeManager';
 import ProductDetailClient from './ProductDetailClient';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 60;
 
 type Props = {
   params: Promise<{ slug: string }>;

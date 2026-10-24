@@ -19,6 +19,13 @@ export async function POST(req: NextRequest) {
     // 1. FIRST-TIME ORDER COUPONS: WELCOME10, ROYAL10, FIRST10, REOTI300
     const FIRST_TIME_COUPONS = ['WELCOME10', 'ROYAL10', 'FIRST10', 'REOTI300'];
     if (FIRST_TIME_COUPONS.includes(normalizedCode)) {
+      if (!cleanPhone || cleanPhone.length < 10) {
+        return NextResponse.json({
+          valid: false,
+          error: 'Please enter your 10-digit Mobile Number first so we can verify your First-Time Order discount.',
+        });
+      }
+
       let hasPreviousOrder = false;
 
       // Check storeData.json orders

@@ -24,6 +24,7 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface BlogPost {
   id: string;
@@ -338,9 +339,9 @@ export function BlogManagerTab() {
     }
   };
 
-  const handleCopyLink = (bSlug: string, id: string) => {
+  const handleCopyLink = async (bSlug: string, id: string) => {
     const url = `https://reotihandloom.com/blogs/${bSlug}`;
-    navigator.clipboard.writeText(url);
+    await copyToClipboard(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2500);
   };
